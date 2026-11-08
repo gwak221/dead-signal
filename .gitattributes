@@ -1,0 +1,20 @@
+# Unity: keep LF in the repo and in working copies (avoid CRLF churn on Windows)
+* text=auto eol=lf
+
+# Binary assets
+*.fbx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tga binary
+*.psd binary
+*.exr binary
+*.hdr binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.ttf binary
+*.otf binary
+*.dll binary
+*.unitypackage binary
+*.zip binary
