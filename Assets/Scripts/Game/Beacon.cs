@@ -1,8 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// control_panel_00X 비콘. 배터리를 가지고 E → 배터리를 삽입구에 고정하고 활성화.
+/// control_panel_00X 비콘. 배터리를 가지고 E → QTE → 성공 시에만 배터리를 삽입구에 고정하고 활성화.
 /// 기존 PlayerInteraction의 IInteractable 경로를 그대로 사용한다.
+/// QTE 실패 시: 배터리/비콘/진행도/EscapeWall 모두 변화 없음 (E를 다시 눌러야 새 QTE).
 /// </summary>
 public class Beacon : MonoBehaviour, IInteractable
 {
@@ -13,7 +14,11 @@ public class Beacon : MonoBehaviour, IInteractable
     [Header("Escape wall (비어 있으면 씬에서 자동 탐색)")]
     public EscapeDoorController escapeWall;
 
+    [Header("QTE (비어 있으면 씬에서 자동 탐색)")]
+    public SkillCheckManager skillCheck;
+
     PlayerInventory inv;
+    bool qteRunning;
 
     public bool IsActivated { get; private set; }
 
@@ -32,8 +37,40 @@ public class Beacon : MonoBehaviour, IInteractable
 
     public void Interact(PlayerInteraction player)
     {
-        if (IsActivated || player == null || player.Inventory == null) return;
+        if (IsActivated || qteRunning || player == null || player.Inventory == null) return;
 
+        // 배터리는 아직 소비하지 않는다 (보유 여부만 확인).
+        if (!player.Inventory.HasItem(InventoryItemType.Battery))
+        {
+            player.Notify("Battery Required");
+            return;
+        }
+
+        if (skillCheck == null) skillCheck = SkillCheckManager.Instance != null ? SkillCheckManager.Instance : FindFirstObjectByType<SkillCheckManager>();
+        if (skillCheck == null)
+        {
+            Debug.LogWarning("[Beacon] SkillCheckManager가 씬에 없습니다.");
+            return;
+        }
+
+        qteRunning = skillCheck.TriggerSkillCheck(() => OnQteSuccess(player), OnQteFail);
+    }
+
+    void OnQteFail()
+    {
+        qteRunning = false; // 진행 없음. 다시 E를 눌러야 새 QTE 시작.
+    }
+
+    void OnQteSuccess(PlayerInteraction player)
+    {
+        qteRunning = false;
+        if (IsActivated || player == null || player.Inventory == null) return;
+        ActivateWithBattery(player);
+    }
+
+    /// <summary>QTE 성공 후의 실제 활성화 처리 (기존 로직 그대로).</summary>
+    void ActivateWithBattery(PlayerInteraction player)
+    {
         if (!player.Inventory.TryTakeItem(InventoryItemType.Battery, out GameObject battery))
         {
             player.Notify("Battery Required");
@@ -45,7 +82,7 @@ public class Beacon : MonoBehaviour, IInteractable
         ApplyVisual();
         GameProgress.ReportBeaconActivated();
 
-        // 팀의 EscapeDoorController: 표시등 1개 켜기 (비콘은 IsActivated로 한 번만 도달하므로 중복 증가 없음)
+        // 팀의 EscapeDoorController: 표시등 1개 켜기 (IsActivated로 한 번만 도달하므로 중복 증가 없음)
         if (escapeWall == null) escapeWall = FindFirstObjectByType<EscapeDoorController>();
         if (escapeWall != null) escapeWall.ActivateNext();
         player.Notify("Beacon Activated  " + GameProgress.ActiveBeacons + " / " + GameProgress.RequiredBeacons, 1.5f);

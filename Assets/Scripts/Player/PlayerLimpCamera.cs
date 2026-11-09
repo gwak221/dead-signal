@@ -41,6 +41,10 @@ public class PlayerLimpCamera : MonoBehaviour
     [Header("Injured Step (다친 다리 걸음)")]
     [Tooltip("다친 다리를 디딜 때 눈높이가 내려가는 거리(m). 핵심 값.")]
     [Range(0f, 0.2f)] public float injuredStepDrop = 0.11f;
+    [Tooltip("LimpVerticalAmount: 세로 Limp 전체 배율 (1 = 기본 하강량).")]
+    [Range(0f, 2f)] public float limpVerticalAmount = 1f;
+    [Tooltip("LimpFrequency: 절뚝 리듬 속도 배율 (1 = 기본, 클수록 빠름).")]
+    [Range(0.3f, 2f)] public float limpFrequency = 1f;
     [Tooltip("다친 걸음 중 '푹 내려가는' 구간 비율. 작을수록 더 갑자기 꺼진다.")]
     [Range(0.1f, 0.5f)] public float injuredDropPortion = 0.28f;
     [Tooltip("다친 걸음 중 가장 낮은 상태로 지나가는 구간 비율.")]
@@ -65,8 +69,8 @@ public class PlayerLimpCamera : MonoBehaviour
     [Range(0f, 1f)] public float limpTiltAngle = 0.35f;
     [Tooltip("다친 걸음에서 고개 숙임 Pitch(도). 0~0.3 권장.")]
     [Range(0f, 1f)] public float limpPitchAngle = 0.2f;
-    [Tooltip("다친 쪽으로 몸이 쏠리는 좌우 이동(m).")]
-    [Range(0f, 0.03f)] public float limpSideSway = 0.01f;
+    [Tooltip("다친 걸음에서 체중이 한쪽으로 쏠리는 좌우 이동 = 세로 하강량 × 이 비율. 0.15~0.25 권장 (아주 약하게).")]
+    [Range(0f, 0.4f)] public float limpHorizontalAmount = 0.17f;
     [Tooltip("true면 오른쪽 다리가 다친 것으로 처리.")]
     public bool injuredRightLeg = true;
 
@@ -76,7 +80,7 @@ public class PlayerLimpCamera : MonoBehaviour
     [Tooltip("걷기 시작/멈춤/패널티 해제 시 효과가 들어오고 빠지는 속도. 멈추면 이 속도로 원위치 복귀.")]
     [Range(1f, 20f)] public float blendSpeed = 6f;
     [Tooltip("최종 오프셋 스무딩 (높을수록 즉각적).")]
-    [Range(5f, 120f)] public float smoothing = 35f;
+    [Range(5f, 120f)] public float smoothing = 22f;
     [Tooltip("이 속도(m/s) 이상 움직일 때 '걷는 중'으로 판단.")]
     public float minMoveSpeed = 0.2f;
     [Tooltip("이 시간(초) 이상 멈췄다가 다시 걸으면 다친 걸음부터 새로 시작.")]
@@ -181,7 +185,7 @@ public class PlayerLimpCamera : MonoBehaviour
             float refSpeed = Mathf.Max(0.1f, controller.moveSpeed * Mathf.Max(0.1f, controller.SpeedMultiplier));
             float speedFactor = Mathf.Clamp(planarSpeed / refSpeed, 0.5f, 1.3f);
 
-            phase += dt * speedFactor / Mathf.Max(0.1f, cycleLength);
+            phase += dt * speedFactor * limpFrequency / Mathf.Max(0.1f, cycleLength);
             while (phase >= 1f)
             {
                 phase -= 1f;
@@ -204,9 +208,10 @@ public class PlayerLimpCamera : MonoBehaviour
             float side = injuredRightLeg ? 1f : -1f;
 
             // 핵심: 눈높이 (다친 걸음 크게 + 멀쩡한 걸음 약하게)
-            targetPos.y = -(injured * cycleInjuredDepth + healthy * cycleHealthyDepth) * injuredStepDrop * amp;
+            float vDrop = injuredStepDrop * limpVerticalAmount;
+            targetPos.y = -(injured * cycleInjuredDepth + healthy * cycleHealthyDepth) * vDrop * amp;
             // 보조: 다친 쪽으로 살짝 쏠렸다가 멀쩡한 걸음에서 약간 되돌아옴
-            targetPos.x = (injured * cycleInjuredDepth - healthy * 0.6f) * limpSideSway * side * amp;
+            targetPos.x = (injured * cycleInjuredDepth - healthy * 0.4f) * vDrop * limpHorizontalAmount * side * amp;
             targetEuler.z = -injured * cycleInjuredDepth * cycleTilt * limpTiltAngle * side * amp; // Roll
             targetEuler.x = injured * cycleInjuredDepth * limpPitchAngle * amp;                     // Pitch
         }
@@ -281,7 +286,7 @@ public class PlayerLimpCamera : MonoBehaviour
         float low = Mathf.Clamp(injuredLowPortion, 0f, 0.5f) * r;
 
         if (t < drop)
-            injured = EaseOutQuad(t / drop);                         // 푹
+            injured = EaseInOutSine(t / drop);                       // 푹 (부드러운 곡선)
         else if (t < drop + low)
             injured = 1f;                                            // 낮게 지나감
         else if (t < injuredSpan)

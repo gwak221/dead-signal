@@ -34,6 +34,15 @@ public class FirstPersonController : MonoBehaviour
     public bool ControlsEnabled => controlsEnabled;
     public bool IsThirdPerson => isThirdPerson;
     public bool SprintAllowed => sprintAllowed;
+    /// <summary>이번 프레임 실제로 달리는 중 (심박수 시스템 등이 읽음).</summary>
+    public bool IsSprinting { get; private set; }
+    /// <summary>카메라 상하 시선(도, 아래가 +). 잡힘 연출 등 외부 시선 제어용.</summary>
+    public float LookPitch => cameraRotationX;
+    public void SetLookPitch(float pitch)
+    {
+        cameraRotationX = Mathf.Clamp(pitch, -80f, 80f);
+        if (cameraPivot != null) cameraPivot.localRotation = Quaternion.Euler(cameraRotationX, 0f, 0f);
+    }
     public float SpeedMultiplier => speedMultiplier;
 
     void Awake()
@@ -54,7 +63,10 @@ public class FirstPersonController : MonoBehaviour
     void Update()
     {
         if (!controlsEnabled)
+        {
+            IsSprinting = false;
             return;
+        }
 
         Move();
         Look();
@@ -100,6 +112,7 @@ public class FirstPersonController : MonoBehaviour
 
         bool isMoving = input.sqrMagnitude > 0.01f;
         bool isRunning = sprintAllowed && Keyboard.current.leftShiftKey.isPressed && isMoving;
+        IsSprinting = isRunning;
         float currentSpeed = (isRunning ? runSpeed : moveSpeed) * speedMultiplier;
 
         if (sprintIndicator != null)
