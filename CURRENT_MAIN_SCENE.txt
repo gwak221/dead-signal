@@ -1,0 +1,5 @@
+Main development scene: Assets/Scenes/DeadSignal_Main.unity
+
+HospitalMap.unity is the frozen baseline scene. Do not modify unless explicitly requested.
+
+All future gameplay work should target DeadSignal_Main.unity.

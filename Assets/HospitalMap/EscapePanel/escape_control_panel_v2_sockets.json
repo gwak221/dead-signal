@@ -1,0 +1,54 @@
+{
+  "note": "panel-local, Blender Z-up / front -Y. Battery = props/01_escape_battery (original coords).",
+  "battery_socket": {
+    "position": [
+      -0.1,
+      -0.2,
+      1.0
+    ],
+    "rotation_matrix_rows": [
+      [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      [
+        0.0,
+        -1.0,
+        0.0
+      ]
+    ],
+    "insert_direction": [
+      0,
+      1,
+      0
+    ],
+    "insert_travel_m": 0.3
+  },
+  "handle_protrusion_m": 0.067,
+  "clamp": {
+    "hinge": [
+      -0.1,
+      -0.523,
+      1.175
+    ],
+    "axis": "X",
+    "locked_deg": 0,
+    "open_deg": -110.0
+  },
+  "lever": {
+    "pivot": [
+      0.299,
+      -0.56,
+      1.0
+    ],
+    "axis": "X",
+    "on_deg": 0,
+    "off_deg": -150.0
+  }
+}
