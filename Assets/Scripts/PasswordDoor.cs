@@ -29,9 +29,9 @@ public class PasswordDoor : MonoBehaviour, IInteractable
             return "";
 
         if (!isUnlocked)
-            return "E : Enter Password";
+            return "[E] ENTER PASSWORD";
 
-        return isOpen ? "E : Close Door" : "E : Open Door";
+        return isOpen ? "[E] CLOSE" : "[E] OPEN";
     }
 
     public void Interact(PlayerInteraction player)

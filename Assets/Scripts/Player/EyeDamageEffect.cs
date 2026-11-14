@@ -41,9 +41,9 @@ public class EyeDamageEffect : MonoBehaviour
     [Tooltip("Vignette 중심을 다친 쪽 반대로 얼마나 옮길지")]
     [Range(0f, 0.2f)] public float ppVignetteShift = 0.1f;
     [Tooltip("먼 곳 흐림 (Gaussian DoF). 이 거리(m)부터 흐려지기 시작")]
-    public float blurStartDistance = 6f;
-    public float blurEndDistance = 22f;
-    [Range(0.5f, 1.5f)] public float blurMaxRadius = 0.7f;
+    public float blurStartDistance = 2.5f;
+    public float blurEndDistance = 10f;
+    [Range(0.5f, 1.5f)] public float blurMaxRadius = 1.5f;
 
     [Header("Transition")]
     [Tooltip("켜고 끌 때 전환 속도 (1/초)")]
@@ -216,7 +216,7 @@ public class EyeDamageEffect : MonoBehaviour
         dof.gaussianStart.Override(blurStartDistance);
         dof.gaussianEnd.Override(blurEndDistance);
         dof.gaussianMaxRadius.Override(blurMaxRadius);
-        dof.highQualitySampling.Override(false);
+        dof.highQualitySampling.Override(true);
 
         volume.sharedProfile = profile;
     }

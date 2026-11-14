@@ -3,12 +3,10 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
-[RequireComponent(typeof(LineRenderer))]
 public class MonsterChase : MonoBehaviour
 {
     public Transform target;
     private NavMeshAgent agent;
-    private LineRenderer lineRenderer;
 
     [Header("공격 설정")]
     public float attackRange = 1.5f;      
@@ -21,22 +19,39 @@ public class MonsterChase : MonoBehaviour
 
     [Header("근접 감지 설정 (360도 전방향)")]
     [Tooltip("시야각에 상관없이(등 뒤나 옆) 이 반경 내에 플레이어가 들어오면 즉시 감지합니다.")]
-    public float closeDetectRadius = 2.8f;
-    private LineRenderer proximityLineRenderer;
+    public float closeDetectRadius = 3.6f; // 이전 2.8
     private float detectionMultiplier = 1f;
     public float CurrentCloseRadius => closeDetectRadius * detectionMultiplier;
 
-    [Header("심박수 연동 시야 범위 설정 (최대 1.1배)")]
-    public float baseViewRadius = 8f;        
+    [Header("심박수 연동 시야 범위 설정")]
+    [Tooltip("안정 BPM(배율 1.0)에서의 전방 시야 거리. 실제 거리 = 이 값 x HeartRateController.DetectionMultiplier. (이전 8)")]
+    public float baseViewRadius = 12f;
     public float maxViewMultiplier = 1.1f;   
     [HideInInspector] public float viewRadius = 8f;
     [Range(0, 360)]
     public float viewAngle = 90f;
+    [Tooltip("끄면(기본) 사방향 360도 감지. 켜면 근접 반경 밖에서는 viewAngle 부채꼴 안에서만 감지(구 방식).")]
+    public bool limitToFov = false;
 
     [Header("추적 유지 시간")]
     public float loseTargetTime = 5f;
     private float loseTimer = 0f;
-    private bool isChasing = false;
+    private bool _isChasing = false;
+    /// <summary>플레이어를 실제로 감지해 추격 중인지 (읽기 전용 외부 상태).</summary>
+    public bool IsChasing => _isChasing;
+    /// <summary>추격 시작/종료 이벤트 (UI·연출 시스템이 구독. MonsterChase는 구독자를 모른다).</summary>
+    public event System.Action<MonsterChase> OnChaseStarted;
+    public event System.Action<MonsterChase> OnChaseEnded;
+    private bool isChasing
+    {
+        get => _isChasing;
+        set
+        {
+            if (_isChasing == value) return;
+            _isChasing = value;
+            if (value) OnChaseStarted?.Invoke(this); else OnChaseEnded?.Invoke(this);
+        }
+    }
 
     [Header("추격 시 몬스터 색상 변경")]
     public Color chaseColor = new Color(1f, 0.15f, 0.15f, 1f);
@@ -58,38 +73,20 @@ public class MonsterChase : MonoBehaviour
     private float scanHoldTimer = 0f;
     private float stuckTimer = 0f;
 
+    // 일반 문(DoorPair)을 직접 열고 통과시키는 컴포넌트 (없으면 Start 에서 한 번만 추가)
+    private MonsterDoorOpener doorOpener;
+    private bool WaitingForDoor => doorOpener != null && doorOpener.IsWaitingForDoor;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        lineRenderer = GetComponent<LineRenderer>();
+        doorOpener = GetComponent<MonsterDoorOpener>();
+        if (doorOpener == null) doorOpener = gameObject.AddComponent<MonsterDoorOpener>();
+        RemoveRangeVisuals();
 
         agent.angularSpeed = 360f;
         agent.acceleration = 16f;
         agent.autoBraking = true;
-
-        lineRenderer.useWorldSpace = false;
-        lineRenderer.loop = true;
-
-        // 근접 360도 감지용 LineRenderer 자식 오브젝트 자동 생성/설정
-        Transform proxChild = transform.Find("ProximityRangeIndicator");
-        if (proxChild == null)
-        {
-            GameObject proxGo = new GameObject("ProximityRangeIndicator");
-            proxGo.transform.SetParent(transform, false);
-            proxChild = proxGo.transform;
-        }
-        proximityLineRenderer = proxChild.GetComponent<LineRenderer>();
-        if (proximityLineRenderer == null)
-        {
-            proximityLineRenderer = proxChild.gameObject.AddComponent<LineRenderer>();
-        }
-        proximityLineRenderer.material = lineRenderer.material;
-        proximityLineRenderer.startWidth = 0.035f;
-        proximityLineRenderer.endWidth = 0.035f;
-        proximityLineRenderer.startColor = new Color(1f, 0.65f, 0.15f, 0.7f); // 주황색 경고 원
-        proximityLineRenderer.endColor = new Color(1f, 0.65f, 0.15f, 0.7f);
-        proximityLineRenderer.useWorldSpace = false;
-        proximityLineRenderer.loop = true;
 
         if (target == null)
         {
@@ -101,7 +98,7 @@ public class MonsterChase : MonoBehaviour
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
         foreach (Renderer r in renderers)
         {
-            if (r is LineRenderer) continue;
+            if (r is LineRenderer) continue; // (구버전 씬 호환)
             foreach (Material mat in r.materials)
             {
                 monsterMaterials.Add(mat);
@@ -118,15 +115,13 @@ public class MonsterChase : MonoBehaviour
 
     void Update()
     {
-        DrawFieldOfView();
-        DrawProximityRange();
-
         // 잡힘 연출 중에는 몬스터 정지 (끝난 뒤 attackStopDuration 만큼 더 정지)
         if (PlayerCaughtSequence.IsRunning)
         {
             isChasing = false;
             loseTimer = 0f;
             attackStopTimer = attackStopDuration;
+            if (doorOpener != null) doorOpener.ResetDoorState();
             if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.isStopped = true;
@@ -184,7 +179,7 @@ public class MonsterChase : MonoBehaviour
         {
             isChasing = true;
             isScanningRoom = false;
-            agent.isStopped = false;
+            if (!WaitingForDoor) agent.isStopped = false;   // 문이 열리길 기다리는 중이면 정지 유지
             loseTimer = loseTargetTime;
         }
         else if (isChasing)
@@ -221,6 +216,7 @@ public class MonsterChase : MonoBehaviour
         loseTimer = 0f;
         stuckTimer = 0f;
         scanHoldTimer = 0f;
+        if (doorOpener != null) doorOpener.ResetDoorState();
         attackStopTimer = attackStopDuration; // 부활 직후 잠시 정지 후 순찰 시작
         visitedHistory.Clear();
         if (agent != null && agent.enabled)
@@ -245,6 +241,7 @@ public class MonsterChase : MonoBehaviour
         isChasing = false;
         isScanningRoom = false;
         loseTimer = 0f;
+        if (doorOpener != null) doorOpener.ResetDoorState();
 
         // 잡힘 연출/피해 처리는 PlayerCaughtSequence가 전담 (한 번만 실행)
         PlayerCaughtSequence.TriggerCaught(transform);
@@ -296,6 +293,13 @@ public class MonsterChase : MonoBehaviour
             return;
         }
 
+        // 문이 열리길 기다리는 동안은 '막힘'으로 보지 않는다 (경로를 강제로 바꾸지 않음)
+        if (WaitingForDoor)
+        {
+            stuckTimer = 0f;
+            return;
+        }
+
         if (!agent.pathPending && agent.velocity.sqrMagnitude < 0.05f)
         {
             stuckTimer += Time.deltaTime;
@@ -337,10 +341,15 @@ public class MonsterChase : MonoBehaviour
     {
         Vector3 eyePos = transform.position + Vector3.up * 0.8f;
 
-        if (Physics.Raycast(eyePos, transform.forward, 2.5f))
+        if (Physics.Raycast(eyePos, transform.forward, out RaycastHit forwardHit, 2.5f))
         {
-            PickSmartPatrolPoint();
-            return;
+            // 앞이 통과 가능한 일반 문이면 벽으로 보지 않는다 (문을 열고 지나가야 함)
+            DoorPair hitDoor = forwardHit.collider.GetComponentInParent<DoorPair>();
+            if (hitDoor == null || !hitDoor.isPassableDoor)
+            {
+                PickSmartPatrolPoint();
+                return;
+            }
         }
 
         if (NavMesh.FindClosestEdge(transform.position, out NavMeshHit edgeHit, NavMesh.AllAreas))
@@ -475,26 +484,18 @@ public class MonsterChase : MonoBehaviour
         Vector3 rayDir = (targetCenter - rayOrigin).normalized;
         float dist = Vector3.Distance(rayOrigin, targetCenter);
 
-        // 1. 근접 360도 전방향 감지 (등 뒤나 옆으로 접근 시)
-        if (distToPlayer <= CurrentCloseRadius)
+        // 360도 감지: 방향과 무관하게 '감지 거리' 안이면 후보 → Line of Sight(벽/문/장애물) 통과 시 감지.
+        // 감지 거리 = max(심박수 연동 시야 거리, 근접 반경). (둘 다 HeartRateController.DetectionMultiplier 반영)
+        float range = Mathf.Max(viewRadius, CurrentCloseRadius);
+        if (distToPlayer <= range)
         {
+            if (limitToFov && distToPlayer > CurrentCloseRadius)
+            {
+                float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
+                if (angle > viewAngle / 2f) return false;
+            }
             if (HasClearRaycast(rayOrigin, rayDir, dist))
-            {
                 return true;
-            }
-        }
-
-        // 2. 전방 부채꼴 시야 감지 (기존 전방 시야)
-        if (distToPlayer <= viewRadius)
-        {
-            float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
-            if (angle <= viewAngle / 2f)
-            {
-                if (HasClearRaycast(rayOrigin, rayDir, dist))
-                {
-                    return true;
-                }
-            }
         }
         return false;
     }
@@ -539,75 +540,33 @@ public class MonsterChase : MonoBehaviour
         }
     }
 
-    private void DrawFieldOfView()
+    /// <summary>
+    /// 감지 범위 표시(LineRenderer 등)는 게임 화면/빌드에 절대 나오면 안 된다.
+    /// 구버전 씬에 남아 있는 LineRenderer / ProximityRangeIndicator 를 런타임에 제거한다.
+    /// 개발용 시각화는 Scene View 전용 OnDrawGizmosSelected 로만 제공한다.
+    /// </summary>
+    private void RemoveRangeVisuals()
     {
-        int segments = 30;
-        lineRenderer.positionCount = segments + 2;
-
-        Vector3[] points = new Vector3[segments + 2];
-        points[0] = Vector3.zero;
-
-        float startAngle = -viewAngle / 2f;
-        float angleStep = viewAngle / segments;
-
-        for (int i = 0; i <= segments; i++)
-        {
-            float currentAngle = startAngle + (angleStep * i);
-            Vector3 localDir = Quaternion.Euler(0, currentAngle, 0) * Vector3.forward;
-            Vector3 worldDir = transform.TransformDirection(localDir);
-
-            float hitDist = viewRadius;
-            Vector3 rayOrigin = transform.position + Vector3.up * 0.5f;
-
-            if (Physics.Raycast(rayOrigin, worldDir, out RaycastHit hit, viewRadius))
-            {
-                if (hit.transform != transform && !hit.transform.IsChildOf(transform) && !hit.collider.isTrigger)
-                {
-                    if (target == null || (hit.transform != target && !hit.transform.IsChildOf(target)))
-                    {
-                        hitDist = hit.distance;
-                    }
-                }
-            }
-
-            points[i + 1] = localDir * hitDist + new Vector3(0, 0.05f, 0);
-        }
-
-        lineRenderer.SetPositions(points);
+        foreach (var lr in GetComponentsInChildren<LineRenderer>(true))
+            Destroy(lr);
+        var prox = transform.Find("ProximityRangeIndicator");
+        if (prox != null) Destroy(prox.gameObject);
     }
 
-    private void DrawProximityRange()
+#if UNITY_EDITOR
+    // Scene View 에서 몬스터를 선택했을 때만 보이는 개발용 Gizmo (Game View / 빌드에는 그려지지 않는다).
+    private void OnDrawGizmosSelected()
     {
-        if (proximityLineRenderer == null) return;
-
-        int segments = 36;
-        proximityLineRenderer.positionCount = segments;
-        Vector3[] points = new Vector3[segments];
-
-        float angleStep = 360f / segments;
-        for (int i = 0; i < segments; i++)
-        {
-            float currentAngle = angleStep * i;
-            Vector3 localDir = Quaternion.Euler(0f, currentAngle, 0f) * Vector3.forward;
-            Vector3 worldDir = transform.TransformDirection(localDir);
-
-            float hitDist = CurrentCloseRadius;
-            Vector3 rayOrigin = transform.position + Vector3.up * 0.5f;
-
-            if (Physics.Raycast(rayOrigin, worldDir, out RaycastHit hit, CurrentCloseRadius))
-            {
-                if (hit.transform != transform && !hit.transform.IsChildOf(transform) && !hit.collider.isTrigger)
-                {
-                    if (target == null || (hit.transform != target && !hit.transform.IsChildOf(target)))
-                    {
-                        hitDist = hit.distance;
-                    }
-                }
-            }
-
-            points[i] = localDir * hitDist + new Vector3(0f, 0.05f, 0f);
-        }
-
-        proximityLineRenderer.SetPositions(points);
+        float mul = Application.isPlaying ? detectionMultiplier : 1f;
+        Gizmos.color = new Color(1f, 0.65f, 0.15f, 0.6f);
+        UnityEditor.Handles.color = Gizmos.color;
+        UnityEditor.Handles.DrawWireDisc(transform.position + Vector3.up * 0.05f, Vector3.up, closeDetectRadius * mul);
+        float r = baseViewRadius * mul;
+        UnityEditor.Handles.color = new Color(1f, 1f, 0.3f, 0.6f);
+        Vector3 l = Quaternion.Euler(0, -viewAngle / 2f, 0) * transform.forward;
+        UnityEditor.Handles.DrawWireArc(transform.position + Vector3.up * 0.05f, Vector3.up, l, viewAngle, r);
+        UnityEditor.Handles.DrawLine(transform.position, transform.position + l * r);
+        UnityEditor.Handles.DrawLine(transform.position, transform.position + Quaternion.Euler(0, viewAngle / 2f, 0) * transform.forward * r);
     }
+#endif
 }

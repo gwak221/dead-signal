@@ -136,7 +136,7 @@ public class PlayerHide : MonoBehaviour
 
     void Update()
     {
-        if (!IsHiding) return;
+        if (!IsHiding || Time.timeScale <= 0f) return; // 일시정지 중에는 시선/E 입력 무시
 
         var kb = Keyboard.current;
         if (kb != null && kb.eKey.wasPressedThisFrame && Time.frameCount > enterFrame)
@@ -185,7 +185,7 @@ public class PlayerHide : MonoBehaviour
         var go = new GameObject("ExitHint", typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(canvasGo.transform, false);
         var t = go.GetComponent<TextMeshProUGUI>();
-        t.text = "E : Exit";
+        t.text = "[E] EXIT";
         t.fontSize = 30;
         t.alignment = TextAlignmentOptions.Center;
         t.color = new Color(1f, 1f, 1f, 0.75f);

@@ -42,6 +42,8 @@ public class GameProgress : MonoBehaviour
     public static int RequiredBeacons => Instance.registeredBeacons > 0 ? Instance.registeredBeacons : Instance.defaultRequiredBeacons;
     public static bool EscapeUnlocked => ActiveBeacons >= RequiredBeacons;
     public static bool HasEscaped => Instance.escaped;
+    /// <summary>GAME OVER / ESCAPED 화면 표시 중인지 (메뉴가 ESC를 무시하는 데 사용).</summary>
+    public static bool IsEnded => instance != null && (instance.escaped || instance.gameOver);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()

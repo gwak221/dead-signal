@@ -39,7 +39,7 @@ public class PlayerCaughtSequence : MonoBehaviour
     public float getUpDuration = 1.0f;
 
     [Header("Debug")]
-    [Tooltip("F9 = 강제로 잡힘 (에디터/개발 빌드 전용)")]
+    [Tooltip("F10 = 강제로 잡힘 (에디터/개발 빌드 전용). F9 는 탈출구 컷씬 테스트(ExitCutsceneController)에 사용.")]
     public bool debugKey = true;
 
     FirstPersonController controller;
@@ -133,7 +133,7 @@ public class PlayerCaughtSequence : MonoBehaviour
     void Update()
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        if (debugKey && Keyboard.current != null && Keyboard.current.f9Key.wasPressedThisFrame)
+        if (debugKey && Keyboard.current != null && Keyboard.current.f10Key.wasPressedThisFrame)
             TriggerCaught();
 #endif
     }

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// 팀원 QTE(원형 스킬체크)를 New Input System으로 이식한 버전. 비콘 배터리 삽입 전용.
@@ -29,6 +30,10 @@ public class SkillCheckManager : MonoBehaviour
     [Header("Calibration (위치 맞춤 보정)")]
     public float angleOffset = 0f;
     public float visualImageOffset = 69f; // 그림 위치 보정: 스크린샷으로 판정 구역(45°)과 흰 호가 겹치게 맞춤
+
+    [Header("Fail Penalty")]
+    [Tooltip("QTE 실패 시 HeartRateController.AddHeartRate 로 즉시 올릴 BPM (Max BPM 은 넘지 않음).")]
+    public float failHeartRateBoost = 38f;
 
     [Header("Events")]
     public UnityEvent OnSuccess;
@@ -90,6 +95,7 @@ public class SkillCheckManager : MonoBehaviour
         if (controller != null) controller.SetControlsEnabled(false);       // WASD/Sprint/시선/손전등
         if (interaction != null) interaction.SetInteractionEnabled(false);  // E 상호작용/인벤토리 선택·Drop
 
+        EnsurePrompt();
         if (skillCheckCanvas != null) skillCheckCanvas.SetActive(true);
 
         zoneStartAngle = UnityEngine.Random.Range(30f, 300f);
@@ -98,6 +104,26 @@ public class SkillCheckManager : MonoBehaviour
         currentAngle = 0f;
         if (needle != null) needle.localRotation = Quaternion.identity;
         return true;
+    }
+
+    /// <summary>QTE UI 아래에 'PRESS SPACE' 안내를 한 번만 만든다 (판정 로직과 무관).</summary>
+    void EnsurePrompt()
+    {
+        if (skillCheckCanvas == null || skillCheckCanvas.transform.Find("PressSpacePrompt") != null) return;
+        var go = new GameObject("PressSpacePrompt", typeof(RectTransform), typeof(TextMeshProUGUI));
+        go.transform.SetParent(skillCheckCanvas.transform, false);
+        var t = go.GetComponent<TextMeshProUGUI>();
+        t.text = "PRESS SPACE";
+        t.fontSize = 44;
+        t.fontStyle = FontStyles.Bold;
+        t.alignment = TextAlignmentOptions.Center;
+        t.color = new Color(1f, 1f, 1f, 0.95f);
+        t.raycastTarget = false;
+        var rt = t.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0f, -310f);
+        rt.sizeDelta = new Vector2(800f, 70f);
     }
 
     void Update()
@@ -152,6 +178,10 @@ public class SkillCheckManager : MonoBehaviour
         if (!raise) { f?.Invoke(); return; } // 취소(잡힘 등): 이벤트 없이 호출자 상태만 해제
 
         if (success) { OnSuccess?.Invoke(); s?.Invoke(); }
-        else { OnFail?.Invoke(); f?.Invoke(); }
+        else
+        {
+            if (HeartRateController.Instance != null) HeartRateController.Instance.AddHeartRate(failHeartRateBoost); // 당황
+            OnFail?.Invoke(); f?.Invoke();
+        }
     }
 }

@@ -9,7 +9,7 @@ using UnityEngine.Events;
 public class EscapeDoorController : MonoBehaviour
 {
     [Header("표시등 (1 → 4 순서)")]
-    public Renderer[] lampLenses = new Renderer[4];
+    public Renderer[] lampLenses = new Renderer[4];   // 현재 모델의 표시등 4개 (개수는 배열 길이 기준 — 아래 코드는 4를 가정하지 않는다)
     public Light[] lampLights = new Light[4];
     public Color lockedColor = new Color(1f, 0.06f, 0.04f);   // 빨강 = 잠김
     public Color activeColor = new Color(0.1f, 1f, 0.25f);    // 초록 = 활성
@@ -21,13 +21,17 @@ public class EscapeDoorController : MonoBehaviour
     public Transform doorLeft;
     public Transform doorRight;
     public float slideDistance = 1.12f;     // 한쪽 문짝이 옆으로 밀리는 거리 (m)
-    public float openDelay = 1.0f;          // 4번째 표시등이 켜진 뒤 문이 움직이기까지
+    public float openDelay = 1.0f;          // 마지막 비콘이 활성화된 뒤 문이 움직이기까지
     public float openDuration = 3.0f;
     public AnimationCurve openCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("순서대로 켜기 데모")]
     public bool playSequenceOnStart = false;
     public float sequenceInterval = 1.5f;
+
+    [Header("컷씬 연동")]
+    [Tooltip("true 면 마지막 표시등이 켜져도 문이 바로 열리지 않고, ExitCutsceneController 가 OpenNow() 를 호출할 때 열린다.")]
+    public bool deferOpen = false;
 
     [Header("충돌체 자동 추가")]
     public bool addColliders = true;
@@ -36,6 +40,10 @@ public class EscapeDoorController : MonoBehaviour
     public UnityEvent<int> onLampActivated;   // 켜진 표시등 번호(1~4)
     public UnityEvent onAllLampsActive;
     public UnityEvent onDoorOpened;
+
+    /// <summary>문이 열리는 데 필요한 활성 비콘 수 = GameProgress 가 쓰는 값(씬의 Beacon 등록 수). 표시등 개수와는 무관.</summary>
+    public int RequiredCount => Mathf.Max(1, GameProgress.RequiredBeacons);
+    public int LampCount => lampLenses != null ? lampLenses.Length : 0;
 
     public int ActiveCount { get; private set; }
     public bool IsOpen { get; private set; }
@@ -47,7 +55,7 @@ public class EscapeDoorController : MonoBehaviour
 
     void Awake()
     {
-        if (doorLeft == null || doorRight == null || lampLenses[0] == null) AutoFind();
+        if (doorLeft == null || doorRight == null || (lampLenses.Length > 0 && lampLenses[0] == null) || lampLenses.Length == 0) AutoFind();
         if (doorLeft != null && doorRight != null)
         {
             leftClosed = doorLeft.localPosition;
@@ -58,7 +66,7 @@ public class EscapeDoorController : MonoBehaviour
             rightOpen = rightClosed + dir * slideDistance;
         }
         if (addColliders) AddColliders();
-        for (int i = 0; i < 4; i++) SetLamp(i, false);
+        for (int i = 0; i < LampCount; i++) SetLamp(i, false);
     }
 
     void Start()
@@ -66,20 +74,26 @@ public class EscapeDoorController : MonoBehaviour
         if (playSequenceOnStart) StartCoroutine(PlaySequence());
     }
 
-    // 다음 번호 표시등을 켬. 4개가 다 켜지면 문이 열림.
+    // 다음 번호 표시등을 켬. 활성 수가 RequiredCount(GameProgress 기준)에 도달하면 문이 열림.
     public void ActivateNext()
     {
-        if (ActiveCount >= 4) return;
-        SetLamp(ActiveCount, true);
+        if (ActiveCount >= RequiredCount) return;
+        if (ActiveCount < LampCount) SetLamp(ActiveCount, true);   // 표시등보다 비콘이 많아도(예: 5개) 안전
         ActiveCount++;
         onLampActivated?.Invoke(ActiveCount);
-        if (ActiveCount == 4 && !opening && !IsOpen) StartCoroutine(OpenRoutine());
+        if (ActiveCount >= RequiredCount && !deferOpen && !opening && !IsOpen) StartCoroutine(OpenRoutine());
+    }
+
+    // 컷씬 등 외부에서 문 개방 시점을 제어할 때 호출 (기존 OpenRoutine 재사용). 이미 열리는 중/열림이면 무시.
+    public void OpenNow()
+    {
+        if (!opening && !IsOpen) StartCoroutine(OpenRoutine());
     }
 
     // 순서대로 하나씩 켜고 문 열기 (데모·컷신용)
     public IEnumerator PlaySequence()
     {
-        while (ActiveCount < 4)
+        while (ActiveCount < RequiredCount)
         {
             yield return new WaitForSeconds(sequenceInterval);
             ActivateNext();
@@ -93,7 +107,7 @@ public class EscapeDoorController : MonoBehaviour
         opening = false;
         IsOpen = false;
         ActiveCount = 0;
-        for (int i = 0; i < 4; i++) SetLamp(i, false);
+        for (int i = 0; i < LampCount; i++) SetLamp(i, false);
         if (doorLeft != null) doorLeft.localPosition = leftClosed;
         if (doorRight != null) doorRight.localPosition = rightClosed;
     }
@@ -141,11 +155,18 @@ public class EscapeDoorController : MonoBehaviour
 
     void AutoFind()
     {
-        if (lampLenses == null || lampLenses.Length != 4) lampLenses = new Renderer[4];
-        if (lampLights == null || lampLights.Length != 4) lampLights = new Light[4];
+        // Lamp_N_Lens / Lamp_N_Light 이름에서 가장 큰 N 을 찾아 표시등 개수를 정한다 (현재 모델은 4개).
+        int count = 0;
         foreach (var t in GetComponentsInChildren<Transform>(true))
         {
-            for (int i = 0; i < 4; i++)
+            var m = System.Text.RegularExpressions.Regex.Match(t.name, @"^Lamp_(\d+)_(Lens|Light)$");
+            if (m.Success) count = Mathf.Max(count, int.Parse(m.Groups[1].Value));
+        }
+        if (lampLenses == null || lampLenses.Length != count) lampLenses = new Renderer[count];
+        if (lampLights == null || lampLights.Length != count) lampLights = new Light[count];
+        foreach (var t in GetComponentsInChildren<Transform>(true))
+        {
+            for (int i = 0; i < count; i++)
             {
                 if (t.name == $"Lamp_{i + 1}_Lens") lampLenses[i] = t.GetComponent<Renderer>();
                 if (t.name == $"Lamp_{i + 1}_Light") lampLights[i] = t.GetComponent<Light>();

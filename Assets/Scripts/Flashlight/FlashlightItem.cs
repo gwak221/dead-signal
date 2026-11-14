@@ -52,7 +52,7 @@ public class FlashlightItem : MonoBehaviour, IInteractable
 
     // ───────────────────────── IInteractable (E로 줍기) ─────────────────────────
 
-    public string GetInteractionText() => "E : Pick Up Flashlight";
+    public string GetInteractionText() => "[E] PICK UP FLASHLIGHT";
 
     public void Interact(PlayerInteraction player)
     {
@@ -167,6 +167,10 @@ public class FlashlightItem : MonoBehaviour, IInteractable
         var r = go.GetComponent<Renderer>();
         if (r != null)
         {
+            // Build 에서는 URP 에셋의 defaultMaterial 이 비어 있어 CreatePrimitive 기본 머티리얼이 Error Shader(보라색)가 된다.
+            // 프로젝트 소유 URP Lit 머티리얼(Resources)로 명시 교체한다. (Lens 는 Emission 변형이 포함된 별도 머티리얼)
+            var baseMat = Resources.Load<Material>(name == "Lens" ? "FlashlightLensLit" : "FlashlightBodyLit");
+            if (baseMat != null) r.sharedMaterial = new Material(baseMat);
             r.material.color = color;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }

@@ -34,9 +34,18 @@ public class HeartRateController : MonoBehaviour
 
     [Header("Monster Detection")]
     [Tooltip("maxBpm 일 때 탐지거리 배율 (restingBpm 일 때 1.0).")]
-    [SerializeField] float maxDetectionMultiplier = 1.6f;
+    [SerializeField] float maxDetectionMultiplier = 2.4f; // 이전 1.6. BPM 70→1.0x, 115→~1.7x, 160→2.4x (선형)
     [Tooltip("x: 0(안정)~1(최대 BPM), y: 0~1 보간. 기본 선형.")]
     [SerializeField] AnimationCurve detectionCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+
+    [Header("Heartbeat UI (시각 박동만 완화. BPM 숫자/탐지 계산은 실제 값 그대로)")]
+    [Tooltip("안정 BPM 일 때 아이콘이 한 번 뛰는 간격(초).")]
+    [SerializeField] float uiBeatIntervalResting = 1.0f;
+    [Tooltip("최대 BPM 일 때 아이콘이 한 번 뛰는 간격(초).")]
+    [SerializeField] float uiBeatIntervalMax = 0.5f;
+    [Tooltip("박동 순간 아이콘이 커지는 비율 (0.10 = 1.0 → 1.10).")]
+    [SerializeField] float uiBeatScale = 0.10f;
+    float beatPhase;
 
     [SerializeField] float currentBpm = 70f;
     FirstPersonController player;
@@ -114,6 +123,9 @@ public class HeartRateController : MonoBehaviour
     /// <summary>부활 직후 등: 회복 도중 상태로 설정.</summary>
     public void SetBpm(float bpm) => currentBpm = Mathf.Clamp(bpm, minBpm, maxBpm);
 
+    /// <summary>외부(QTE 실패 등)에서 심박수를 즉시 올린다. maxBpm 을 넘지 않는다. 회복은 기존 recoveryRate 로 자연스럽게.</summary>
+    public void AddHeartRate(float amount) => currentBpm = Mathf.Clamp(currentBpm + amount, minBpm, maxBpm);
+
     void UpdateUI()
     {
         if (heartRateText == null) return;
@@ -125,8 +137,15 @@ public class HeartRateController : MonoBehaviour
     void Pulse()
     {
         if (heartIconTrans == null) return;
-        float speed = currentBpm * 0.12f;
-        float s = 1f + Mathf.Sin(Time.time * speed) * 0.18f * (currentBpm / 100f);
+        // 실제 BPM 을 1:1 로 따라가지 않고, 안정~최대 BPM 을 [Resting, Max] 간격으로 매핑 (쿵 ... 쿵 ... 쿵)
+        float t = Mathf.Clamp01(Mathf.InverseLerp(restingBpm, maxBpm, currentBpm));
+        float interval = Mathf.Lerp(uiBeatIntervalResting, uiBeatIntervalMax, t);
+        beatPhase += Time.deltaTime / Mathf.Max(0.1f, interval);
+        if (beatPhase >= 1f) beatPhase -= Mathf.Floor(beatPhase);
+
+        // 한 번 부드럽게 부풀었다가 가라앉는 단일 박동 (전체 주기의 앞 22%)
+        float k = beatPhase < 0.22f ? Mathf.Sin(beatPhase / 0.22f * Mathf.PI) : 0f;
+        float s = 1f + uiBeatScale * k;
         heartIconTrans.localScale = new Vector3(s, s, 1f);
     }
 }

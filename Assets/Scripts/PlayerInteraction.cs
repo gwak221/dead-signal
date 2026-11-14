@@ -44,6 +44,13 @@ public class PlayerInteraction : MonoBehaviour
 
         if (keyHoldPoint != null)
             inventory.SetHoldPoint(keyHoldPoint);
+
+        // 어두운/밝은 배경 위에서도 프롬프트가 읽히도록 얇은 검은 외곽선
+        if (interactionText != null)
+        {
+            interactionText.outlineWidth = 0.25f;
+            interactionText.outlineColor = new Color32(0, 0, 0, 255);
+        }
     }
 
     void Update()
@@ -129,12 +136,12 @@ public class PlayerInteraction : MonoBehaviour
             if (battery != null)
             {
                 ResetHold();
-                ShowMessage("E : Pick Up Battery");
+                ShowMessage("[E] PICK UP BATTERY");
 
                 if (kb != null && kb.eKey.wasPressedThisFrame)
                 {
                     if (!battery.Collect(this))
-                        Notify("Inventory Full");
+                        Notify("INVENTORY FULL");
                 }
                 return;
             }
@@ -146,7 +153,7 @@ public class PlayerInteraction : MonoBehaviour
             {
                 if (device.IsActivated)
                 {
-                    ShowMessage("Complete : " + device.DisplayName);
+                    ShowMessage("COMPLETE: " + device.DisplayName);
                     return;
                 }
 
@@ -154,14 +161,14 @@ public class PlayerInteraction : MonoBehaviour
                 {
                     if (inventory != null && inventory.IsSelected(InventoryItemType.Battery))
                     {
-                        ShowMessage("E : Insert Battery");
+                        ShowMessage("[E] INSERT BATTERY");
 
                         if (kb != null && kb.eKey.wasPressedThisFrame && device.TryInsertBattery())
                             inventory.TryConsumeSelected(InventoryItemType.Battery);
                     }
                     else
                     {
-                        ShowMessage("Equip Battery (1-3)");
+                        ShowMessage("EQUIP BATTERY  [1/2/3]");
                     }
                     return;
                 }
@@ -176,7 +183,7 @@ public class PlayerInteraction : MonoBehaviour
                     ResetHold();
                 }
 
-                ShowMessage("Hold E : " + device.DisplayName + " " + device.HoldProgressPercent.ToString("0") + "%");
+                ShowMessage("[HOLD E] " + device.DisplayName + " " + device.HoldProgressPercent.ToString("0") + "%");
                 return;
             }
 

@@ -26,7 +26,7 @@ public class SafeDoor : MonoBehaviour, IInteractable
         if (isMoving)
             return "";
 
-        return isOpen ? "E : Close Safe" : "E : Open Safe";
+        return isOpen ? "[E] CLOSE" : "[E] OPEN";
     }
 
     public void Interact(PlayerInteraction player)

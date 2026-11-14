@@ -28,11 +28,11 @@ public class Beacon : MonoBehaviour, IInteractable
 
     public string GetInteractionText()
     {
-        if (IsActivated) return "Beacon Online";
+        if (IsActivated) return "BEACON ONLINE";
         if (inv == null) inv = FindFirstObjectByType<PlayerInventory>();
         return inv != null && inv.HasItem(InventoryItemType.Battery)
-            ? "E : Insert Battery"
-            : "Battery Required";
+            ? "[E] INSERT BATTERY"
+            : "BATTERY REQUIRED";
     }
 
     public void Interact(PlayerInteraction player)
@@ -42,7 +42,7 @@ public class Beacon : MonoBehaviour, IInteractable
         // 배터리는 아직 소비하지 않는다 (보유 여부만 확인).
         if (!player.Inventory.HasItem(InventoryItemType.Battery))
         {
-            player.Notify("Battery Required");
+            player.Notify("BATTERY REQUIRED");
             return;
         }
 
@@ -73,7 +73,7 @@ public class Beacon : MonoBehaviour, IInteractable
     {
         if (!player.Inventory.TryTakeItem(InventoryItemType.Battery, out GameObject battery))
         {
-            player.Notify("Battery Required");
+            player.Notify("BATTERY REQUIRED");
             return;
         }
 
@@ -104,6 +104,24 @@ public class Beacon : MonoBehaviour, IInteractable
         battery.transform.localRotation = Quaternion.identity;
         battery.SetActive(true);
     }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    /// <summary>
+    /// [테스트 전용 — Editor / Development Build 에서만 컴파일] F9 디버그 완료.
+    /// 배터리/QTE 없이, ActivateWithBattery 와 같은 진행 상태 갱신(IsActivated, 상태등, GameProgress, EscapeWall 표시등)만 수행한다.
+    /// </summary>
+    public bool DebugComplete()
+    {
+        if (IsActivated) return false;
+        IsActivated = true;
+        qteRunning = false;
+        ApplyVisual();
+        GameProgress.ReportBeaconActivated();
+        if (escapeWall == null) escapeWall = FindFirstObjectByType<EscapeDoorController>();
+        if (escapeWall != null) escapeWall.ActivateNext();
+        return true;
+    }
+#endif
 
     void ApplyVisual()
     {

@@ -4,7 +4,7 @@ public class KeyPickup : MonoBehaviour, IInteractable
 {
     public string GetInteractionText()
     {
-        return "E : Pick Up Key";
+        return "[E] PICK UP KEY";
     }
 
     public void Interact(PlayerInteraction player)

@@ -46,11 +46,23 @@ public class FlashlightController : MonoBehaviour
     [Tooltip("몬스터 스턴 시간(초)")]
     public float stunDuration = 2.5f;
     [Tooltip("스턴 성공 후 손전등 재사용 대기시간(초). 손전등 아이템에 저장되고 슬롯에 표시됨.")]
-    public float restunCooldown = 3f;
+    public float restunCooldown = 8f; // 알파 피드백으로 3 → 8
     [Tooltip("판정 영역을 벗어나면 누적 시간을 즉시 0으로.")]
     public bool resetExposureInstantly = false;
     [Tooltip("즉시 초기화가 아닐 때 초당 감소량(초). 4 = 0.6초 누적이 0.15초 만에 사라짐.")]
     public float exposureDecayRate = 4f;
+
+    [Header("Stun Charges (손전등 조명은 무제한, 몬스터 스턴만 횟수 제한)")]
+    [Tooltip("한 판에서 손전등으로 몬스터를 스턴시킬 수 있는 최대 횟수. 스턴이 실제로 성공했을 때만 1 소모.")]
+    public int maxStunCharges = 3;
+
+    [Header("Reload (R키: 0/3 방전 + AA 배터리 보유 시에만)")]
+    [Tooltip("손전등이 아래로 내려가는 시간(초).")] public float reloadLowerTime = 0.35f;
+    [Tooltip("아래에서 배터리를 갈아 끼우는 정지 시간(초).")] public float reloadHoldTime = 0.45f;
+    [Tooltip("원래 위치로 돌아오는 시간(초).")] public float reloadRaiseTime = 0.4f;
+    [Tooltip("Reload 중 손전등 모델이 내려가는 양 (Held 기준 로컬, m).")] public Vector3 reloadLowerOffset = new Vector3(-0.02f, -0.17f, 0.03f);
+    [Tooltip("Reload 중 손전등 모델의 추가 기울기(도).")] public Vector3 reloadTiltEuler = new Vector3(24f, 0f, -12f);
+    public bool showReloadBatteryModel = true;
 
     [Header("Line of Sight")]
     [Tooltip("시야 차단 검사에 쓰는 레이어. 기본 Everything.")]
@@ -59,9 +71,42 @@ public class FlashlightController : MonoBehaviour
     [Header("Beam Visual (실제 Spot Light 조명)")]
     public bool createBeamLight = true;
     public Light beamLight;
-    public float beamIntensity = 40f;
+    public float beamIntensity = 29f; // 가까운 벽 화이트아웃 완화: 40 → 29 (약 72%)
     public float beamRange = 22f;
     [Range(10f, 90f)] public float beamSpotAngle = 55f;
+
+    [Header("Near-Surface Auto Dim (SphereCast → 거리 SmoothDamp → 연속 곡선)")]
+    [Tooltip("전방 감지 SphereCast 반지름(m). 점이 아니라 면적으로 감지해 문틀/모서리에서 값이 튀지 않게 한다.")]
+    public float nearDimSphereRadius = 0.3f;
+    [Tooltip("감지 최대 거리(m). 아무것도 없으면(No Hit) 이 값을 거리로 취급 → 항상 거리값이 존재.")]
+    public float maxDetectionDistance = 8f;
+    [Tooltip("x = 필터링된 전방 거리(m), y = intensity 배율(×beamIntensity). 기본(29 기준): 8m 29 / 6m 25 / 5m 21 / 4m 17 / 3m 12 / 2m 7 / 1m 2.5 / 0.5m 1.")]
+    public AnimationCurve nearDimCurve = DefaultNearDimCurve();
+    [Tooltip("가까워져 어두워질 때 거리 SmoothDamp 시간(초).")]
+    public float dimSmoothTime = 0.3f;
+    [Tooltip("멀어져 다시 밝아질 때 거리 SmoothDamp 시간(초). 더 느리게.")]
+    public float brightenSmoothTime = 0.6f;
+    [Tooltip("빛 원점(Near-wall correction)의 카메라 기준 위치 보간 속도(1/초).")]
+    public float beamOriginSmoothing = 14f;
+
+    static AnimationCurve DefaultNearDimCurve()
+    {
+        float[] d = { 0.5f, 1f, 2f, 3f, 4f, 5f, 6f, 8f };
+        float[] i = { 1f, 2.5f, 7f, 12f, 17f, 21f, 25f, 29f };
+        var keys = new Keyframe[d.Length];
+        for (int k = 0; k < d.Length; k++)
+        {
+            float slope = 0f;
+            if (k > 0 && k < d.Length - 1)
+            {
+                float s0 = (i[k] - i[k - 1]) / (d[k] - d[k - 1]);
+                float s1 = (i[k + 1] - i[k]) / (d[k + 1] - d[k]);
+                slope = 0.5f * (s0 + s1) / 29f;
+            }
+            keys[k] = new Keyframe(d[k], i[k] / 29f, slope, slope);
+        }
+        return new AnimationCurve(keys);
+    }
 
     [Header("Debug")]
     public bool drawDebugRays;
@@ -76,6 +121,35 @@ public class FlashlightController : MonoBehaviour
     public float Exposure01 => requiredExposure > 0f ? Mathf.Clamp01(exposure / requiredExposure) : 0f;
     public MonsterStun CurrentTarget => currentTarget;
     public FlashlightItem EquippedFlashlight => equipped;
+
+    /// <summary>스턴 횟수를 모두 써서 손전등이 방전된 상태인지 (Light 점등 불가).</summary>
+    public bool IsBatteryEmpty => stunCharges <= 0;
+    /// <summary>근거리 자동 감광 배율 (1 = 감광 없음). 디버그/테스트용 읽기 전용.</summary>
+    public float NearDimFactor => nearDim;
+    /// <summary>SmoothDamp 로 필터링된 전방 거리 (디버그/테스트용).</summary>
+    public float FilteredDistance => filteredDistance;
+
+    int stunCharges;
+
+    bool reloading;
+    float reloadElapsed;
+    GameObject reloadBatteryModel;
+    FlashlightBatteryStock batteryStock;
+    /// <summary>배터리 교체 연출 중 (손전등 사용/스턴 불가).</summary>
+    public bool IsReloading => reloading;
+    public float ReloadTotalTime => reloadLowerTime + reloadHoldTime + reloadRaiseTime;
+    /// <summary>남은 스턴 횟수 (0 이면 빛은 켜지지만 더 이상 스턴되지 않음).</summary>
+    public int StunCharges => stunCharges;
+    public int MaxStunCharges => maxStunCharges;
+    /// <summary>(남은 횟수, 최대 횟수) 변경 시.</summary>
+    public event Action<int, int> OnStunChargesChanged;
+
+    /// <summary>스턴 횟수를 최대로 되돌린다. 씬이 다시 로드되면(Retry / Quit to Title) 새 컴포넌트가 만들어져 자동으로 초기화된다.</summary>
+    public void ResetStunCharges()
+    {
+        stunCharges = Mathf.Max(0, maxStunCharges);
+        OnStunChargesChanged?.Invoke(stunCharges, maxStunCharges);
+    }
 
     /// <summary>현재 적용 중인 화면 판정 영역 (눈 파손 시 축소).</summary>
     public float EffectiveScreenArea
@@ -122,8 +196,11 @@ public class FlashlightController : MonoBehaviour
         if (playerCamera == null) playerCamera = Camera.main;
         if (inventory == null) inventory = GetComponent<PlayerInventory>();
         if (bodyStatus == null) bodyStatus = GetComponent<PlayerBodyStatus>();
+        stunCharges = Mathf.Max(0, maxStunCharges);
         if (GetComponent<FlashlightSlotCooldownUI>() == null)
             gameObject.AddComponent<FlashlightSlotCooldownUI>();
+        if (GetComponent<FlashlightChargesUI>() == null)
+            gameObject.AddComponent<FlashlightChargesUI>();
     }
 
     IEnumerator Start()
@@ -186,8 +263,11 @@ public class FlashlightController : MonoBehaviour
             currentTarget = null;
         }
 
-        bool canUse = equipped != null && (controller == null || controller.ControlsEnabled);
-        bool held = canUse && Mouse.current != null && Mouse.current.rightButton.isPressed;
+        UpdateReload();
+
+        bool canUse = equipped != null && (controller == null || controller.ControlsEnabled) && !reloading;
+        // 스턴 횟수를 다 쓰면(0/3) 방전: 우클릭해도 점등되지 않는다.
+        bool held = canUse && stunCharges > 0 && Mouse.current != null && Mouse.current.rightButton.isPressed;
 
         SetOn(held);
 
@@ -240,6 +320,9 @@ public class FlashlightController : MonoBehaviour
         {
             if (best.TryStun(stunDuration))
             {
+                stunCharges = Mathf.Max(0, stunCharges - 1); // 실제로 스턴이 성공했을 때만 소모
+                OnStunChargesChanged?.Invoke(stunCharges, maxStunCharges);
+                if (stunCharges <= 0) SetOn(false); // 마지막 스턴으로 방전되는 순간 즉시 Light OFF
                 equipped.StartCooldown(restunCooldown);
                 feedback?.PlayStunFlash(best.FacePosition);
                 OnMonsterStunned?.Invoke(best);
@@ -248,8 +331,110 @@ public class FlashlightController : MonoBehaviour
         }
     }
 
+    // ───────────────────────── Reload (배터리 교체) ─────────────────────────
+
+    bool CanStartReload()
+    {
+        if (reloading) return false;
+        if (stunCharges > 0) return false;                                   // 1/3, 2/3 에서는 교체 금지 (AA 낭비 방지)
+        if (controller != null && !controller.ControlsEnabled) return false; // Game Over / Caught / QTE / 숨기 / 메뉴 / 암호 UI 등
+        if (GameProgress.IsEnded || GameMenuManager.MenuOpen) return false;
+        // 손전등이 현재 선택되어 실제로 손에 들려 있을 때만 (다른 슬롯 / 맨손이면 R 무반응).
+        if (equipped == null || inventory == null || !inventory.IsSelected(InventoryItemType.Flashlight)) return false;
+        if (batteryStock == null) batteryStock = GetComponent<FlashlightBatteryStock>();
+        return batteryStock != null && batteryStock.Count >= 1;
+    }
+
+    void UpdateReload()
+    {
+        if (!reloading)
+        {
+            var kb = Keyboard.current;
+            if (kb != null && kb.rKey.wasPressedThisFrame && CanStartReload())
+            {
+                // 안전한 쪽: 시작 순간 1개 소비(예약). reloading 플래그로 재진입이 막혀 R 연타해도 정확히 1개.
+                if (batteryStock.TryConsume(1))
+                {
+                    reloading = true;
+                    reloadElapsed = 0f;
+                    SetOn(false);
+                    exposure = 0f;
+                    currentTarget = null;
+                    feedback?.SetExposure(0f, 0);
+                }
+            }
+            return;
+        }
+
+        reloadElapsed += Time.deltaTime;
+        if (reloadElapsed >= ReloadTotalTime)
+        {
+            reloading = false;
+            DestroyReloadModel();
+            ResetStunCharges();   // BATTERY EMPTY → STUN 3/3
+            if (equipped != null) equipped.transform.localRotation = Quaternion.Euler(equipped.holdLocalEuler);
+        }
+    }
+
+    // 0 = 평소 Held 위치, 1 = 화면 아래로 완전히 내려감
+    float ReloadAmount()
+    {
+        float t = reloadElapsed;
+        if (t < reloadLowerTime) return Mathf.SmoothStep(0f, 1f, t / Mathf.Max(0.01f, reloadLowerTime));
+        t -= reloadLowerTime;
+        if (t < reloadHoldTime) return 1f;
+        t -= reloadHoldTime;
+        return 1f - Mathf.SmoothStep(0f, 1f, t / Mathf.Max(0.01f, reloadRaiseTime));
+    }
+
+    // LateUpdate 에서 호출: Held 모델에 내림/기울기 추가 + 중간 구간에 AA 모델 잠깐 표시.
+    void ApplyReloadPose()
+    {
+        if (!reloading || equipped == null || playerCamera == null) { DestroyReloadModel(); return; }
+        float a = ReloadAmount();
+        Transform item = equipped.transform;
+        Transform parent = item.parent;
+        if (parent == null) return;
+
+        float sway = a >= 1f ? Mathf.Sin((reloadElapsed - reloadLowerTime) * 14f) * 0.004f : 0f; // 교체하는 느낌의 미세한 흔들림
+        item.position += parent.TransformVector(reloadLowerOffset * a + new Vector3(0f, sway, 0f));
+        item.localRotation = Quaternion.Euler(equipped.holdLocalEuler) * Quaternion.Euler(reloadTiltEuler * a);
+
+        // AA 모델: 아래에 내려간 구간(정지 시작 ~ 끝 직전)에만, 옆에서 손전등 쪽으로 밀려 들어오고 사라진다.
+        float st = reloadLowerTime, en = reloadLowerTime + reloadHoldTime;
+        if (showReloadBatteryModel && reloadElapsed >= st + 0.03f && reloadElapsed <= en - 0.03f)
+        {
+            if (reloadBatteryModel == null) reloadBatteryModel = CreateReloadModel();
+            if (reloadBatteryModel != null)
+            {
+                float k = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(st + 0.03f, en - 0.03f, reloadElapsed));
+                Transform cam = playerCamera.transform;
+                Vector3 target = item.position + cam.up * 0.13f - cam.right * 0.03f;
+                Vector3 start = target + cam.right * 0.16f + cam.up * 0.05f;
+                reloadBatteryModel.transform.SetPositionAndRotation(Vector3.Lerp(start, target, k), cam.rotation * Quaternion.Euler(10f, 30f, 75f));
+            }
+        }
+        else DestroyReloadModel();
+    }
+
+    GameObject CreateReloadModel()
+    {
+        var prefab = Resources.Load<GameObject>("AABatteryViewModel");
+        if (prefab == null) return null;
+        var go = Instantiate(prefab);
+        go.name = "ReloadBatteryModel";
+        return go;
+    }
+
+    void DestroyReloadModel()
+    {
+        if (reloadBatteryModel != null) Destroy(reloadBatteryModel);
+        reloadBatteryModel = null;
+    }
+
     void OnDisable()
     {
+        DestroyReloadModel();
         SetOn(false);
         if (equipped != null) equipped.SetLit(false);
         exposure = 0f;
@@ -369,6 +554,9 @@ public class FlashlightController : MonoBehaviour
     [Range(0.1f, 0.6f)] public float lightForwardRatio = 0.3f;
 
     float modelScale = 1f;
+    float nearDim = 1f;
+    float filteredDistance = -1f, filteredVel;
+    Vector3 smoothedLocalOff; bool offInit;
 
     void LateUpdate()
     {
@@ -376,6 +564,9 @@ public class FlashlightController : MonoBehaviour
             UpdateHeldModelClearance();
         else
             modelScale = 1f;
+
+        ApplyReloadPose();
+        UpdateBeamPower();
 
         // 빛 = 모델(렌즈)과 분리된 안전한 원점 + 카메라가 보는 방향 (카메라 흔들림 반영 후).
         if (!isOn || beamLight == null || equipped == null || equipped.beamOrigin == null || playerCamera == null)
@@ -397,10 +588,66 @@ public class FlashlightController : MonoBehaviour
             && !h2.collider.transform.IsChildOf(transform))
         {
             float limit = Mathf.Max(0f, (h2.distance - surfaceMargin) * lightForwardRatio);
+            // 경계(lightProbeDistance)에서 갑자기 제한이 걸리지 않도록: 표면이 probe 거리 끝에 있으면 영향 0 → 60% 거리 안쪽에서 100% (smoothstep).
+            float w = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(lightProbeDistance, lightProbeDistance * 0.6f, h2.distance));
+            limit = Mathf.Lerp(fwd, limit, w);
             if (fwd > limit) off -= cam.forward * (fwd - limit);
         }
 
+        // 위 보정이 특정 거리에서 즉시 바뀌어도 빛 원점이 튀지 않도록 카메라 로컬 공간에서 지수 보간.
+        Vector3 localOff = cam.InverseTransformVector(off);
+        if (!offInit) { smoothedLocalOff = localOff; offInit = true; }
+        else smoothedLocalOff = Vector3.Lerp(smoothedLocalOff, localOff, 1f - Mathf.Exp(-beamOriginSmoothing * Time.deltaTime));
+        off = cam.TransformVector(smoothedLocalOff);
+
         beamLight.transform.SetPositionAndRotation(camPos + off, Quaternion.LookRotation(cam.forward, cam.up));
+    }
+
+    // 전방 SphereCast → 항상 존재하는 원시 거리 (No Hit = maxDetectionDistance).
+    float RawFrontDistance()
+    {
+        Transform cam = playerCamera.transform;
+        float max = Mathf.Max(0.5f, maxDetectionDistance);
+        float r = Mathf.Max(0.01f, nearDimSphereRadius);
+        int n = Physics.SphereCastNonAlloc(cam.position, r, cam.forward, hitBuffer, max, obstacleMask, QueryTriggerInteraction.Ignore);
+        float best = max;
+        for (int k = 0; k < n; k++)
+        {
+            var h = hitBuffer[k];
+            if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
+            if (h.distance <= 0f) continue; // 시작부터 겹친 콜라이더
+            best = Mathf.Min(best, h.distance + r); // 구 중심 이동거리 + 반지름 ≈ 표면까지 거리
+        }
+        return best;
+    }
+
+    /// <summary>
+    /// Physics 감지(raw 거리) → SmoothDamp(filteredDistance) → AnimationCurve → 최종 intensity.
+    /// Hit/NoHit 전환도 거리 값이 연속적으로 변하므로 밝기가 튀지 않는다. Range / Spot Angle 은 항상 그대로.
+    /// </summary>
+    void UpdateBeamPower()
+    {
+        if (beamLight == null) return;
+
+        float max = Mathf.Max(0.5f, maxDetectionDistance);
+        if (equipped != null && playerCamera != null)
+        {
+            float raw = RawFrontDistance();
+            if (filteredDistance < 0f) filteredDistance = raw;
+            float st = raw < filteredDistance ? dimSmoothTime : brightenSmoothTime;
+            filteredDistance = Mathf.SmoothDamp(filteredDistance, raw, ref filteredVel, Mathf.Max(0.01f, st), Mathf.Infinity, Time.deltaTime);
+        }
+        else
+        {
+            filteredDistance = max; filteredVel = 0f; // 미장착: 다음 장착 시 최대 거리에서 시작
+        }
+
+        nearDim = (nearDimCurve != null && nearDimCurve.length > 0)
+            ? Mathf.Clamp01(nearDimCurve.Evaluate(Mathf.Clamp(filteredDistance, 0f, max))) : 1f;
+
+        beamLight.intensity = beamIntensity * nearDim;
+        beamLight.range = beamRange;
+        beamLight.spotAngle = beamSpotAngle;
     }
 
     /// <summary>
