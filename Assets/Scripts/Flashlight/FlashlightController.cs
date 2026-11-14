@@ -71,7 +71,7 @@ public class FlashlightController : MonoBehaviour
     [Header("Beam Visual (실제 Spot Light 조명)")]
     public bool createBeamLight = true;
     public Light beamLight;
-    public float beamIntensity = 29f; // 가까운 벽 화이트아웃 완화: 40 → 29 (약 72%)
+    public float beamIntensity = 21f; // 최대 밝기 (8m 이상). 가까운 물체 과노출 완화: 40 → 29 → 21
     public float beamRange = 22f;
     [Range(10f, 90f)] public float beamSpotAngle = 55f;
 
@@ -80,10 +80,10 @@ public class FlashlightController : MonoBehaviour
     public float nearDimSphereRadius = 0.3f;
     [Tooltip("감지 최대 거리(m). 아무것도 없으면(No Hit) 이 값을 거리로 취급 → 항상 거리값이 존재.")]
     public float maxDetectionDistance = 8f;
-    [Tooltip("x = 필터링된 전방 거리(m), y = intensity 배율(×beamIntensity). 기본(29 기준): 8m 29 / 6m 25 / 5m 21 / 4m 17 / 3m 12 / 2m 7 / 1m 2.5 / 0.5m 1.")]
+    [Tooltip("x = 필터링된 전방 거리(m), y = intensity 배율(×beamIntensity). 기본(21 기준): 8m+ 21 / 6m 17 / 5m 13 / 4m 9 / 3m 5 / 2m 2.5 / 1m 1 / 0.5m 0.5.")]
     public AnimationCurve nearDimCurve = DefaultNearDimCurve();
     [Tooltip("가까워져 어두워질 때 거리 SmoothDamp 시간(초).")]
-    public float dimSmoothTime = 0.3f;
+    public float dimSmoothTime = 0.18f;
     [Tooltip("멀어져 다시 밝아질 때 거리 SmoothDamp 시간(초). 더 느리게.")]
     public float brightenSmoothTime = 0.6f;
     [Tooltip("빛 원점(Near-wall correction)의 카메라 기준 위치 보간 속도(1/초).")]
@@ -92,7 +92,8 @@ public class FlashlightController : MonoBehaviour
     static AnimationCurve DefaultNearDimCurve()
     {
         float[] d = { 0.5f, 1f, 2f, 3f, 4f, 5f, 6f, 8f };
-        float[] i = { 1f, 2.5f, 7f, 12f, 17f, 21f, 25f, 29f };
+        const float peak = 21f; // beamIntensity 기본값과 같게 (곡선 y = intensity / peak)
+        float[] i = { 0.5f, 1f, 2.5f, 5f, 9f, 13f, 17f, 21f };
         var keys = new Keyframe[d.Length];
         for (int k = 0; k < d.Length; k++)
         {
@@ -101,11 +102,28 @@ public class FlashlightController : MonoBehaviour
             {
                 float s0 = (i[k] - i[k - 1]) / (d[k] - d[k - 1]);
                 float s1 = (i[k + 1] - i[k]) / (d[k + 1] - d[k]);
-                slope = 0.5f * (s0 + s1) / 29f;
+                slope = 0.5f * (s0 + s1) / peak;
             }
-            keys[k] = new Keyframe(d[k], i[k] / 29f, slope, slope);
+            keys[k] = new Keyframe(d[k], i[k] / peak, slope, slope);
         }
         return new AnimationCurve(keys);
+    }
+
+    [Header("Light Origin (ViewModel 과 분리)")]
+    [Tooltip("Spot Light 시작점 = 카메라 로컬 위치(화면 중앙에서 약간 아래, 앞쪽). 손전등 모델(ViewModel)의 위치/회전과 무관. 빛 방향은 항상 Camera.forward.")]
+    public Vector3 lightOriginLocal = new Vector3(0f, -0.12f, 1.0f);
+    Transform lightOrigin;
+
+    Transform LightOrigin()
+    {
+        if (lightOrigin == null && playerCamera != null)
+        {
+            var go = new GameObject("FlashlightLightOrigin");
+            go.transform.SetParent(playerCamera.transform, false);
+            lightOrigin = go.transform;
+        }
+        if (lightOrigin != null) lightOrigin.localPosition = lightOriginLocal;
+        return lightOrigin;
     }
 
     [Header("Debug")]
@@ -569,14 +587,16 @@ public class FlashlightController : MonoBehaviour
         UpdateBeamPower();
 
         // 빛 = 모델(렌즈)과 분리된 안전한 원점 + 카메라가 보는 방향 (카메라 흔들림 반영 후).
-        if (!isOn || beamLight == null || equipped == null || equipped.beamOrigin == null || playerCamera == null)
+        if (!isOn || beamLight == null || equipped == null || playerCamera == null)
             return;
 
         Transform cam = playerCamera.transform;
         Vector3 camPos = cam.position;
-        Vector3 off = equipped.beamOrigin.position - camPos;   // 평소 위치 = 렌즈(손) 위치 (기존과 동일)
+        Transform origin = LightOrigin();
+        if (origin == null) return;
+        Vector3 off = origin.position - camPos;   // 평소 위치 = 카메라 중앙 약간 아래 (모델 렌즈와 독립)
 
-        // 1) 카메라 → 렌즈 사이가 막혀 있으면(벽/캐비넷 안으로 들어간 경우) 막히기 직전까지만.
+        // 1) 카메라 → 광원 원점 사이가 막혀 있으면(벽/캐비넷 안으로 들어간 경우) 막히기 직전까지만.
         float len = off.magnitude;
         if (len > 0.001f && Physics.Raycast(camPos, off / len, out RaycastHit h1, len + surfaceMargin, obstacleMask, QueryTriggerInteraction.Ignore)
             && !h1.collider.transform.IsChildOf(transform))
@@ -617,6 +637,17 @@ public class FlashlightController : MonoBehaviour
             if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
             if (h.distance <= 0f) continue; // 시작부터 겹친 콜라이더
             best = Mathf.Min(best, h.distance + r); // 구 중심 이동거리 + 반지름 ≈ 표면까지 거리
+        }
+
+        // 정면 광선(반지름 0): 구가 이미 표면과 겹쳐 시작한 경우(아주 가까운 벽/가구/문짝)에도 정확한 표면 거리를 얻는다.
+        // → 가까운 물체가 광원 앞에 끼어도 "감지 실패 = 최대 밝기" 가 되지 않는다. 모든 일반 Collider(벽·Openables 가구·문짝) 공통.
+        var ray = new Ray(cam.position, cam.forward);
+        int rn = Physics.RaycastNonAlloc(ray, hitBuffer, max, obstacleMask, QueryTriggerInteraction.Ignore);
+        for (int k = 0; k < rn; k++)
+        {
+            var h = hitBuffer[k];
+            if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
+            best = Mathf.Min(best, h.distance);
         }
         return best;
     }

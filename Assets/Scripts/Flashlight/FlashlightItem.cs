@@ -22,7 +22,7 @@ public class FlashlightItem : MonoBehaviour, IInteractable
     public Transform beamOrigin;
 
     [Header("Held Pose (KeyHoldPoint 기준 로컬)")]
-    [Tooltip("1인칭 화면 오른쪽 아래에 보이도록 하는 위치")]
+    [Tooltip("ViewModel 위치: 화면 오른쪽 아래 (뷰포트 약 x 0.72, y 0.10). KeyHoldPoint(카메라 자식) 기준. Spot Light 는 FlashlightController.lightOriginLocal 로 따로 정해지며 이 값과 무관. 회전은 화면 중앙을 향해 살짝 틀어 둠.")]
     public Vector3 holdLocalPosition = new Vector3(0f, -0.06f, -0.32f);
     public Vector3 holdLocalEuler = new Vector3(-2f, -5f, 0f);
 
