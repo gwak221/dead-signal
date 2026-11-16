@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: plr_breath_tense
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 2468838ba7f341e9838e9d043c80408f, type: 3}
   volume: 0.6
   pitchRange: {x: 1, y: 1}
   avoidRepeat: 1

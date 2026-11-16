@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: plr_drop
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: d9d8b2466fc2450fa00e6381a1c5f02b, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   avoidRepeat: 1

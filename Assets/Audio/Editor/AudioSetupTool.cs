@@ -43,14 +43,14 @@ public static class AudioSetupTool
         D("Player", "plr_breath_idle",   "Player", false, 1, 10, "대기 숨소리 루프. breathing calm loop", 0.35f, 1f, 1f, 0f),
         D("Player", "plr_breath_tense",  "Player", false, 1, 10, "긴장 숨소리 루프 (120bpm 이상). heavy breathing scared panting loop", 0.6f, 1f, 1f, 0f),
         D("Player", "plr_heartbeat",     "Player", false, 1, 10, "심장박동 한 번 (BPM에 맞춰 반복). heartbeat single thump", 0.7f, 1f, 1f, 0.15f),
-        D("Player", "plr_interact",      "Player", false, 1, 10, "상호작용. interact grab click"),
+        D("Player", "plr_interact",      "Player", false, 1, 10, "상호작용. interact grab click", 1f, 0.9f, 1.1f),
         D("Player", "plr_drop",          "World",  true,  1, 10, "물건 버리기 (바닥에 떨어짐). item drop floor"),
         D("Player", "plr_slot_select",   "UI",     false, 1, 10, "아이템 슬롯 선택. inventory select", 0.7f),
         D("Player", "plr_slot_deselect", "UI",     false, 1, 10, "아이템 슬롯 해제. inventory deselect", 0.7f),
         D("Player", "plr_hurt",          "Player", false, 1, 10, "피격 (다리/눈 파손). male hurt grunt pain"),
         D("Player", "plr_caught_bite",   "Player", false, 1, 10, "잡힘 (물리기). bite flesh gore", 1f, 1f, 1f),
-        D("Player", "plr_hide_enter",    "Player", false, 1, 10, "캐비닛 숨기. metal locker enter cloth"),
-        D("Player", "plr_hide_exit",     "Player", false, 1, 10, "캐비닛 나오기. metal locker exit"),
+        D("Player", "plr_hide_enter",    "Player", false, 1, 10, "캐비닛 숨기. metal locker enter cloth", 1f, 0.9f, 1.1f),
+        D("Player", "plr_hide_exit",     "Player", false, 1, 10, "캐비닛 나오기. metal locker exit", 1f, 0.9f, 1.1f),
 
         // 추격 공통
         D("BGM", "bgm_chase",         "BGM", false, 1, 10, "쫓김 BGM 루프 (적 추격 상태 공통). horror chase music loop", 0.8f, 1f, 1f, 0f),
@@ -373,6 +373,43 @@ public static class AudioSetupTool
             .Select(g => AssetDatabase.LoadAssetAtPath<SoundCue>(AssetDatabase.GUIDToAssetPath(g)))
             .Where(c => c != null && !c.HasClips).Select(c => c.name).OrderBy(n => n).ToList();
         Debug.Log($"[AudioSetup] 클립이 없는 Cue {empty.Count}개:\n" + string.Join("\n", empty));
+    }
+
+    /// <summary>
+    /// Clips/&lt;폴더&gt;/ 안의 &lt;cue이름&gt;_01, _02 ... 파일을 찾아 같은 이름의 Cue에 넣는다.
+    /// 새 파일을 추가하거나 확장자를 바꿨을 때(.wav → .mp3) 실행. 해당 파일이 하나도 없는 Cue는 건드리지 않는다.
+    /// </summary>
+    [MenuItem("Tools/Dead Signal/Audio/4. Auto-Assign Clips From Folders")]
+    public static void AutoAssignClips()
+    {
+        var log = new System.Text.StringBuilder();
+        int changed = 0;
+        foreach (var guid in AssetDatabase.FindAssets("t:SoundCue", new[] { CuesRoot }))
+        {
+            string cuePath = AssetDatabase.GUIDToAssetPath(guid);
+            var cue = AssetDatabase.LoadAssetAtPath<SoundCue>(cuePath);
+            if (cue == null) continue;
+            string folder = $"{ClipsRoot}/{FolderForClips(Path.GetFileName(Path.GetDirectoryName(cuePath)))}";
+            if (!AssetDatabase.IsValidFolder(folder)) continue;
+
+            var pattern = new System.Text.RegularExpressions.Regex("^" + System.Text.RegularExpressions.Regex.Escape(cue.name) + @"_\d+$");
+            var found = AssetDatabase.FindAssets("t:AudioClip", new[] { folder })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(p => pattern.IsMatch(Path.GetFileNameWithoutExtension(p)))
+                .OrderBy(p => p)
+                .Select(p => AssetDatabase.LoadAssetAtPath<AudioClip>(p))
+                .Where(c => c != null).ToArray();
+            if (found.Length == 0) continue;
+            if (cue.clips != null && cue.clips.SequenceEqual(found)) continue;
+
+            Undo.RecordObject(cue, "Auto-Assign Clips");
+            cue.clips = found;
+            EditorUtility.SetDirty(cue);
+            changed++;
+            log.AppendLine($"{cue.name}: {found.Length}개");
+        }
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[AudioSetup] 클립 자동 연결: Cue {changed}개 변경\n" + log);
     }
 
     // ───────────────────────── 단계 ─────────────────────────

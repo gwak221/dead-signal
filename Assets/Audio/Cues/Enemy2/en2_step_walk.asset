@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: en2_step_walk
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 3376967309184ae6ab95a80499080e0d, type: 3}
   volume: 0.8
   pitchRange: {x: 0.9, y: 1.1}
   avoidRepeat: 1

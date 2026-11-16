@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: fl_charge
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 243f3f4058be4725baf2e6f10c4b1e04, type: 3}
   volume: 0.8
   pitchRange: {x: 1, y: 1}
   avoidRepeat: 1

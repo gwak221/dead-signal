@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: door_open
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 000ddaf72a0044be99a7f90f93bab5e4, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   avoidRepeat: 1

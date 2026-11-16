@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: bgm_gameover
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 70e329c58aed42aea5241d30fc043b42, type: 3}
   volume: 1
   pitchRange: {x: 1, y: 1}
   avoidRepeat: 1

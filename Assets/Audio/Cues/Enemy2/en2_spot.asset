@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: en2_spot
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 8c9c7f1c4bd947faa3cfa9e991141c3d, type: 3}
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
   avoidRepeat: 1

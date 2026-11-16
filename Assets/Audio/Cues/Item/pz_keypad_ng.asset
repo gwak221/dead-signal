@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: pz_keypad_ng
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 5e17c943179a496b98d379af32c941b4, type: 3}
   volume: 0.8
   pitchRange: {x: 1, y: 1}
   avoidRepeat: 1

@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
   m_Name: plr_hide_exit
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: a157b6941e2a48afa16579ff4e1ebf82, type: 3}
   volume: 1
-  pitchRange: {x: 0.95, y: 1.05}
+  pitchRange: {x: 0.9, y: 1.1}
   avoidRepeat: 1
   spatial3D: 0
   minDistance: 1
