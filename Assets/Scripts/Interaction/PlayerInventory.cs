@@ -46,6 +46,14 @@ public class PlayerInventory : MonoBehaviour
     PlayerInteraction interaction;
     int selectedSlot = -1;
 
+    // 사운드용 이벤트 (플레이어가 직접 한 동작만 알린다)
+    /// <summary>1/2/3/0 키로 슬롯을 선택(true)하거나 해제(false)했을 때.</summary>
+    public event System.Action<bool> OnSlotToggled;
+    /// <summary>F로 아이템을 버렸을 때. 버린 아이템 오브젝트.</summary>
+    public event System.Action<InventoryItemType, GameObject> OnItemDropped;
+    /// <summary>아이템을 인벤토리에 넣었을 때.</summary>
+    public event System.Action<InventoryItemType> OnItemAdded;
+
     public int SelectedSlotIndex => selectedSlot;
     public InventoryItemType SelectedItemType => selectedSlot >= 0 ? slots[selectedSlot].type : InventoryItemType.None;
     public bool HasSelectedItem => SelectedItemType != InventoryItemType.None;
@@ -111,7 +119,11 @@ public class PlayerInventory : MonoBehaviour
         if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame) ToggleSlot(2);
 
         if (kb.digit0Key.wasPressedThisFrame || kb.numpad0Key.wasPressedThisFrame)
+        {
+            bool had = selectedSlot >= 0;
             SelectBareHands();
+            if (had) OnSlotToggled?.Invoke(false);
+        }
 
         if (kb.fKey.wasPressedThisFrame)
             DropSelectedItem();
@@ -146,6 +158,7 @@ public class PlayerInventory : MonoBehaviour
         // 습득만 하고 자동 장착하지 않는다. 1/2/3으로 직접 꺼낸다.
         worldObject.SetActive(false);
         RefreshUI();
+        OnItemAdded?.Invoke(type);
         return true;
     }
 
@@ -254,6 +267,7 @@ public class PlayerInventory : MonoBehaviour
 
         RefreshHeldVisuals();
         RefreshUI();
+        OnItemDropped?.Invoke(type, item);
         return true;
     }
 
@@ -274,19 +288,23 @@ public class PlayerInventory : MonoBehaviour
         if (selectedSlot == index)
         {
             SelectBareHands();
+            OnSlotToggled?.Invoke(false);
             return;
         }
 
         // 빈 칸은 선택하지 않고 맨손으로 둔다.
         if (slots[index].type == InventoryItemType.None)
         {
+            bool had = selectedSlot >= 0;
             SelectBareHands();
+            if (had) OnSlotToggled?.Invoke(false);
             return;
         }
 
         selectedSlot = index;
         RefreshHeldVisuals();
         RefreshUI();
+        OnSlotToggled?.Invoke(true);
     }
 
     void ResolveHoldPoint()

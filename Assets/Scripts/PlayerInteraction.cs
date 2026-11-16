@@ -36,6 +36,9 @@ public class PlayerInteraction : MonoBehaviour
     public bool InteractionEnabled => interactionEnabled;
     public PlayerInventory Inventory => inventory;
 
+    /// <summary>E로 IInteractable과 상호작용했을 때 (사운드용).</summary>
+    public event System.Action OnInteracted;
+
     void Awake()
     {
         inventory = GetComponent<PlayerInventory>();
@@ -201,7 +204,10 @@ public class PlayerInteraction : MonoBehaviour
                 }
 
                 if (kb != null && kb.eKey.wasPressedThisFrame)
+                {
                     interactable.Interact(this);
+                    OnInteracted?.Invoke();
+                }
 
                 return;
             }

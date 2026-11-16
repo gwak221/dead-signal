@@ -38,11 +38,22 @@ public class SafeDoor : MonoBehaviour, IInteractable
         if (player.Inventory == null || !player.Inventory.IsSelected(InventoryItemType.Key))
         {
             player.Notify("Equip Key (1-3)");
+            AnyLocked?.Invoke(this);
             return;
         }
 
+        AnyMoved?.Invoke(this, !isOpen);
         StartCoroutine(ToggleDoor());
     }
+
+    // 사운드용 이벤트
+    /// <summary>금고 문이 움직이기 시작할 때 (금고, 여는 중인지).</summary>
+    public static event System.Action<SafeDoor, bool> AnyMoved;
+    /// <summary>열쇠 없이 열려고 했을 때.</summary>
+    public static event System.Action<SafeDoor> AnyLocked;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() { AnyMoved = null; AnyLocked = null; }
 
     IEnumerator ToggleDoor()
     {

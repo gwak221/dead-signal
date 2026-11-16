@@ -42,6 +42,8 @@ public class MonsterChase : MonoBehaviour
     /// <summary>추격 시작/종료 이벤트 (UI·연출 시스템이 구독. MonsterChase는 구독자를 모른다).</summary>
     public event System.Action<MonsterChase> OnChaseStarted;
     public event System.Action<MonsterChase> OnChaseEnded;
+    /// <summary>플레이어를 공격(잡음)했을 때 (사운드용).</summary>
+    public event System.Action<MonsterChase> OnAttack;
     private bool isChasing
     {
         get => _isChasing;
@@ -244,7 +246,9 @@ public class MonsterChase : MonoBehaviour
         if (doorOpener != null) doorOpener.ResetDoorState();
 
         // 잡힘 연출/피해 처리는 PlayerCaughtSequence가 전담 (한 번만 실행)
+        bool wasRunning = PlayerCaughtSequence.IsRunning;
         PlayerCaughtSequence.TriggerCaught(transform);
+        if (!wasRunning && PlayerCaughtSequence.IsRunning) OnAttack?.Invoke(this);
 
         attackStopTimer = attackStopDuration;
         agent.isStopped = true;

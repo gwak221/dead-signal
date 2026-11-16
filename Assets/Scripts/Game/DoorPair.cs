@@ -34,15 +34,24 @@ public class DoorPair : MonoBehaviour, IInteractable
         Apply(0f);
     }
 
+    /// <summary>문이 움직이기 시작할 때 (문, 여는 중인지, 플레이어가 했는지). 사운드용.</summary>
+    public static event System.Action<DoorPair, bool, bool> AnyMoved;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => AnyMoved = null;
+
+    // Open/Close = 몬스터 AI 경로, Interact = 플레이어 경로
     public void Open()
     {
         if (leafL == null && leafR == null) return;
+        if (target < 0.5f) AnyMoved?.Invoke(this, true, false);
         target = 1f;
     }
 
     public void Close()
     {
         if (leafL == null && leafR == null) return;
+        if (target > 0.5f) AnyMoved?.Invoke(this, false, false);
         target = 0f;
     }
 
@@ -61,6 +70,7 @@ public class DoorPair : MonoBehaviour, IInteractable
     {
         if (leafL == null && leafR == null) return;
         target = target > 0.5f ? 0f : 1f;   // 이동 중이면 현재 위치에서 반대로
+        AnyMoved?.Invoke(this, target > 0.5f, true);
     }
 
     void Update()

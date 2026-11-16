@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
+  m_Name: en1_chase
+  m_EditorClassIdentifier: Assembly-CSharp::SoundCue
+  clips: []
+  volume: 0.9
+  pitchRange: {x: 0.9, y: 1.05}
+  avoidRepeat: 1
+  spatial3D: 1
+  minDistance: 2
+  maxDistance: 30
+  rolloff: 1
+  mixerGroup: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  minInterval: 0.05
+  note: "\uC8011 \uCD94\uACA9 \uC6B8\uC74C (Mm_random). \uD074\uB9BD 3~5\uAC1C. monster
+    aggressive growl\n\uD074\uB9BD \uD3F4\uB354: Assets/Audio/Clips/Enemy1/  \uD30C\uC77C
+    \uC774\uB984: en1_chase_01, en1_chase_02 ..."

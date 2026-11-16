@@ -51,6 +51,50 @@ public static class OpenablesPrefabBuilder
         return log.ToString();
     }
 
+    // ───────── broken (정적 파손 모델) ─────────
+
+    public const string BrokenModelsFolder = RootFolder + "/Broken/Models";
+    public const string BrokenPrefabsFolder = RootFolder + "/Broken/Prefabs";
+
+    /// <summary>
+    /// Broken/Models/&lt;name&gt;_broken.fbx → Broken/Prefabs/&lt;name&gt;_broken.prefab (항상 덮어씀).
+    /// 여닫이·사운드 없이 정적 오브젝트. 머티리얼은 Openables/Materials 의 같은 이름 .mat 으로 remap 한다.
+    /// 모델은 Openables/Broken/Source~/build_broken.py (Blender) 로 다시 만들 수 있다.
+    /// </summary>
+    [MenuItem("Tools/Openables/Build Broken Prefabs")]
+    public static string BuildBroken()
+    {
+        EnsureFolder(BrokenPrefabsFolder);
+        var log = new System.Text.StringBuilder();
+        foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { BrokenModelsFolder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            ExtractMaterials(path);
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            string name = model.name;
+            var root = new GameObject(name);
+            try
+            {
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
+                PrefabUtility.UnpackPrefabInstance(inst, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                inst.name = name + "_model";
+                inst.transform.SetParent(root.transform, false);
+                inst.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // BuildOne 과 같은 방향 (+Z 앞)
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                    GameObjectUtility.SetStaticEditorFlags(t.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
+                PrefabUtility.SaveAsPrefabAsset(root, $"{BrokenPrefabsFolder}/{name}.prefab", out bool ok);
+                log.AppendLine((ok ? "built  " : "FAILED ") + name);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+        AssetDatabase.SaveAssets();
+        Debug.Log("[Openables] Build Broken Prefabs\n" + log);
+        return log.ToString();
+    }
+
     // ───────── materials ─────────
 
     static void ExtractMaterials(string modelPath)
