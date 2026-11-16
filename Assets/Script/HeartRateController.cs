@@ -134,14 +134,17 @@ public class HeartRateController : MonoBehaviour
         heartRateText.color = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.25f), ratio);
     }
 
+    /// <summary>UI 하트 아이콘이 한 번 뛸 때마다 호출 (사운드 동기화용).</summary>
+    public event System.Action OnBeat;
+
     void Pulse()
     {
-        if (heartIconTrans == null) return;
         // 실제 BPM 을 1:1 로 따라가지 않고, 안정~최대 BPM 을 [Resting, Max] 간격으로 매핑 (쿵 ... 쿵 ... 쿵)
         float t = Mathf.Clamp01(Mathf.InverseLerp(restingBpm, maxBpm, currentBpm));
         float interval = Mathf.Lerp(uiBeatIntervalResting, uiBeatIntervalMax, t);
         beatPhase += Time.deltaTime / Mathf.Max(0.1f, interval);
-        if (beatPhase >= 1f) beatPhase -= Mathf.Floor(beatPhase);
+        if (beatPhase >= 1f) { beatPhase -= Mathf.Floor(beatPhase); OnBeat?.Invoke(); }
+        if (heartIconTrans == null) return;
 
         // 한 번 부드럽게 부풀었다가 가라앉는 단일 박동 (전체 주기의 앞 22%)
         float k = beatPhase < 0.22f ? Mathf.Sin(beatPhase / 0.22f * Mathf.PI) : 0f;

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
+  m_Name: fl_flash
+  m_EditorClassIdentifier: Assembly-CSharp::SoundCue
+  clips:
+  - {fileID: 8300000, guid: d00365efcdeb42e88f3c55a8ff14b19e, type: 3}
+  volume: 1
+  pitchRange: {x: 0.97, y: 1.03}
+  avoidRepeat: 1
+  spatial3D: 0
+  minDistance: 1
+  maxDistance: 10
+  rolloff: 1
+  mixerGroup: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  minInterval: 0.05
+  note: "\uB208\uBF55 (\uAC15\uD55C \uBE5B). camera flash burst\n\uD074\uB9BD \uD3F4\uB354:
+    Assets/Audio/Clips/Flashlight/  \uD30C\uC77C \uC774\uB984: fl_flash_01, fl_flash_02
+    ..."

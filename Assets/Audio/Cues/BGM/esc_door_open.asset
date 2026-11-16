@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
+  m_Name: esc_door_open
+  m_EditorClassIdentifier: Assembly-CSharp::SoundCue
+  clips:
+  - {fileID: 8300000, guid: 37b3a1c7ea404cb980c8523e114286f7, type: 3}
+  volume: 1
+  pitchRange: {x: 0.95, y: 1.05}
+  avoidRepeat: 1
+  spatial3D: 1
+  minDistance: 2
+  maxDistance: 25
+  rolloff: 1
+  mixerGroup: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  minInterval: 0.05
+  note: "\uD0C8\uCD9C \uBB38 \uC5F4\uB9BC. heavy metal gate open\n\uD074\uB9BD \uD3F4\uB354:
+    Assets/Audio/Clips/BGM/  \uD30C\uC77C \uC774\uB984: esc_door_open_01, esc_door_open_02
+    ..."

@@ -182,6 +182,16 @@ public class FlashlightController : MonoBehaviour
     /// <summary>스턴 성공 시 (사운드 연결용).</summary>
     public event Action<MonsterStun> OnMonsterStunned;
 
+    // 사운드용 이벤트
+    /// <summary>손전등 빛이 켜지거나(true) 꺼질 때(false).</summary>
+    public event Action<bool> OnLightToggled;
+    /// <summary>몬스터에 빛을 비춰 눈뽕 게이지가 차기 시작할 때.</summary>
+    public event Action OnChargeStarted;
+    /// <summary>R로 배터리 교체를 시작했을 때.</summary>
+    public event Action OnReloadStarted;
+    /// <summary>방전 상태에서 우클릭했을 때 (빈 딸깍).</summary>
+    public event Action OnEmptyTriggered;
+
     // ───────────────────────── 자동 부착 ─────────────────────────
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -286,6 +296,8 @@ public class FlashlightController : MonoBehaviour
         bool canUse = equipped != null && (controller == null || controller.ControlsEnabled) && !reloading;
         // 스턴 횟수를 다 쓰면(0/3) 방전: 우클릭해도 점등되지 않는다.
         bool held = canUse && stunCharges > 0 && Mouse.current != null && Mouse.current.rightButton.isPressed;
+        if (canUse && stunCharges <= 0 && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+            OnEmptyTriggered?.Invoke();
 
         SetOn(held);
 
@@ -331,6 +343,7 @@ public class FlashlightController : MonoBehaviour
             return;
         }
 
+        if (exposure <= 0f) OnChargeStarted?.Invoke();
         exposure += Time.deltaTime;
         feedback?.SetExposure(Exposure01, 1);
 
@@ -375,6 +388,7 @@ public class FlashlightController : MonoBehaviour
                 {
                     reloading = true;
                     reloadElapsed = 0f;
+                    OnReloadStarted?.Invoke();
                     SetOn(false);
                     exposure = 0f;
                     currentTarget = null;
@@ -557,6 +571,7 @@ public class FlashlightController : MonoBehaviour
     {
         if (isOn == on) return;
         isOn = on;
+        OnLightToggled?.Invoke(on);
         if (beamLight != null) beamLight.enabled = on;
         if (equipped != null) equipped.SetLit(on);
     }

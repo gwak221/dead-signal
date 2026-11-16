@@ -56,14 +56,25 @@ public class Beacon : MonoBehaviour, IInteractable
         qteRunning = skillCheck.TriggerSkillCheck(() => OnQteSuccess(player), OnQteFail);
     }
 
+    // 사운드용 이벤트
+    /// <summary>QTE 결과 (비콘, 성공 여부).</summary>
+    public static event System.Action<Beacon, bool> AnyQteResult;
+    /// <summary>배터리가 꽂히고 비콘이 활성화됐을 때.</summary>
+    public static event System.Action<Beacon> AnyActivated;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() { AnyQteResult = null; AnyActivated = null; }
+
     void OnQteFail()
     {
         qteRunning = false; // 진행 없음. 다시 E를 눌러야 새 QTE 시작.
+        AnyQteResult?.Invoke(this, false);
     }
 
     void OnQteSuccess(PlayerInteraction player)
     {
         qteRunning = false;
+        AnyQteResult?.Invoke(this, true);
         if (IsActivated || player == null || player.Inventory == null) return;
         ActivateWithBattery(player);
     }
@@ -80,6 +91,7 @@ public class Beacon : MonoBehaviour, IInteractable
         Insert(battery);
         IsActivated = true;
         ApplyVisual();
+        AnyActivated?.Invoke(this);
         GameProgress.ReportBeaconActivated();
 
         // 팀의 EscapeDoorController: 표시등 1개 켜기 (IsActivated로 한 번만 도달하므로 중복 증가 없음)

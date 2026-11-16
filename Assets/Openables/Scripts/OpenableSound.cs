@@ -8,6 +8,11 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class OpenableSound : MonoBehaviour
 {
+    [Header("SoundCue (우선 사용, Assets/Audio/Cues)")]
+    public SoundCue openCue;
+    public SoundCue closeCue;
+
+    [Header("Legacy clips (Cue가 비었을 때만 사용)")]
     public AudioClip defaultOpenClip;
     public AudioClip defaultCloseClip;
     [Range(0f, 1f)] public float volume = 1f;
@@ -27,11 +32,27 @@ public class OpenableSound : MonoBehaviour
 
     public void Play(AudioClip clip, bool opening)
     {
-        if (clip == null) clip = opening ? defaultOpenClip : defaultCloseClip;
-        if (clip == null || source == null) return;
+        if (source == null) return;
         if (Time.time - lastPlay < minInterval) return;
+
+        // 파츠 개별 클립 > SoundCue > 기본 클립 순서
+        SoundCue cue = opening ? openCue : closeCue;
+        float vol = volume;
+        if (clip == null && cue != null && cue.HasClips)
+        {
+            clip = cue.PickClip();
+            cue.ApplyTo(source);
+            source.pitch = cue.RandomPitch();
+            vol = cue.volume;
+        }
+        else
+        {
+            if (clip == null) clip = opening ? defaultOpenClip : defaultCloseClip;
+            source.pitch = Random.Range(pitchRange.x, pitchRange.y);
+        }
+        if (clip == null) return;
+
         lastPlay = Time.time;
-        source.pitch = Random.Range(pitchRange.x, pitchRange.y);
-        source.PlayOneShot(clip, volume);
+        source.PlayOneShot(clip, vol);
     }
 }

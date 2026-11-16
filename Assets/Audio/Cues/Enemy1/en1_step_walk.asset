@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
+  m_Name: en1_step_walk
+  m_EditorClassIdentifier: Assembly-CSharp::SoundCue
+  clips:
+  - {fileID: 8300000, guid: 272e36fbe3864fd797a3f86cdce5c68a, type: 3}
+  volume: 0.8
+  pitchRange: {x: 0.9, y: 1.1}
+  avoidRepeat: 1
+  spatial3D: 1
+  minDistance: 2
+  maxDistance: 25
+  rolloff: 1
+  mixerGroup: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  minInterval: 0.05
+  note: "\uC8011 \uAC77\uAE30 \uBC1C\uC18C\uB9AC. \uD074\uB9BD 4\uAC1C. monster footstep
+    heavy slow\n\uD074\uB9BD \uD3F4\uB354: Assets/Audio/Clips/Enemy1/  \uD30C\uC77C
+    \uC774\uB984: en1_step_walk_01, en1_step_walk_02 ..."

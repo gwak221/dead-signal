@@ -653,6 +653,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ee9ab12de3ab4443b0a52f1d924e149, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpenableSound
+  openCue: {fileID: 11400000, guid: bbf43653f2beb9d4990e2e2fa62321e2, type: 2}
+  closeCue: {fileID: 11400000, guid: 42df8292ef655874da1bfc7dff220edb, type: 2}
   defaultOpenClip: {fileID: 0}
   defaultCloseClip: {fileID: 0}
   volume: 1

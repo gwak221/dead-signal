@@ -37,6 +37,9 @@ public class PasswordUIController : MonoBehaviour
         if (confirmButton != null)
             confirmButton.onClick.AddListener(Submit);
 
+        if (inputField != null)
+            inputField.onValueChanged.AddListener(OnInputChanged);
+
         if (panel != null)
             panel.SetActive(false);
     }
@@ -45,6 +48,9 @@ public class PasswordUIController : MonoBehaviour
     {
         if (confirmButton != null)
             confirmButton.onClick.RemoveListener(Submit);
+
+        if (inputField != null)
+            inputField.onValueChanged.RemoveListener(OnInputChanged);
 
         if (Instance == this)
             Instance = null;
@@ -97,6 +103,13 @@ public class PasswordUIController : MonoBehaviour
         StartCoroutine(FocusInputNextFrame());
     }
 
+    /// <summary>비밀번호 제출 결과 (true = 정답). 사운드용.</summary>
+    public event System.Action<bool> OnSubmitted;
+    /// <summary>입력칸 글자가 바뀔 때 (키 입력). 사운드용.</summary>
+    public event System.Action OnTyped;
+
+    void OnInputChanged(string _) => OnTyped?.Invoke();
+
     public void Close()
     {
         if (panel == null || !panel.activeSelf)
@@ -132,9 +145,12 @@ public class PasswordUIController : MonoBehaviour
 
         if (activeDoor.TryPassword(entered))
         {
+            OnSubmitted?.Invoke(true);
             Close();
             return;
         }
+
+        OnSubmitted?.Invoke(false);
 
         if (statusText != null)
             statusText.text = "Wrong password";

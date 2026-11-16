@@ -23,6 +23,8 @@ public class GameMenuManager : MonoBehaviour
     public static GameMenuManager Instance { get; private set; }
     /// <summary>Title/Pause 메뉴가 열려 있는 동안 true.</summary>
     public static bool MenuOpen => Instance != null && Instance.state != State.Playing;
+    /// <summary>타이틀 화면(조작법 포함)인지. 메뉴 음악용.</summary>
+    public static bool InTitle => Instance != null && (Instance.state == State.Title || Instance.state == State.TitleControls);
 
     static readonly Color Ink = new Color(0.02f, 0.02f, 0.02f, 1f);
     static readonly Color Bone = new Color(0.86f, 0.84f, 0.78f, 1f);

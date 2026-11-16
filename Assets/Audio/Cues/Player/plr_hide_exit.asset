@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42c035fec12a834aa647188673d0896, type: 3}
+  m_Name: plr_hide_exit
+  m_EditorClassIdentifier: Assembly-CSharp::SoundCue
+  clips:
+  - {fileID: 8300000, guid: a157b6941e2a48afa16579ff4e1ebf82, type: 3}
+  volume: 1
+  pitchRange: {x: 0.9, y: 1.1}
+  avoidRepeat: 1
+  spatial3D: 0
+  minDistance: 1
+  maxDistance: 10
+  rolloff: 1
+  mixerGroup: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  minInterval: 0.05
+  note: "\uCE90\uBE44\uB2DB \uB098\uC624\uAE30. metal locker exit\n\uD074\uB9BD \uD3F4\uB354:
+    Assets/Audio/Clips/Player/  \uD30C\uC77C \uC774\uB984: plr_hide_exit_01, plr_hide_exit_02
+    ..."
