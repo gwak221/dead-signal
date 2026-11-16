@@ -17,12 +17,36 @@ public class Beacon : MonoBehaviour, IInteractable
     [Header("QTE (비어 있으면 씬에서 자동 탐색)")]
     public SkillCheckManager skillCheck;
 
+    [Header("Tutorial (탈출 진행도 / EscapeWall 표시등에 포함하지 않음)")]
+    [Tooltip("true = 튜토리얼 비콘. 비콘 개수(RequiredBeacons)와 EscapeWall 표시등에 들어가지 않는다.")]
+    public bool isTutorial;
+    [Tooltip("활성화 시 잠금을 풀 문. 시작 시 이 문을 잠근다.")]
+    public DoorPair unlockDoor;
+    [Tooltip("잠금 해제와 함께 문을 연다. false 면 잠금만 풀고 플레이어가 직접 연다.")]
+    public bool openDoorOnUnlock = false;
+    public string unlockedMessage = "DOOR UNLOCKED";
+
     PlayerInventory inv;
     bool qteRunning;
 
     public bool IsActivated { get; private set; }
 
-    void OnEnable() => GameProgress.RegisterBeacon();
+    void Awake()
+    {
+        if (unlockDoor != null && !IsActivated) unlockDoor.Lock();
+    }
+
+    void OnEnable()
+    {
+        if (!isTutorial) GameProgress.RegisterBeacon();
+    }
+
+    void UnlockLinkedDoor()
+    {
+        if (unlockDoor == null) return;
+        unlockDoor.Unlock();
+        if (openDoorOnUnlock) unlockDoor.Open();
+    }
 
     void Start() => ApplyVisual();
 
@@ -92,6 +116,14 @@ public class Beacon : MonoBehaviour, IInteractable
         IsActivated = true;
         ApplyVisual();
         AnyActivated?.Invoke(this);
+        UnlockLinkedDoor();
+
+        if (isTutorial)
+        {
+            player.Notify(unlockDoor != null ? unlockedMessage : "Beacon Activated", 1.5f);
+            return;
+        }
+
         GameProgress.ReportBeaconActivated();
 
         // 팀의 EscapeDoorController: 표시등 1개 켜기 (IsActivated로 한 번만 도달하므로 중복 증가 없음)
@@ -128,6 +160,8 @@ public class Beacon : MonoBehaviour, IInteractable
         IsActivated = true;
         qteRunning = false;
         ApplyVisual();
+        UnlockLinkedDoor();
+        if (isTutorial) return true;   // 튜토리얼 비콘은 진행도/EscapeWall 에 반영하지 않음
         GameProgress.ReportBeaconActivated();
         if (escapeWall == null) escapeWall = FindFirstObjectByType<EscapeDoorController>();
         if (escapeWall != null) escapeWall.ActivateNext();

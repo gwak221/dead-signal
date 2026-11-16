@@ -217,7 +217,7 @@ public class MonsterDoorOpener : MonoBehaviour
     /// <summary>몬스터가 열어도 되는 문인지: 일반 통행 문만. 수납장 / 숨기 캐비넷 / 탈출 벽은 제외.</summary>
     static bool IsEligible(DoorPair door)
     {
-        if (door == null || !door.isPassableDoor) return false;
+        if (door == null || !door.isPassableDoor || door.IsLocked) return false;
         if (door.GetComponentInParent<HideSpot>() != null) return false;
         if (door.GetComponentInParent<EscapeDoorController>() != null) return false;
         if (door.name.ToLowerInvariant().Contains("cabinet")) return false;

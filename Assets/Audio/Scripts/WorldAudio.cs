@@ -75,6 +75,7 @@ public class WorldAudio : MonoBehaviour
         PasswordDoor.AnyMoved += HandlePasswordDoor;
         SafeDoor.AnyMoved += HandleSafe;
         SafeDoor.AnyLocked += HandleSafeLocked;
+        DoorPair.AnyLocked += HandleDoorPairLocked;
         GameProgress.Changed += HandleProgress;
     }
 
@@ -84,6 +85,7 @@ public class WorldAudio : MonoBehaviour
         PasswordDoor.AnyMoved -= HandlePasswordDoor;
         SafeDoor.AnyMoved -= HandleSafe;
         SafeDoor.AnyLocked -= HandleSafeLocked;
+        DoorPair.AnyLocked -= HandleDoorPairLocked;
         GameProgress.Changed -= HandleProgress;
         if (flashlight != null) UnhookFlashlight();
         if (keypad != null) { keypad.OnTyped -= HandleTyped; keypad.OnSubmitted -= HandleSubmitted; }
@@ -162,6 +164,8 @@ public class WorldAudio : MonoBehaviour
     void HandleSafe(SafeDoor safe, bool opening) => SoundEmitter.PlayAt(opening ? safeOpenCue : doorCloseCue, safe.transform.position);
 
     void HandleSafeLocked(SafeDoor safe) => SoundEmitter.PlayAt(doorLockedCue, safe.transform.position);
+
+    void HandleDoorPairLocked(DoorPair door) => SoundEmitter.PlayAt(doorLockedCue, door.GetDoorCenter());
 
     void HandleEscapeOpening()
     {

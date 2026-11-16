@@ -349,7 +349,7 @@ public class MonsterChase : MonoBehaviour
         {
             // 앞이 통과 가능한 일반 문이면 벽으로 보지 않는다 (문을 열고 지나가야 함)
             DoorPair hitDoor = forwardHit.collider.GetComponentInParent<DoorPair>();
-            if (hitDoor == null || !hitDoor.isPassableDoor)
+            if (hitDoor == null || !hitDoor.isPassableDoor || hitDoor.IsLocked)
             {
                 PickSmartPatrolPoint();
                 return;
