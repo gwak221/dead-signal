@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// DoorLeaf_L / DoorLeaf_R 한 세트(양문). PlayerInteraction의 IInteractable(E) 경로로 동작한다.
@@ -18,7 +19,18 @@ public class DoorPair : MonoBehaviour, IInteractable
     [Tooltip("true = 병원 일반 문 (MonsterDoorOpener 가 직접 열 수 있음). med_cabinet 등 수납장은 false.")]
     public bool isPassableDoor = true;
 
-    float t;        // 0 닫힘 ~ 1 열림 (선형 진행도)
+    [Header("Lock (잠긴 동안 플레이어/몬스터 모두 열 수 없음)")]
+    [Tooltip("시작부터 잠김. 튜토리얼 비콘(Beacon.unlockDoor)에 연결하면 비콘이 시작 시 잠그고 활성화 시 풀어 준다.")]
+    public bool locked;
+    public string lockedText = "LOCKED";
+    [Tooltip("잠긴 동안 NavMeshObstacle 로 NavMesh 를 막아 몬스터가 이 문으로 경로를 잡지 않게 한다 (문 프레임은 Bake 에서 제외돼 있으므로).")]
+    public bool blockNavMeshWhileLocked = true;
+
+    NavMeshObstacle lockObstacle;
+
+    public bool IsLocked => locked;
+
+    float t;       // 0 닫힘 ~ 1 열림 (선형 진행도)
     float target;
 
     // 몬스터 AI 가 문 상태를 읽기 위한 공개 API (플레이어 상호작용 경로는 그대로)
@@ -32,17 +44,66 @@ public class DoorPair : MonoBehaviour, IInteractable
         // 안전장치: 이름에 cabinet 이 들어가는 수납장(med_cabinet)은 항상 통과용 문이 아니다.
         if (gameObject.name.ToLowerInvariant().Contains("cabinet")) isPassableDoor = false;
         Apply(0f);
+        if (locked) Lock();
     }
 
     /// <summary>문이 움직이기 시작할 때 (문, 여는 중인지, 플레이어가 했는지). 사운드용.</summary>
     public static event System.Action<DoorPair, bool, bool> AnyMoved;
+    /// <summary>잠긴 문을 플레이어가 열려고 했을 때. 사운드용.</summary>
+    public static event System.Action<DoorPair> AnyLocked;
+    /// <summary>잠금이 풀렸을 때.</summary>
+    public static event System.Action<DoorPair> AnyUnlocked;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() => AnyMoved = null;
+    static void ResetStatics() { AnyMoved = null; AnyLocked = null; AnyUnlocked = null; }
+
+    /// <summary>문을 닫힌 상태로 잠근다 (몬스터 경로도 막음).</summary>
+    public void Lock()
+    {
+        locked = true;
+        target = 0f;
+        if (blockNavMeshWhileLocked) SetObstacle(true);
+    }
+
+    public void Unlock()
+    {
+        if (!locked) return;
+        locked = false;
+        SetObstacle(false);
+        AnyUnlocked?.Invoke(this);
+    }
+
+    void SetObstacle(bool on)
+    {
+        if (!on) { if (lockObstacle != null) lockObstacle.enabled = false; return; }
+        if (lockObstacle == null)
+        {
+            // 두 문짝의 월드 AABB 크기로 문 앞을 막는 박스 (월드 축 정렬)
+            Bounds b = new Bounds(GetDoorCenter(), Vector3.zero);
+            bool any = false;
+            foreach (var leaf in new[] { leafL, leafR })
+                if (leaf != null)
+                    foreach (var r in leaf.GetComponentsInChildren<Renderer>())
+                    {
+                        if (!any) { b = r.bounds; any = true; }
+                        else b.Encapsulate(r.bounds);
+                    }
+            var go = new GameObject("LockedNavBlock");
+            go.transform.SetParent(transform, false);
+            go.transform.SetPositionAndRotation(b.center, Quaternion.identity);
+            lockObstacle = go.AddComponent<NavMeshObstacle>();
+            lockObstacle.shape = NavMeshObstacleShape.Box;
+            lockObstacle.size = new Vector3(Mathf.Max(b.size.x, 0.4f), Mathf.Max(b.size.y, 2f), Mathf.Max(b.size.z, 0.4f));
+            lockObstacle.carving = true;
+            lockObstacle.carveOnlyStationary = false;
+        }
+        lockObstacle.enabled = true;
+    }
 
     // Open/Close = 몬스터 AI 경로, Interact = 플레이어 경로
     public void Open()
     {
+        if (locked) return;
         if (leafL == null && leafR == null) return;
         if (target < 0.5f) AnyMoved?.Invoke(this, true, false);
         target = 1f;
@@ -64,11 +125,17 @@ public class DoorPair : MonoBehaviour, IInteractable
         return transform.position;
     }
 
-    public string GetInteractionText() => target > 0.5f ? closeText : openText;
+    public string GetInteractionText() => locked ? lockedText : target > 0.5f ? closeText : openText;
 
     public void Interact(PlayerInteraction player)
     {
         if (leafL == null && leafR == null) return;
+        if (locked)
+        {
+            if (player != null) player.Notify(lockedText);
+            AnyLocked?.Invoke(this);
+            return;
+        }
         target = target > 0.5f ? 0f : 1f;   // 이동 중이면 현재 위치에서 반대로
         AnyMoved?.Invoke(this, target > 0.5f, true);
     }
