@@ -49,8 +49,6 @@ public class PlayerInventory : MonoBehaviour
     // 사운드용 이벤트 (플레이어가 직접 한 동작만 알린다)
     /// <summary>1/2/3/0 키로 슬롯을 선택(true)하거나 해제(false)했을 때.</summary>
     public event System.Action<bool> OnSlotToggled;
-    /// <summary>F로 아이템을 버렸을 때. 버린 아이템 오브젝트.</summary>
-    public event System.Action<InventoryItemType, GameObject> OnItemDropped;
     /// <summary>아이템을 인벤토리에 넣었을 때.</summary>
     public event System.Action<InventoryItemType> OnItemAdded;
 
@@ -125,8 +123,6 @@ public class PlayerInventory : MonoBehaviour
             if (had) OnSlotToggled?.Invoke(false);
         }
 
-        if (kb.fKey.wasPressedThisFrame)
-            DropSelectedItem();
     }
 
     public void SetHoldPoint(Transform point)
@@ -217,58 +213,6 @@ public class PlayerInventory : MonoBehaviour
         selectedSlot = -1;
         RefreshHeldVisuals();
         RefreshUI();
-    }
-
-    public bool DropSelectedItem()
-    {
-        if (selectedSlot < 0)
-            return false;
-
-        SlotData slot = slots[selectedSlot];
-        if (slot.type == InventoryItemType.None || slot.worldObject == null)
-        {
-            SelectBareHands();
-            return false;
-        }
-
-        GameObject item = slot.worldObject;
-        InventoryItemType type = slot.type;
-
-        slots[selectedSlot].type = InventoryItemType.None;
-        slots[selectedSlot].worldObject = null;
-        selectedSlot = -1;
-
-        item.SetActive(true);
-        item.transform.SetParent(null, true);
-
-        Vector3 forward = transform.forward;
-        Vector3 origin = transform.position + Vector3.up * 1.25f + forward * 1.0f;
-
-        if (interaction != null && interaction.playerCamera != null)
-        {
-            forward = interaction.playerCamera.transform.forward;
-            origin = interaction.playerCamera.transform.position + forward * 1.0f - interaction.playerCamera.transform.up * 0.15f;
-        }
-
-        item.transform.position = origin;
-
-        RestorePickupComponents(item, type);
-
-        Rigidbody rb = item.GetComponent<Rigidbody>();
-        if (rb == null)
-            rb = item.AddComponent<Rigidbody>();
-
-        rb.isKinematic = false;
-        rb.detectCollisions = true;
-        rb.useGravity = true;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-        rb.AddForce(forward * throwForce + Vector3.up * throwUpForce, ForceMode.VelocityChange);
-
-        RefreshHeldVisuals();
-        RefreshUI();
-        OnItemDropped?.Invoke(type, item);
-        return true;
     }
 
     void ToggleSlot(int index)
@@ -488,7 +432,7 @@ public class PlayerInventory : MonoBehaviour
     /// <summary>
     /// 슬롯 잠금/해제. 잠글 때 그 슬롯에 아이템이 있으면
     /// 1) 비어있는 다른 슬롯으로 옮기고 (장착 중이었다면 장착 유지),
-    /// 2) 빈 슬롯이 없으면 플레이어 앞 바닥에 떨어뜨린다 (다시 E로 주울 수 있음).
+    /// 2) 빈 슬롯이 없으면 플레이어 앞 바닥에 떨어뜨린다 (다시 F로 주울 수 있음).
     /// 아이템이 사라지는 경우는 없다.
     /// </summary>
     public void SetSlotLocked(int index, bool locked)

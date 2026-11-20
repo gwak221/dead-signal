@@ -93,7 +93,7 @@ public class SkillCheckManager : MonoBehaviour
         prevControls = controller != null && controller.ControlsEnabled;
         prevInteraction = interaction != null && interaction.InteractionEnabled;
         if (controller != null) controller.SetControlsEnabled(false);       // WASD/Sprint/시선/손전등
-        if (interaction != null) interaction.SetInteractionEnabled(false);  // E 상호작용/인벤토리 선택·Drop
+        if (interaction != null) interaction.SetInteractionEnabled(false);  // E 상호작용/인벤토리 선택
 
         EnsurePrompt();
         if (skillCheckCanvas != null) skillCheckCanvas.SetActive(true);

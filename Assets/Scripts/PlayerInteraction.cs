@@ -25,6 +25,10 @@ public class PlayerInteraction : MonoBehaviour
     public bool drawInteractionDebug;
 
     readonly RaycastHit[] assistHits = new RaycastHit[32];
+    readonly RaycastHit[] pickupHits = new RaycastHit[32];
+    readonly RaycastHit[] pickupRayHits = new RaycastHit[32];
+    readonly RaycastHit[] blockHits = new RaycastHit[32];
+    string pendingPickupText; // 이번 프레임 F 줍기 대상의 프롬프트 (없으면 null)
     Component lastAssistTarget;
 
     PlayerInventory inventory;
@@ -36,7 +40,7 @@ public class PlayerInteraction : MonoBehaviour
     public bool InteractionEnabled => interactionEnabled;
     public PlayerInventory Inventory => inventory;
 
-    /// <summary>E로 IInteractable과 상호작용했을 때 (사운드용).</summary>
+    /// <summary>E로 환경 상호작용을 했을 때 /줍기(F)를 했을 때 (사운드용).</summary>
     public event System.Action OnInteracted;
 
     void Awake()
@@ -70,7 +74,16 @@ public class PlayerInteraction : MonoBehaviour
             return;
         }
 
+        pendingPickupText = null;
         CheckInteraction();
+
+        // F 줍기 대상이 따로 있으면(예: 열린 벽장 안 배터리) E 프롬프트 아래에 F 프롬프트를 함께 표시.
+        if (!string.IsNullOrEmpty(pendingPickupText) && interactionText != null)
+        {
+            string cur = interactionText.gameObject.activeSelf ? interactionText.text : "";
+            if (!cur.Contains(pendingPickupText))
+                ShowMessage(string.IsNullOrEmpty(cur) ? pendingPickupText : cur + "\n" + pendingPickupText);
+        }
     }
 
     public void SetInteractionEnabled(bool enabled)
@@ -130,6 +143,12 @@ public class PlayerInteraction : MonoBehaviour
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
+        // F 줍기: E 상호작용 판정과 완전히 분리된 별도 판정.
+        Component pickup = FindPickup(ray, out pendingPickupText);
+        var fkb = Keyboard.current;
+        if (pickup != null && fkb != null && fkb.fKey.wasPressedThisFrame)
+            TryPickup(pickup);
+
         if (FindInteractionHit(ray, out RaycastHit hit))
         {
             var kb = Keyboard.current;
@@ -139,13 +158,7 @@ public class PlayerInteraction : MonoBehaviour
             if (battery != null)
             {
                 ResetHold();
-                ShowMessage("[E] PICK UP BATTERY");
-
-                if (kb != null && kb.eKey.wasPressedThisFrame)
-                {
-                    if (!battery.Collect(this))
-                        Notify("INVENTORY FULL");
-                }
+                ShowMessage("[F] PICK UP BATTERY"); // 실제 줍기는 TryPickup(F 전용 판정)에서 처리
                 return;
             }
 
@@ -203,7 +216,8 @@ public class PlayerInteraction : MonoBehaviour
                     interactionText.gameObject.SetActive(!string.IsNullOrEmpty(message));
                 }
 
-                if (kb != null && kb.eKey.wasPressedThisFrame)
+                // 줍기 계열(IPickupable)은 F 전용(TryPickup), 그 외 환경 상호작용은 E 전용.
+                if (!(interactable is IPickupable) && kb != null && kb.eKey.wasPressedThisFrame)
                 {
                     interactable.Interact(this);
                     OnInteracted?.Invoke();
@@ -215,6 +229,97 @@ public class PlayerInteraction : MonoBehaviour
 
         ResetHold();
         HideInteractionText();
+    }
+
+    // ───────────────────────── F 줍기 판정 (E 판정과 분리) ─────────────────────────
+
+    /// <summary>줍기 대상 소유자: Beacon 배터리(BatteryPickup) 또는 IPickupable. 없으면 null.</summary>
+    static Component GetPickupOwner(Collider col)
+    {
+        if (col == null) return null;
+        var battery = col.GetComponentInParent<BatteryPickup>();
+        if (battery != null) return battery;
+        foreach (var mb in col.GetComponentsInParent<MonoBehaviour>())
+            if (mb is IPickupable && mb is IInteractable) return mb;
+        return null;
+    }
+
+    /// <summary>
+    /// F 전용: 화면 중앙(Ray + SphereCast 여유) 근처의 줍기 대상만 찾는다. E 용 큰 상호작용 Collider 에 영향받지 않는다.
+    /// 막힘 검사에서 제외: 플레이어 자신, 대상 자신, 다른 줍기 아이템, 대상을 감싸고 있는 가구 몸통 Collider(벽장 상호작용 박스 등).
+    /// 닫힌 OpenablePart(문짝/서랍)와 벽·바닥 등 다른 구조물은 그대로 시야를 막는다.
+    /// </summary>
+    Component FindPickup(Ray ray, out string text)
+    {
+        text = null;
+        int n = interactionRadius > 0f
+            ? Physics.SphereCastNonAlloc(ray, interactionRadius, pickupHits, interactionDistance, interactionMask)
+            : 0;
+        int rn = Physics.RaycastNonAlloc(ray, pickupRayHits, interactionDistance, interactionMask);
+
+        Component best = null; string bestText = null; float bestScore = float.MaxValue;
+        for (int pass = 0; pass < 2; pass++)
+        {
+            int count = pass == 0 ? n : rn;
+            var buf = pass == 0 ? pickupHits : pickupRayHits;
+            for (int i = 0; i < count; i++)
+            {
+                Collider col = buf[i].collider;
+                if (col == null || col.transform.IsChildOf(transform)) continue;
+                Component owner = GetPickupOwner(col);
+                if (owner == null || !owner.gameObject.activeInHierarchy) continue;
+
+                string t = owner is BatteryPickup ? "[F] PICK UP BATTERY" : ((IInteractable)owner).GetInteractionText();
+                if (string.IsNullOrEmpty(t)) continue; // 예: 닫힌 약장 안 AA
+
+                Vector3 target = col.bounds.center;
+                Vector3 toTarget = target - ray.origin;
+                float dist = toTarget.magnitude;
+                if (dist > interactionDistance + interactionRadius) continue;
+                if (!HasClearPickupLine(ray.origin, target, dist, owner)) continue;
+
+                float angle = dist > 0.001f ? Vector3.Angle(ray.direction, toTarget) : 0f;
+                float score = angle + dist * 0.01f;
+                if (score < bestScore) { bestScore = score; best = owner; bestText = t; }
+            }
+        }
+        text = bestText;
+        return best;
+    }
+
+    bool HasClearPickupLine(Vector3 origin, Vector3 target, float dist, Component owner)
+    {
+        if (dist < 0.001f) return true;
+        Vector3 dir = (target - origin) / dist;
+        int n = Physics.RaycastNonAlloc(origin, dir, blockHits, dist, interactionMask, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            Collider c = blockHits[i].collider;
+            if (c == null || c.transform.IsChildOf(transform)) continue;
+            if (c.transform.IsChildOf(owner.transform)) continue;       // 대상 자신
+            if (GetPickupOwner(c) != null) continue;                    // 다른 줍기 아이템은 시야를 막지 않음
+            if (c.bounds.Contains(target))
+            {
+                // 대상을 감싸는 Collider: 가구 몸통(큰 상호작용 박스)은 무시, 닫힌 문짝/서랍은 막음.
+                var part = c.GetComponentInParent<OpenablePart>();
+                if (part != null && !part.IsOpen) return false;
+                if (c.GetComponentInParent<IInteractable>() != null) continue;
+            }
+            return false; // 벽/바닥/닫힌 문 등 실제 막힌 구조물
+        }
+        return true;
+    }
+
+    void TryPickup(Component owner)
+    {
+        if (owner is BatteryPickup battery)
+        {
+            if (!battery.Collect(this)) Notify("INVENTORY FULL");
+            else OnInteracted?.Invoke();
+            return;
+        }
+        ((IInteractable)owner).Interact(this);
+        OnInteracted?.Invoke();
     }
 
     // ───────────────────────── 판정 여유 (SphereCast) ─────────────────────────

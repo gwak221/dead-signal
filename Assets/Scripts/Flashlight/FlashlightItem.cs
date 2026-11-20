@@ -14,7 +14,7 @@ using UnityEngine;
 /// 쿨타임은 이 오브젝트에 저장된다. 버렸다가 다시 주워도 같은 오브젝트이므로 쿨타임이 유지된다.
 /// </summary>
 [DisallowMultipleComponent]
-public class FlashlightItem : MonoBehaviour, IInteractable
+public class FlashlightItem : MonoBehaviour, IInteractable, IPickupable
 {
     [Header("Parts (auto-found by name if empty)")]
     public Transform visual;
@@ -50,9 +50,9 @@ public class FlashlightItem : MonoBehaviour, IInteractable
         cooldownEnd = Time.time + seconds;
     }
 
-    // ───────────────────────── IInteractable (E로 줍기) ─────────────────────────
+    // ───────────────────────── IInteractable + IPickupable (F로 줍기) ─────────────────────────
 
-    public string GetInteractionText() => "[E] PICK UP FLASHLIGHT";
+    public string GetInteractionText() => "[F] PICK UP FLASHLIGHT";
 
     public void Interact(PlayerInteraction player)
     {

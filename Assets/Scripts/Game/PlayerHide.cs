@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// 플레이어 숨기 상태. Player 오브젝트에 붙는다 (HideSpot이 첫 사용 시 자동 추가).
 /// 숨는 동안 기존 FirstPersonController / PlayerInteraction의 공개 스위치만 사용해 차단한다:
 ///   - FirstPersonController.SetControlsEnabled(false) : 이동/달리기/마우스 시선 + 손전등(FlashlightController가 ControlsEnabled 필요)
-///   - PlayerInteraction.SetInteractionEnabled(false)  : E 상호작용 전부 + 인벤토리 단축키(아이템 Drop 포함)
+///   - PlayerInteraction.SetInteractionEnabled(false)  : E 상호작용 전부 + 인벤토리 단축키
 /// 인벤토리 내용, 신체 파손, 하트 상태는 건드리지 않는다.
 /// 나중에 MonsterChase 등이 PlayerHide.IsPlayerHiding 또는 인스턴스의 IsHiding을 읽으면 된다.
 /// </summary>

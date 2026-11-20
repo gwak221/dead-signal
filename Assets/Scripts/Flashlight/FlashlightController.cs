@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 ///  - 손전등은 인벤토리 아이템(InventoryItemType.Flashlight, FlashlightItem). 게임 시작 시 1개 지급.
 ///  - 손전등 슬롯을 선택해 '장착한 상태'에서만 우클릭 사용 가능. 맨손/다른 아이템이면 무반응.
 ///  - 스턴 성공 후 재사용 대기시간은 FlashlightItem 오브젝트에 저장 → 버렸다 주워도 유지.
-///  - 배터리 무한.
+///  - 배터리 0~100%: 켜져 있는 동안 서서히 감소, 몬스터 스턴 성공 시 stunBatteryCost% 즉시 소모. R + AA 로 100% 재장전.
 ///  - 정확한 에임 대신: 몬스터가 화면 중앙 영역(screenArea) 안에 있고, 사거리 안이고,
 ///    Raycast로 벽에 가려지지 않았으면 '비추는 중'으로 판정.
 ///  - requiredExposure초 동안 계속 비추면 스턴 + 플래시 연출.
@@ -52,11 +52,16 @@ public class FlashlightController : MonoBehaviour
     [Tooltip("즉시 초기화가 아닐 때 초당 감소량(초). 4 = 0.6초 누적이 0.15초 만에 사라짐.")]
     public float exposureDecayRate = 4f;
 
-    [Header("Stun Charges (손전등 조명은 무제한, 몬스터 스턴만 횟수 제한)")]
-    [Tooltip("한 판에서 손전등으로 몬스터를 스턴시킬 수 있는 최대 횟수. 스턴이 실제로 성공했을 때만 1 소모.")]
-    public int maxStunCharges = 3;
+    [Header("Battery % (0~100)")]
+    [Tooltip("켜져 있는 동안 초당 감소량(%). 0.3333 = 3초 점등당 약 1%.")]
+    public float drainPercentPerSecond = 1f / 3f;
+    [Tooltip("몬스터 스턴이 실제로 성공했을 때 즉시 소모되는 배터리(%). 남은 양이 이보다 적으면 0%까지 소모.")]
+    public float stunBatteryCost = 35f;
+    public float maxBattery = 100f;
+    [Tooltip("배터리 0% 에서 우클릭 시 안내 문구 표시 시간(초).")]
+    public float emptyHintSeconds = 1.6f;
 
-    [Header("Reload (R키: 0/3 방전 + AA 배터리 보유 시에만)")]
+    [Header("Reload (R키: 배터리 0% + AA 배터리 보유 시에만)")]
     [Tooltip("손전등이 아래로 내려가는 시간(초).")] public float reloadLowerTime = 0.35f;
     [Tooltip("아래에서 배터리를 갈아 끼우는 정지 시간(초).")] public float reloadHoldTime = 0.45f;
     [Tooltip("원래 위치로 돌아오는 시간(초).")] public float reloadRaiseTime = 0.4f;
@@ -140,14 +145,14 @@ public class FlashlightController : MonoBehaviour
     public MonsterStun CurrentTarget => currentTarget;
     public FlashlightItem EquippedFlashlight => equipped;
 
-    /// <summary>스턴 횟수를 모두 써서 손전등이 방전된 상태인지 (Light 점등 불가).</summary>
-    public bool IsBatteryEmpty => stunCharges <= 0;
+    /// <summary>배터리가 0% 인 상태 (Light 점등/스턴 불가).</summary>
+    public bool IsBatteryEmpty => battery <= 0f;
     /// <summary>근거리 자동 감광 배율 (1 = 감광 없음). 디버그/테스트용 읽기 전용.</summary>
     public float NearDimFactor => nearDim;
     /// <summary>SmoothDamp 로 필터링된 전방 거리 (디버그/테스트용).</summary>
     public float FilteredDistance => filteredDistance;
 
-    int stunCharges;
+    float battery = 100f;
 
     bool reloading;
     float reloadElapsed;
@@ -156,17 +161,27 @@ public class FlashlightController : MonoBehaviour
     /// <summary>배터리 교체 연출 중 (손전등 사용/스턴 불가).</summary>
     public bool IsReloading => reloading;
     public float ReloadTotalTime => reloadLowerTime + reloadHoldTime + reloadRaiseTime;
-    /// <summary>남은 스턴 횟수 (0 이면 빛은 켜지지만 더 이상 스턴되지 않음).</summary>
-    public int StunCharges => stunCharges;
-    public int MaxStunCharges => maxStunCharges;
-    /// <summary>(남은 횟수, 최대 횟수) 변경 시.</summary>
-    public event Action<int, int> OnStunChargesChanged;
+    /// <summary>남은 배터리(%, 0~maxBattery).</summary>
+    public float BatteryPercent => battery;
+    public float MaxBattery => maxBattery;
+    /// <summary>배터리 값이 바뀔 때 (현재 %).</summary>
+    public event Action<float> OnBatteryChanged;
+    /// <summary>0% 에서 우클릭해 점등을 시도했을 때 (UI 안내용).</summary>
+    public event Action OnEmptyHint;
 
-    /// <summary>스턴 횟수를 최대로 되돌린다. 씬이 다시 로드되면(Retry / Quit to Title) 새 컴포넌트가 만들어져 자동으로 초기화된다.</summary>
-    public void ResetStunCharges()
+    void SetBattery(float v)
     {
-        stunCharges = Mathf.Max(0, maxStunCharges);
-        OnStunChargesChanged?.Invoke(stunCharges, maxStunCharges);
+        v = Mathf.Clamp(v, 0f, maxBattery);
+        if (Mathf.Approximately(v, battery)) return;
+        battery = v;
+        OnBatteryChanged?.Invoke(battery);
+    }
+
+    /// <summary>배터리를 100% 로 되돌린다. 씬이 다시 로드되면(Retry / Quit to Title) 새 컴포넌트가 만들어져 자동으로 초기화된다.</summary>
+    public void RefillBattery()
+    {
+        battery = maxBattery;
+        OnBatteryChanged?.Invoke(battery);
     }
 
     /// <summary>현재 적용 중인 화면 판정 영역 (눈 파손 시 축소).</summary>
@@ -224,7 +239,7 @@ public class FlashlightController : MonoBehaviour
         if (playerCamera == null) playerCamera = Camera.main;
         if (inventory == null) inventory = GetComponent<PlayerInventory>();
         if (bodyStatus == null) bodyStatus = GetComponent<PlayerBodyStatus>();
-        stunCharges = Mathf.Max(0, maxStunCharges);
+        battery = maxBattery;
         if (GetComponent<FlashlightSlotCooldownUI>() == null)
             gameObject.AddComponent<FlashlightSlotCooldownUI>();
         if (GetComponent<FlashlightChargesUI>() == null)
@@ -294,12 +309,22 @@ public class FlashlightController : MonoBehaviour
         UpdateReload();
 
         bool canUse = equipped != null && (controller == null || controller.ControlsEnabled) && !reloading;
-        // 스턴 횟수를 다 쓰면(0/3) 방전: 우클릭해도 점등되지 않는다.
-        bool held = canUse && stunCharges > 0 && Mouse.current != null && Mouse.current.rightButton.isPressed;
-        if (canUse && stunCharges <= 0 && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        // 배터리 0% 면 방전: 우클릭해도 점등되지 않는다.
+        bool held = canUse && battery > 0f && Mouse.current != null && Mouse.current.rightButton.isPressed;
+        if (canUse && battery <= 0f && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        {
             OnEmptyTriggered?.Invoke();
+            OnEmptyHint?.Invoke();
+        }
 
         SetOn(held);
+
+        // 실제로 켜져 있는 동안만 지속 소모 (프레임레이트 무관).
+        if (isOn)
+        {
+            SetBattery(battery - drainPercentPerSecond * Time.deltaTime);
+            if (battery <= 0f) { SetOn(false); held = false; }
+        }
 
         if (!held)
         {
@@ -351,9 +376,8 @@ public class FlashlightController : MonoBehaviour
         {
             if (best.TryStun(stunDuration))
             {
-                stunCharges = Mathf.Max(0, stunCharges - 1); // 실제로 스턴이 성공했을 때만 소모
-                OnStunChargesChanged?.Invoke(stunCharges, maxStunCharges);
-                if (stunCharges <= 0) SetOn(false); // 마지막 스턴으로 방전되는 순간 즉시 Light OFF
+                SetBattery(battery - stunBatteryCost); // 실제로 스턴이 성공했을 때만 소모 (부족하면 0% 까지)
+                if (battery <= 0f) SetOn(false);       // 0% 가 되는 순간 즉시 Light OFF
                 equipped.StartCooldown(restunCooldown);
                 feedback?.PlayStunFlash(best.FacePosition);
                 OnMonsterStunned?.Invoke(best);
@@ -367,7 +391,7 @@ public class FlashlightController : MonoBehaviour
     bool CanStartReload()
     {
         if (reloading) return false;
-        if (stunCharges > 0) return false;                                   // 1/3, 2/3 에서는 교체 금지 (AA 낭비 방지)
+        if (battery > 0f) return false;                                      // 완전 방전(0%)일 때만 교체 가능 (AA 낭비 방지)
         if (controller != null && !controller.ControlsEnabled) return false; // Game Over / Caught / QTE / 숨기 / 메뉴 / 암호 UI 등
         if (GameProgress.IsEnded || GameMenuManager.MenuOpen) return false;
         // 손전등이 현재 선택되어 실제로 손에 들려 있을 때만 (다른 슬롯 / 맨손이면 R 무반응).
@@ -403,7 +427,7 @@ public class FlashlightController : MonoBehaviour
         {
             reloading = false;
             DestroyReloadModel();
-            ResetStunCharges();   // BATTERY EMPTY → STUN 3/3
+            RefillBattery();      // → 100%
             if (equipped != null) equipped.transform.localRotation = Quaternion.Euler(equipped.holdLocalEuler);
         }
     }
