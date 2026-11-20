@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// "AA x0" — 보유 AA 배터리 개수. "STUN n/3" 라벨(24,96) 바로 위(24,126)에 작게 표시.
+/// "AA x0" — 보유 AA 배터리 개수. "FLASHLIGHT n%" 라벨(24,96) 바로 위(24,126)에 작게 표시.
 /// 손전등을 획득했거나 AA 를 1개 이상 가지고 있을 때만 보인다. FlashlightChargesUI 가 자동으로 붙인다.
 /// </summary>
 [DisallowMultipleComponent]

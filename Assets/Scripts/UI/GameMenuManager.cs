@@ -48,10 +48,11 @@ public class GameMenuManager : MonoBehaviour
         { "WASD",      "Move" },
         { "MOUSE",     "Look" },
         { "L-SHIFT",   "Sprint" },
-        { "E",         "Interact" },
+        { "E",         "Interact / Use" },
+        { "F",         "Pick Up" },
         { "R-MOUSE",   "Flashlight" },
+        { "R",         "Reload" },
         { "1 / 2 / 3", "Inventory Slot" },
-        { "F",         "Drop Item" },
         { "SPACE",     "QTE / Skill Check" },
         { "ESC",       "Pause / Controls" },
     };

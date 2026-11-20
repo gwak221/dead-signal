@@ -2,11 +2,11 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 손전등 잔여 스턴 횟수 표시 ("STUN 3/3").
+/// 손전등 배터리 % 표시 ("FLASHLIGHT 100%").
 ///  - 손전등을 획득한 뒤에만 표시 (인벤토리에 손전등이 없으면 숨김)
-///  - 스턴 성공 시 FlashlightController.OnStunChargesChanged 로 즉시 갱신
+///  - 배터리 변화 시 FlashlightController.OnBatteryChanged 로 즉시 갱신 (정수 %)
 ///  - Reload 중 "RELOADING..." (R키 배터리 교체)
-///  - 0/3 이면 흐린 붉은색 "BATTERY EMPTY" (손전등 방전 — Light 점등 불가)
+///  - 0% 이면 흐린 붉은색 (방전 — Light 점등 불가). 0% 에서 우클릭하면 "BATTERY EMPTY - PRESS R TO RELOAD" 토스트
 ///  - HUD 의 DesignRoot(1280x720 기준) 왼쪽 아래, 인벤토리 슬롯 바로 위에 배치 → Heart Rate / 비콘 HUD 와 겹치지 않음
 /// FlashlightController 가 자동으로 붙인다.
 /// </summary>
@@ -22,6 +22,7 @@ public class FlashlightChargesUI : MonoBehaviour
     PlayerInventory inventory;
     TextMeshProUGUI label;
     int shown = -1;
+    public const string EmptyHintText = "BATTERY EMPTY - PRESS R TO RELOAD";
 
     void Awake()
     {
@@ -33,15 +34,17 @@ public class FlashlightChargesUI : MonoBehaviour
     void OnEnable()
     {
         if (fc == null) fc = GetComponent<FlashlightController>();
-        if (fc != null) fc.OnStunChargesChanged += OnChanged;
+        if (fc != null) { fc.OnBatteryChanged += OnChanged; fc.OnEmptyHint += OnEmptyHint; }
     }
 
     void OnDisable()
     {
-        if (fc != null) fc.OnStunChargesChanged -= OnChanged;
+        if (fc != null) { fc.OnBatteryChanged -= OnChanged; fc.OnEmptyHint -= OnEmptyHint; }
     }
 
-    void OnChanged(int left, int max) => Refresh();
+    void OnChanged(float percent) => Refresh();
+
+    void OnEmptyHint() => HudToast.Show("FlashlightEmpty", EmptyHintText, fc != null ? fc.emptyHintSeconds : 1.6f);
 
     void LateUpdate()
     {
@@ -63,13 +66,14 @@ public class FlashlightChargesUI : MonoBehaviour
     void Refresh()
     {
         if (label == null || fc == null) return;
-        int left = fc.StunCharges;
+        int pct = Mathf.Clamp(Mathf.RoundToInt(fc.BatteryPercent), 0, 100);
+        if (pct == 0 && fc.BatteryPercent > 0f) pct = 1; // 0% 는 실제로 방전됐을 때만 표시
         bool rl = fc.IsReloading;
-        int key = left * 100 + fc.MaxStunCharges + (rl ? 100000 : 0);
+        int key = pct + (rl ? 1000 : 0);
         if (key == shown) return;
         shown = key;
-        label.text = rl ? "RELOADING..." : left <= 0 ? "BATTERY EMPTY" : "STUN " + left + "/" + fc.MaxStunCharges;
-        label.color = (left <= 0 && !rl) ? emptyColor : normalColor;
+        label.text = rl ? "RELOADING..." : "FLASHLIGHT " + pct + "%";
+        label.color = (pct <= 0 && !rl) ? emptyColor : normalColor;
     }
 
     bool Build()

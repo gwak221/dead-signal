@@ -31,6 +31,26 @@ public class FirstPersonController : MonoBehaviour
     private bool sprintAllowed = true;
     private float speedMultiplier = 1f;
 
+    // 심박수 Sprint Lock (히스테리시스): lockBpm 이상이면 잠금, releaseBpm 이하로 회복돼야 해제. 그 사이 구간은 현재 상태 유지.
+    // 코드 상수(직렬화 안 함): 씬에 저장된 옛 값이 새 기준을 덮어쓰지 않게 한다.
+    /// <summary>이 BPM 이상이면 달리기 금지.</summary>
+    [System.NonSerialized] public float sprintLockBpm = 160f;
+    /// <summary>잠긴 뒤 이 BPM 이하로 내려가야 다시 달릴 수 있음 (121~159 는 현재 상태 유지).</summary>
+    [System.NonSerialized] public float sprintReleaseBpm = 120f;
+    private bool heartSprintLocked;
+
+    /// <summary>심박수로 인한 Sprint Lock 상태 (다리 부상 SprintAllowed 와 별개).</summary>
+    public bool HeartSprintLocked => heartSprintLocked;
+
+    void UpdateHeartSprintLock()
+    {
+        var heart = HeartRateController.Instance;
+        if (heart == null) return;
+        float bpm = heart.CurrentBpm;
+        if (!heartSprintLocked && bpm >= sprintLockBpm) heartSprintLocked = true;
+        else if (heartSprintLocked && bpm <= sprintReleaseBpm) heartSprintLocked = false;
+    }
+
     public bool ControlsEnabled => controlsEnabled;
     public bool IsThirdPerson => isThirdPerson;
     public bool SprintAllowed => sprintAllowed;
@@ -111,7 +131,12 @@ public class FirstPersonController : MonoBehaviour
         input = Vector2.ClampMagnitude(input, 1f);
 
         bool isMoving = input.sqrMagnitude > 0.01f;
-        bool isRunning = sprintAllowed && Keyboard.current.leftShiftKey.isPressed && isMoving;
+        UpdateHeartSprintLock();
+        bool shiftHeld = Keyboard.current.leftShiftKey.isPressed;
+        // 다리 부상(sprintAllowed) 또는 심박수 잠금 중 하나라도 걸려 있으면 달리기 불가.
+        bool isRunning = sprintAllowed && !heartSprintLocked && shiftHeld && isMoving;
+        if (heartSprintLocked && shiftHeld && isMoving)
+            HudToast.Show("TooExhausted", "TOO EXHAUSTED", 1.0f);
         IsSprinting = isRunning;
         float currentSpeed = (isRunning ? runSpeed : moveSpeed) * speedMultiplier;
 
