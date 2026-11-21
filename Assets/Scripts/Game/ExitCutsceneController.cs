@@ -6,7 +6,7 @@ using UnityEngine.UI;
 /// 모든 비콘 활성화(GameProgress.EscapeUnlocked = 활성 >= 필요 개수, 개수 하드코딩 없음) 시
 /// 탈출구 컷씬을 한 번만 재생: 조작 잠금 → ExitCutsceneCamera → 닫힌 EscapeWall/EXIT → EscapeWall 개방(기존 EscapeDoorController 재사용)
 /// → 열린 출구 → 플레이어 카메라 복귀 → 조작 재개.
-///  - 입력 잠금: 기존 FirstPersonController.SetControlsEnabled(false)(이동/시선/손전등/R) + PlayerInteraction.SetInteractionEnabled(false)(E/슬롯/Drop).
+///  - 입력 잠금: 기존 FirstPersonController.SetControlsEnabled(false)(이동/시선/손전등/R) + PlayerInteraction.SetInteractionEnabled(false)(E/F/슬롯).
 ///    ESC 는 GameMenuManager.CanPause 가 IsPlaying 을 보고 막는다. Time.timeScale 은 건드리지 않는다.
 ///  - 몬스터: 컷씬 동안 MonsterChase 비활성(추적/공격/PlayerCaughtSequence 발생 불가) + NavMeshAgent 정지, 종료 시 복구.
 ///  - Clear 는 건드리지 않음 (EscapeZone 통과 시에만 기존대로).
@@ -70,6 +70,7 @@ public class ExitCutsceneController : MonoBehaviour
         if (kb == null || !kb.f9Key.wasPressedThisFrame) return;
         if (played || IsPlaying || GameProgress.IsEnded || GameMenuManager.MenuOpen) return;
         if (SkillCheckManager.Instance != null && SkillCheckManager.Instance.IsActive) return;
+        if (BeaconPipeQte.IsOpen) return;
         int n = 0;
         foreach (var b in FindObjectsByType<Beacon>(FindObjectsSortMode.None))
             if (b.DebugComplete()) n++;

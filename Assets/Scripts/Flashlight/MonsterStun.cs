@@ -87,7 +87,10 @@ public class MonsterStun : MonoBehaviour
         if (aiBehavioursToPause == null || aiBehavioursToPause.Length == 0)
         {
             var chase = GetComponent<MonsterChase>();
-            aiBehavioursToPause = chase != null ? new Behaviour[] { chase } : new Behaviour[0];
+            var hound = GetComponent<MonsterHoundAI>();   // Monster 2 (E-07 Hound)
+            aiBehavioursToPause = chase != null ? new Behaviour[] { chase }
+                                : hound != null ? new Behaviour[] { hound }
+                                : new Behaviour[0];
         }
 
         renderers = GetComponentsInChildren<Renderer>();

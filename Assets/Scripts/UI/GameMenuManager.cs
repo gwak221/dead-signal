@@ -48,10 +48,11 @@ public class GameMenuManager : MonoBehaviour
         { "WASD",      "Move" },
         { "MOUSE",     "Look" },
         { "L-SHIFT",   "Sprint" },
-        { "E",         "Interact" },
+        { "E",         "Interact / Use" },
+        { "F",         "Pick Up" },
         { "R-MOUSE",   "Flashlight" },
+        { "R",         "Reload" },
         { "1 / 2 / 3", "Inventory Slot" },
-        { "F",         "Drop Item" },
         { "SPACE",     "QTE / Skill Check" },
         { "ESC",       "Pause / Controls" },
     };
@@ -123,6 +124,8 @@ public class GameMenuManager : MonoBehaviour
     static bool CanPause()
     {
         if (SkillCheckManager.Instance != null && SkillCheckManager.Instance.IsActive) return false;
+        if (BeaconPipeQte.IsOpen) return false;   // 파이프 퍼즐은 ESC 로 퍼즐만 취소한다 (일시정지 메뉴와 동시에 열지 않음)
+        if (Monster2ReleaseSequence.IsPlaying) return false; // Monster 2 등장 컷씬 중 ESC 일시정지 금지
         if (PlayerCaughtSequence.IsRunning) return false;
         if (ExitCutsceneController.IsPlaying) return false; // 탈출구 컷씬 중 ESC 일시정지 금지
         if (GameProgress.IsEnded) return false;

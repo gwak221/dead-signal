@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class KeyPickup : MonoBehaviour, IInteractable
+public class KeyPickup : MonoBehaviour, IInteractable, IPickupable
 {
     public string GetInteractionText()
     {
-        return "[E] PICK UP KEY";
+        return "[F] PICK UP KEY";
     }
 
     public void Interact(PlayerInteraction player)

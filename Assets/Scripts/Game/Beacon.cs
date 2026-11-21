@@ -3,7 +3,8 @@ using UnityEngine;
 /// <summary>
 /// control_panel_00X 비콘. 배터리를 가지고 E → QTE → 성공 시에만 배터리를 삽입구에 고정하고 활성화.
 /// 기존 PlayerInteraction의 IInteractable 경로를 그대로 사용한다.
-/// QTE 실패 시: 배터리/비콘/진행도/EscapeWall 모두 변화 없음 (E를 다시 눌러야 새 QTE).
+/// QTE = 파이프 연결 퍼즐(BeaconPipeQte). 기존 원형 SkillCheckManager 는 아이템 상자 잠금(LootQteGate)용으로 남겨 둔다.
+/// 퍼즐 취소(ESC) 시: 배터리/비콘/진행도/EscapeWall 모두 변화 없음 (E를 다시 눌러야 새 퍼즐).
 /// </summary>
 public class Beacon : MonoBehaviour, IInteractable
 {
@@ -14,7 +15,7 @@ public class Beacon : MonoBehaviour, IInteractable
     [Header("Escape wall (비어 있으면 씬에서 자동 탐색)")]
     public EscapeDoorController escapeWall;
 
-    [Header("QTE (비어 있으면 씬에서 자동 탐색)")]
+    [Header("(구) 원형 스킬체크 참조 - 비콘은 더 이상 사용하지 않음 (아이템 상자 QTE 가 사용)")]
     public SkillCheckManager skillCheck;
 
     [Header("Tutorial (탈출 진행도 / EscapeWall 표시등에 포함하지 않음)")]
@@ -70,14 +71,9 @@ public class Beacon : MonoBehaviour, IInteractable
             return;
         }
 
-        if (skillCheck == null) skillCheck = SkillCheckManager.Instance != null ? SkillCheckManager.Instance : FindFirstObjectByType<SkillCheckManager>();
-        if (skillCheck == null)
-        {
-            Debug.LogWarning("[Beacon] SkillCheckManager가 씬에 없습니다.");
-            return;
-        }
-
-        qteRunning = skillCheck.TriggerSkillCheck(() => OnQteSuccess(player), OnQteFail);
+        // 파이프 퍼즐 QTE: Beacon 이 명시적으로 Open 을 호출한다 (퍼즐은 자체 입력 없음).
+        qteRunning = BeaconPipeQte.Instance.Open(() => OnQteSuccess(player), OnQteCancel);
+        if (!qteRunning) Debug.LogWarning("[Beacon] 파이프 퍼즐 QTE 를 열 수 없습니다 (Resources/BeaconPipePuzzle 확인).");
     }
 
     // 사운드용 이벤트
@@ -94,6 +90,9 @@ public class Beacon : MonoBehaviour, IInteractable
         qteRunning = false; // 진행 없음. 다시 E를 눌러야 새 QTE 시작.
         AnyQteResult?.Invoke(this, false);
     }
+
+    /// <summary>퍼즐 취소(ESC)/강제 종료: 진행/배터리 변화 없음. 실패 사운드도 내지 않는다.</summary>
+    void OnQteCancel() { qteRunning = false; }
 
     void OnQteSuccess(PlayerInteraction player)
     {

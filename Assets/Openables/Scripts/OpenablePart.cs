@@ -73,17 +73,29 @@ public class OpenablePart : MonoBehaviour, IInteractable
 
     public string GetInteractionText()
     {
+        if (DecorativeOpenable.IsDecorative(this)) return string.Empty;   // 장식용: 프롬프트 없음
         if (!interactable)
             return ForwardTarget != null ? ForwardTarget.GetInteractionText() : string.Empty;
+        if (!IsOpen)
+        {
+            var gate = GetComponentInParent<LootQteGate>();
+            if (gate != null && gate.locked) return gate.lockedText;   // 아이템 상자: 잠금 QTE 필요
+        }
         return IsOpen ? closeText : openText;
     }
 
     public void Interact(PlayerInteraction player)
     {
+        if (DecorativeOpenable.IsDecorative(this)) return;   // 장식용: 열고 닫기 불가
         if (!interactable)
         {
             ForwardTarget?.Interact(player);
             return;
+        }
+        if (!IsOpen)
+        {
+            var gate = GetComponentInParent<LootQteGate>();
+            if (gate != null && gate.Intercept(Toggle)) return;   // 잠긴 아이템 상자: QTE 성공 시에만 Toggle(열기)
         }
         Toggle();
     }

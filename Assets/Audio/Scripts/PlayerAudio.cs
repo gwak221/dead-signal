@@ -7,7 +7,7 @@ using UnityEngine;
 ///   숨소리   : BreathingAudio (HeartRateController BPM)
 ///   심장박동 : HeartRateController.OnBeat (BPM이 높을수록 크게)
 ///   상호작용 : PlayerInteraction.OnInteracted
-///   인벤토리 : PlayerInventory.OnSlotToggled / OnItemDropped / OnItemAdded
+///   인벤토리 : PlayerInventory.OnSlotToggled / OnItemAdded
 ///   피격     : PlayerBodyStatus.OnPenaltyChanged
 ///   숨기     : PlayerHide.OnHidingChanged
 ///   잡힘     : PlayerCaughtSequence.onBiteImpact
@@ -68,7 +68,6 @@ public class PlayerAudio : MonoBehaviour
         if (inventory != null)
         {
             inventory.OnSlotToggled += HandleSlotToggled;
-            inventory.OnItemDropped += HandleDropped;
             inventory.OnItemAdded += HandleAdded;
         }
         if (body != null) body.OnPenaltyChanged += HandlePenalty;
@@ -81,7 +80,6 @@ public class PlayerAudio : MonoBehaviour
         if (inventory != null)
         {
             inventory.OnSlotToggled -= HandleSlotToggled;
-            inventory.OnItemDropped -= HandleDropped;
             inventory.OnItemAdded -= HandleAdded;
         }
         if (body != null) body.OnPenaltyChanged -= HandlePenalty;
@@ -150,12 +148,6 @@ public class PlayerAudio : MonoBehaviour
     }
 
     void HandleSlotToggled(bool selected) => emitter.Play(selected ? slotSelectCue : slotDeselectCue);
-
-    void HandleDropped(InventoryItemType type, GameObject item)
-    {
-        Vector3 pos = item != null ? item.transform.position : transform.position;
-        SoundEmitter.PlayAt(dropCue, pos);
-    }
 
     void HandleAdded(InventoryItemType type)
     {

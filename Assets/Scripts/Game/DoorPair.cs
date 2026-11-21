@@ -109,6 +109,20 @@ public class DoorPair : MonoBehaviour, IInteractable
         target = 1f;
     }
 
+    float burstUntil;   // Time.time 이 이 값 이전이면 짧은 개방 시간(BurstOpen)으로 보간
+
+    /// <summary>E-07 Hound 돌진용: 잠기지 않은 문을 짧은 시간(seconds)에 강제로 연다.</summary>
+    public void BurstOpen(float seconds)
+    {
+        if (locked) return;
+        if (leafL == null && leafR == null) return;
+        if (target < 0.5f) AnyMoved?.Invoke(this, true, false);
+        target = 1f;
+        burstUntil = Time.time + Mathf.Max(0.05f, seconds) + 0.5f;
+        burstSeconds = Mathf.Max(0.05f, seconds);
+    }
+    float burstSeconds;
+
     public void Close()
     {
         if (leafL == null && leafR == null) return;
@@ -125,16 +139,32 @@ public class DoorPair : MonoBehaviour, IInteractable
         return transform.position;
     }
 
-    public string GetInteractionText() => locked ? lockedText : target > 0.5f ? closeText : openText;
+    public string GetInteractionText()
+    {
+        if (DecorativeOpenable.IsDecorative(this)) return string.Empty;   // 장식용: 프롬프트 없음
+        if (locked) return lockedText;
+        if (target <= 0.5f)
+        {
+            var gate = GetComponentInParent<LootQteGate>();
+            if (gate != null && gate.locked) return gate.lockedText;   // 아이템이 든 약장: 잠금 QTE 필요
+        }
+        return target > 0.5f ? closeText : openText;
+    }
 
     public void Interact(PlayerInteraction player)
     {
         if (leafL == null && leafR == null) return;
+        if (DecorativeOpenable.IsDecorative(this)) return;   // 장식용: 열고 닫기 불가
         if (locked)
         {
             if (player != null) player.Notify(lockedText);
             AnyLocked?.Invoke(this);
             return;
+        }
+        if (target <= 0.5f)
+        {
+            var gate = GetComponentInParent<LootQteGate>();
+            if (gate != null && gate.Intercept(() => { target = 1f; AnyMoved?.Invoke(this, true, true); })) return;
         }
         target = target > 0.5f ? 0f : 1f;   // 이동 중이면 현재 위치에서 반대로
         AnyMoved?.Invoke(this, target > 0.5f, true);
@@ -143,7 +173,8 @@ public class DoorPair : MonoBehaviour, IInteractable
     void Update()
     {
         if (Mathf.Approximately(t, target)) return;
-        t = Mathf.MoveTowards(t, target, Time.deltaTime / Mathf.Max(0.05f, openSeconds));
+        float dur = Time.time < burstUntil ? burstSeconds : openSeconds;
+        t = Mathf.MoveTowards(t, target, Time.deltaTime / Mathf.Max(0.05f, dur));
         Apply(Mathf.SmoothStep(0f, 1f, t));
     }
 
