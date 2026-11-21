@@ -3,10 +3,40 @@ guid: 409a261dee4ae48f8b5277e9c698f53b
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Monster_Bone
+    second: {fileID: 2100000, guid: e2c10944bbaaa401f9b644edba5b4c51, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Monster_Claw
+    second: {fileID: 2100000, guid: 9b94afe26311e441db016807d703d808, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Monster_Heart
+    second: {fileID: 2100000, guid: fb5de69673a644ec9af3fdf251770a23, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Monster_Skin
+    second: {fileID: 2100000, guid: df37bccc6eba74430b532d9ac30fac43, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Monster_Tendril
+    second: {fileID: 2100000, guid: 65d27917c7c494b6588a42675636f48b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Monster_Veins
+    second: {fileID: 2100000, guid: e3c6b0796ee574d6c826c153c4de7f88, type: 2}
   materials:
     materialImportMode: 2
-    materialName: 0
+    materialName: 1
     materialSearch: 1
     materialLocation: 1
   animations:

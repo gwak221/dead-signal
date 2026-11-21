@@ -70,6 +70,7 @@ public class ExitCutsceneController : MonoBehaviour
         if (kb == null || !kb.f9Key.wasPressedThisFrame) return;
         if (played || IsPlaying || GameProgress.IsEnded || GameMenuManager.MenuOpen) return;
         if (SkillCheckManager.Instance != null && SkillCheckManager.Instance.IsActive) return;
+        if (BeaconPipeQte.IsOpen) return;
         int n = 0;
         foreach (var b in FindObjectsByType<Beacon>(FindObjectsSortMode.None))
             if (b.DebugComplete()) n++;

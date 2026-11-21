@@ -53,9 +53,18 @@ public class ChaseMusicController : MonoBehaviour
         if (m != null && !chasers.Contains(m)) chasers.Add(m);
     }
 
+    // Monster 2 (Hound): 같은 BGM/카운트 방식에 합류 (적이 여러 마리여도 BGM 하나)
+    readonly List<MonsterHoundAI> hounds = new List<MonsterHoundAI>();
+
+    public void Register(MonsterHoundAI h)
+    {
+        if (h != null && !hounds.Contains(h)) hounds.Add(h);
+    }
+
     void Rescan()
     {
         foreach (var m in FindObjectsByType<MonsterChase>(FindObjectsSortMode.None)) Register(m);
+        foreach (var h in FindObjectsByType<MonsterHoundAI>(FindObjectsSortMode.None)) Register(h);
     }
 
     void Update()
@@ -68,6 +77,12 @@ public class ChaseMusicController : MonoBehaviour
             var m = chasers[i];
             if (m == null) { chasers.RemoveAt(i); continue; }
             if (m.isActiveAndEnabled && m.IsChasing) count++;
+        }
+        for (int i = hounds.Count - 1; i >= 0; i--)
+        {
+            var h = hounds[i];
+            if (h == null) { hounds.RemoveAt(i); continue; }
+            if (h.isActiveAndEnabled && h.IsChasingPlayer) count++;
         }
         ChasingCount = count;
 

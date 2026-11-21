@@ -228,6 +228,11 @@ public class FlashlightController : MonoBehaviour
         foreach (var m in FindObjectsByType<MonsterChase>(FindObjectsSortMode.None))
             if (m.GetComponent<MonsterStun>() == null)
                 m.gameObject.AddComponent<MonsterStun>();
+
+        // Monster 2 (Hound): 같은 MonsterStun 공통 구조 사용
+        foreach (var h in FindObjectsByType<MonsterHoundAI>(FindObjectsSortMode.None))
+            if (h.GetComponent<MonsterStun>() == null)
+                h.gameObject.AddComponent<MonsterStun>();
     }
 
     // ───────────────────────── Unity ─────────────────────────
