@@ -6,7 +6,8 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 팀원 QTE(원형 스킬체크)를 New Input System으로 이식한 버전. 비콘 배터리 삽입 전용.
+/// 팀원 QTE(원형 스킬체크)를 New Input System으로 이식한 버전. 이제 비콘이 아니라 '아이템이 든 상자'의 잠금 QTE(LootQteGate)용.
+/// (비콘 QTE 는 BeaconPipeQte 파이프 퍼즐로 교체됨. 이 클래스의 코드는 그대로 재사용한다.)
 /// - 외부에서 TriggerSkillCheck() / TriggerSkillCheck(onSuccess, onFail) 로 시작.
 /// - 판정은 Space(Keyboard.current.spaceKey)만 사용.
 /// - OnSuccess / OnFail (UnityEvent) + 호출별 1회용 콜백 제공. QTE 코드는 비콘 로직을 모른다.

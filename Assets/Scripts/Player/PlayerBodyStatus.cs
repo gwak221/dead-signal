@@ -106,6 +106,8 @@ public class PlayerBodyStatus : MonoBehaviour
         ApplyLeg(startLegPenalty, true);
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    // [테스트 전용 — Editor / Development Build 에서만 컴파일. Release Build 에서는 F6/F7/F8 이 동작하지 않는다]
     void Update()
     {
         if (!enableDebugKeys || Keyboard.current == null)
@@ -116,6 +118,7 @@ public class PlayerBodyStatus : MonoBehaviour
         if (kb.f7Key.wasPressedThisFrame) SetArmPenalty(!armPenalty);
         if (kb.f8Key.wasPressedThisFrame) SetLegPenalty(!legPenalty);
     }
+#endif
 
     // ───────────────────────── Public API ─────────────────────────
 

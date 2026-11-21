@@ -147,6 +147,7 @@ public class PlayerCaughtSequence : MonoBehaviour
 
         // 진행 중인 QTE가 있으면 (이벤트 없이) 닫는다.
         SkillCheckManager.CancelActive();
+        BeaconPipeQte.CancelActive();
 
         // 조작 차단: 이동/Sprint/시선/손전등(ControlsEnabled) + 상호작용/인벤토리 선택(InteractionEnabled)
         if (controller != null) controller.SetControlsEnabled(false);

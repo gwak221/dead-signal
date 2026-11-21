@@ -8,7 +8,8 @@ public enum InventoryItemType
     None,
     Battery,
     Key,
-    Flashlight // 기존 값 순서 유지를 위해 맨 뒤에 추가
+    Flashlight, // 기존 값 순서 유지를 위해 맨 뒤에 추가
+    Medkit
 }
 
 public class PlayerInventory : MonoBehaviour
@@ -278,6 +279,13 @@ public class PlayerInventory : MonoBehaviour
             item.transform.localPosition = flashlightItem.holdLocalPosition;
             item.transform.localRotation = Quaternion.Euler(flashlightItem.holdLocalEuler);
         }
+        else if (type == InventoryItemType.Medkit)
+        {
+            // 의료상자: 손에 든 모습이 화면을 가리지 않도록 약간 아래/앞에, 크기를 줄여서.
+            item.transform.localPosition = new Vector3(0.02f, -0.14f, 0.16f);
+            item.transform.localRotation = Quaternion.identity;
+            item.transform.localScale = savedScale * 0.5f;
+        }
         else if (type == InventoryItemType.Key)
         {
             // 기존 KeyHoldPoint가 키에 맞춰져 있으므로 그대로 사용.
@@ -308,6 +316,9 @@ public class PlayerInventory : MonoBehaviour
 
         BatteryPickup battery = item.GetComponent<BatteryPickup>();
         if (battery != null) battery.enabled = false;
+
+        MedkitPickup medkit = item.GetComponent<MedkitPickup>();
+        if (medkit != null) medkit.enabled = false;
     }
 
     void RestorePickupComponents(GameObject item, InventoryItemType type)
@@ -326,6 +337,13 @@ public class PlayerInventory : MonoBehaviour
             BatteryPickup battery = item.GetComponent<BatteryPickup>();
             if (battery == null) battery = item.AddComponent<BatteryPickup>();
             battery.enabled = true;
+        }
+        else if (type == InventoryItemType.Medkit)
+        {
+            MedkitPickup medkit = item.GetComponent<MedkitPickup>();
+            if (medkit == null) medkit = item.AddComponent<MedkitPickup>();
+            medkit.enabled = true;
+            item.transform.localScale = medkit.worldScale;
         }
         else if (type == InventoryItemType.Flashlight)
         {
@@ -402,6 +420,7 @@ public class PlayerInventory : MonoBehaviour
                     InventoryItemType.Battery => "BAT",
                     InventoryItemType.Key => "KEY",
                     InventoryItemType.Flashlight => "LIGHT",
+                    InventoryItemType.Medkit => "MED",
                     _ => "-"
                 };
 
