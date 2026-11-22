@@ -1,0 +1,64 @@
+Dead Signal - 변경/추가 파일 목록 (총 27개 에셋 + .meta)
+====================================================================
+
+[적용 방법 - 둘 중 편한 방식 사용 (씬/.unity 수정 없음)]
+1) Unity 에디터 방식:
+   DeadSignal_MonsterAndBloodUpdate.unitypackage 를
+   Unity 메뉴 Assets -> Import Package -> Custom Package... 로 임포트 (모든 항목 체크 후 Import)
+2) 폴더 덮어쓰기 방식:
+   DeadSignal_MonsterAndBloodUpdate.zip 을 팀원 프로젝트 루트(Assets 폴더가 있는 최상위 폴더)에 압축 해제해 덮어쓰기
+
+--------------------------------------------------------------------
+1. 새로 추가된 파일 (6개 + .meta)
+--------------------------------------------------------------------
+[스크립트]
+- Assets/Script/PlayerBloodDeathEffect.cs
+  : 피격/사망 시 화면 붉은 플래시, 혈흔 비네트/튐, 흐르는 핏방울, URP 후처리 연동 (PlayerCaughtSequence가 런타임에 자동 부착)
+
+[커스텀 URP 셰이더]
+- Assets/Shaders/MonsterLit.shader
+- Assets/Shaders/MonsterLitInput.hlsl
+- Assets/Shaders/MonsterLitForwardPass.hlsl
+  : 몬스터 본래 색상 보존, 어두운 환경 최소 가시성 보정(_AmbientFill), 몬스터 1 피부 노멀맵/모공 디테일 보존, 발광(_EmissionMap) 지원
+
+[네온 핏줄 Emission 텍스처]
+- Assets/Monster_1_Textures/M1_Skin_VeinEmission.png
+- Assets/Monster_2_Textures/E07_Skin_VeinEmission.png
+
+--------------------------------------------------------------------
+2. 수정된 파일 (21개)
+--------------------------------------------------------------------
+[스크립트 - 5개]
+- Assets/Script/MonsterMovementAnimator.cs
+  : MonsterChase 공개 API(IsChasing, OnAttack) 연동 및 Attack 트리거/파라미터 갱신
+- Assets/Script/MonsterHoundAI.cs
+  : Monster 2 디버그 포획용 ForceCaughtAttackState() 및 상태 복원 보완
+- Assets/Script/MonsterHoundAnimator.cs
+  : MonsterHoundAI 비활성 시(해제 전) 이동 애니메이션(01_Walk) 억제 보완
+- Assets/Scripts/Game/MonsterSpawnPoints.cs
+  : Monster 2 재배치용 RelocateHound() 및 스폰 후보 선택(PickCandidate) 보강
+- Assets/Scripts/Player/PlayerCaughtSequence.cs
+  : F10(Monster 1)/F12(Monster 2) 디버그 포획 키, 검은 양옆 닫힘 막(EyelidCanvas) 제거 →
+    몬스터를 올려다보며 피 흘리는 Killcam(fallDrop/fallBack/fallRoll) + 0.15s 급암전(DeathCutoutCanvas) 적용
+
+[Monster 1 머티리얼 - 6개]
+- Assets/Monster_1_Materials/Mat_Monster_Skin.mat
+- Assets/Monster_1_Materials/Mat_Monster_Veins.mat
+- Assets/Monster_1_Materials/Mat_Monster_Heart.mat
+- Assets/Monster_1_Materials/Mat_Monster_Bone.mat
+- Assets/Monster_1_Materials/Mat_Monster_Claw.mat
+- Assets/Monster_1_Materials/Mat_Monster_Tendril.mat
+
+[Monster 2 머티리얼 - 10개]
+- Assets/Monster_2_Materials/Mat_E07_Skin.mat
+- Assets/Monster_2_Materials/Mat_E07_Wound.mat
+- Assets/Monster_2_Materials/Mat_E07_Harness.mat
+- Assets/Monster_2_Materials/Mat_E07_MouthInner.mat
+- Assets/Monster_2_Materials/Mat_E07_Stitch.mat
+- Assets/Monster_2_Materials/Mat_E07_Brass.mat
+- Assets/Monster_2_Materials/Mat_E07_Teeth.mat
+- Assets/Monster_2_Materials/Mat_E07_Claw.mat
+- Assets/Monster_2_Materials/Mat_E07_Metal.mat
+- Assets/Monster_2_Materials/Mat_E07_TubeLiquid.mat
+
+
