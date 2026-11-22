@@ -116,9 +116,12 @@ public class FlashlightSlotCooldownUI : MonoBehaviour
         textGo.layer = root.layer;
         textGo.transform.SetParent(root.transform, false);
         Stretch((RectTransform)textGo.transform);
+        textGo.transform.localRotation = Quaternion.Euler(0f, 0f, -45f);
 
         label = textGo.AddComponent<TextMeshProUGUI>();
         TMP_Text existing = slotUI.GetComponentInChildren<TMP_Text>(true);
+        if (existing == null && slotUI.parent != null)
+            existing = slotUI.parent.GetComponentInChildren<TMP_Text>(true);
         if (existing != null && existing != label && existing.font != null)
             label.font = existing.font; // 기존 슬롯 폰트와 통일
         label.fontSize = fontSize;

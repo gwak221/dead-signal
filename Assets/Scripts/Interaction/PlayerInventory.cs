@@ -14,12 +14,41 @@ public enum InventoryItemType
 
 public class PlayerInventory : MonoBehaviour
 {
-    const int SlotCount = 3;
+    const int SlotCount = 4;
+    /// <summary>6시(아래) 칸. 다른 칸의 70% 크기. 손전등 AA 개수만 보여주고, 아이템은 들어가지 않는다.</summary>
+    const int BatterySlot = 3;
+    const float AaGemScale = 0.7f;
+
+    const float GemSize = 64f;
+    const float GemGap = 4f;
+    const float ClusterMargin = 16f;
+    const float ClusterPad = 8f;
+
+    /// <summary>
+    /// 엘든링형 슬롯 뭉치가 끝나는 높이 (1280x720 DesignRoot, 아래 기준).
+    /// 손전등 잔량 라벨이 이 위에 앉도록 FlashlightChargesUI 가 읽는다.
+    /// </summary>
+    public static float HudClusterTop
+    {
+        get
+        {
+            MeasureCluster(out _, out float parentH, out _, out _, out _, out _);
+            return ClusterMargin + parentH;
+        }
+    }
 
     class SlotData
     {
         public InventoryItemType type = InventoryItemType.None;
         public GameObject worldObject;
+    }
+
+    static SlotData[] NewSlots()
+    {
+        var created = new SlotData[SlotCount];
+        for (int i = 0; i < created.Length; i++)
+            created[i] = new SlotData();
+        return created;
     }
 
     [Header("Held item")]
@@ -37,12 +66,22 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] Color lockedXColor = new Color(0.85f, 0.12f, 0.12f, 0.95f);
     [SerializeField] float lockedXThickness = 6f;
 
-    readonly SlotData[] slots = { new SlotData(), new SlotData(), new SlotData() };
+    readonly SlotData[] slots = NewSlots();
     readonly Image[] slotImages = new Image[SlotCount];
     readonly TMP_Text[] slotTexts = new TMP_Text[SlotCount];
-    readonly Color[] normalSlotColors = new Color[SlotCount];
+    readonly TMP_Text[] slotIndexTexts = new TMP_Text[SlotCount];
     readonly bool[] lockedSlots = new bool[SlotCount];
     readonly GameObject[] lockOverlays = new GameObject[SlotCount];
+    bool hudLaidOut;
+    FlashlightBatteryStock aaStock;
+
+    static readonly Color FrameIdle = new Color(0.055f, 0.05f, 0.045f, 1f);
+    static readonly Color FrameSelected = new Color(0.96f, 0.80f, 0.42f, 1f);
+    static readonly Color FrameStocked = new Color(0.86f, 0.82f, 0.72f, 1f);
+    static readonly Color PlateSelected = new Color(0.11f, 0.10f, 0.09f, 1f);
+    static readonly Color PlateStocked = new Color(0.08f, 0.074f, 0.066f, 1f);
+    static readonly Color TextIdle = new Color(0.86f, 0.82f, 0.72f, 1f);
+    static readonly Color IndexColor = new Color(0.80f, 0.76f, 0.64f, 0.92f);
 
     PlayerInteraction interaction;
     int selectedSlot = -1;
@@ -87,7 +126,9 @@ public class PlayerInventory : MonoBehaviour
             ResolveUI();
         if (inventorySlotsRoot == null || index < 0 || index >= SlotCount || index >= inventorySlotsRoot.childCount)
             return null;
-        return inventorySlotsRoot.GetChild(index);
+        Transform slot = inventorySlotsRoot.GetChild(index);
+        Transform gem = slot.Find("Gem");
+        return gem != null ? gem : slot;
     }
 
     void Awake()
@@ -97,11 +138,21 @@ public class PlayerInventory : MonoBehaviour
 
     void Start()
     {
+        aaStock = FlashlightBatteryStock.GetOrAdd(gameObject);
+        aaStock.OnCountChanged += OnAaCountChanged;
         ResolveHoldPoint();
         ResolveUI();
         RefreshHeldVisuals();
         RefreshUI();
     }
+
+    void OnDestroy()
+    {
+        if (aaStock != null)
+            aaStock.OnCountChanged -= OnAaCountChanged;
+    }
+
+    void OnAaCountChanged(int _) => RefreshUI();
 
     void Update()
     {
@@ -218,7 +269,7 @@ public class PlayerInventory : MonoBehaviour
 
     void ToggleSlot(int index)
     {
-        if (index < 0 || index >= SlotCount)
+        if (index < 0 || index >= SlotCount || index == BatterySlot)
             return;
 
         // 팔 파손으로 잠긴 슬롯은 선택 불가. 현재 선택 상태는 그대로 유지.
@@ -357,10 +408,21 @@ public class PlayerInventory : MonoBehaviour
     int FindFirstEmptySlot()
     {
         for (int i = 0; i < SlotCount; i++)
-            if (!lockedSlots[i] && slots[i].type == InventoryItemType.None)
+        {
+            if (i == BatterySlot)
+                continue;
+            if (IsSlotOpen(i))
                 return i;
+        }
 
         return -1;
+    }
+
+    bool IsSlotOpen(int index)
+    {
+        return index >= 0 && index < SlotCount
+            && !lockedSlots[index]
+            && slots[index].type == InventoryItemType.None;
     }
 
     int Count(InventoryItemType type)
@@ -394,16 +456,222 @@ public class PlayerInventory : MonoBehaviour
         if (inventorySlotsRoot == null)
             return;
 
+        if (!hudLaidOut)
+        {
+            LayoutEldenRing();
+            hudLaidOut = true;
+        }
+
         for (int i = 0; i < SlotCount && i < inventorySlotsRoot.childCount; i++)
         {
             Transform slot = inventorySlotsRoot.GetChild(i);
-            slotImages[i] = slot.GetComponent<Image>();
-            if (slotImages[i] != null)
-                normalSlotColors[i] = slotImages[i].color;
+            Transform gem = slot.Find("Gem");
+            slotImages[i] = gem != null ? gem.GetComponent<Image>() : slot.GetComponent<Image>();
 
-            slotTexts[i] = slot.GetComponentInChildren<TMP_Text>(true);
+            Transform item = slot.Find("ItemLabel");
+            slotTexts[i] = item != null ? item.GetComponent<TMP_Text>() : null;
+
+            Transform index = slot.Find("Index");
+            slotIndexTexts[i] = index != null ? index.GetComponent<TMP_Text>() : null;
         }
     }
+
+    /// <summary>
+    /// 칸을 45도 돌려 마름모로 붙인다.
+    /// 1 = 9시, 2 = 12시, 3 = 3시, 4 = 6시(70% 크기, 손전등 AA 개수).
+    /// </summary>
+    void LayoutEldenRing()
+    {
+        HorizontalLayoutGroup row = inventorySlotsRoot.GetComponent<HorizontalLayoutGroup>();
+        if (row != null)
+        {
+            row.enabled = false;
+            Destroy(row);
+        }
+
+        if (inventorySlotsRoot.childCount == 0)
+            return;
+
+        while (inventorySlotsRoot.childCount < SlotCount)
+        {
+            GameObject clone = Instantiate(inventorySlotsRoot.GetChild(0).gameObject, inventorySlotsRoot);
+            clone.name = "Slot_AA";
+        }
+
+        MeasureCluster(out float parentW, out float parentH, out float radius, out float batteryY, out float originX, out float originY);
+
+        var root = (RectTransform)inventorySlotsRoot;
+        root.anchorMin = Vector2.zero;
+        root.anchorMax = Vector2.zero;
+        root.pivot = Vector2.zero;
+        root.anchoredPosition = new Vector2(ClusterMargin, ClusterMargin);
+        root.sizeDelta = new Vector2(parentW, parentH);
+        root.localScale = Vector3.one;
+
+        Image rootImage = root.GetComponent<Image>();
+        if (rootImage != null)
+        {
+            rootImage.color = new Color(0f, 0f, 0f, 0f);
+            rootImage.raycastTarget = false;
+        }
+
+        string[] names = { "Slot_1", "Slot_2", "Slot_3", "Slot_AA" };
+        Vector2 origin = new Vector2(originX, originY);
+        Vector2[] positions =
+        {
+            origin + new Vector2(-radius, 0f),
+            origin + new Vector2(0f, radius),
+            origin + new Vector2(radius, 0f),
+            origin + new Vector2(0f, batteryY),
+        };
+
+        Sprite frame = RoughFrame();
+        for (int i = 0; i < SlotCount; i++)
+        {
+            var slot = (RectTransform)inventorySlotsRoot.GetChild(i);
+            slot.gameObject.name = names[i];
+            slot.anchorMin = slot.anchorMax = Vector2.zero;
+            slot.pivot = new Vector2(0.5f, 0.5f);
+            slot.localScale = Vector3.one;
+            slot.localRotation = Quaternion.identity;
+
+            bool aa = i == BatterySlot;
+            float gem = aa ? GemSize * AaGemScale : GemSize;
+            float box = gem * Mathf.Sqrt(2f);
+            slot.sizeDelta = new Vector2(box, box);
+            slot.anchoredPosition = positions[i];
+
+            Image slotImage = slot.GetComponent<Image>();
+            if (slotImage != null)
+            {
+                slotImage.enabled = false;
+                slotImage.raycastTarget = false;
+            }
+
+            Image gemImage = EnsureGem(slot, gem, frame);
+            gemImage.color = FrameIdle;
+
+            TMP_Text label = null;
+            foreach (TMP_Text text in slot.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text.gameObject.name == "Index")
+                    continue;
+                label = text;
+                break;
+            }
+
+            if (label != null)
+            {
+                label.gameObject.name = "ItemLabel";
+                label.enableAutoSizing = true;
+                label.fontSizeMin = aa ? 12f : 11f;
+                label.fontSizeMax = aa ? 22f : 18f;
+                label.alignment = TextAlignmentOptions.Center;
+                label.textWrappingMode = TextWrappingModes.NoWrap;
+                label.raycastTarget = false;
+                label.color = TextIdle;
+                var textRt = label.rectTransform;
+                textRt.anchorMin = textRt.anchorMax = new Vector2(0.5f, 0.5f);
+                textRt.pivot = new Vector2(0.5f, 0.5f);
+                textRt.sizeDelta = new Vector2(gem * 0.72f, gem * 0.42f);
+                textRt.anchoredPosition = Vector2.zero;
+                textRt.localRotation = Quaternion.identity;
+                textRt.localScale = Vector3.one;
+            }
+
+            EnsureIndex(slot, i, label);
+        }
+    }
+
+    static void MeasureCluster(out float parentW, out float parentH, out float radius, out float batteryY, out float originX, out float originY)
+    {
+        float fullReach = GemSize / Mathf.Sqrt(2f);
+        float batteryReach = (GemSize * AaGemScale) / Mathf.Sqrt(2f);
+        radius = (GemSize + GemGap) / Mathf.Sqrt(2f);
+        batteryY = radius - fullReach - GemGap - batteryReach;
+
+        float side = radius + fullReach;
+        float below = -batteryY + batteryReach;
+        parentW = side * 2f + ClusterPad * 2f;
+        parentH = side + below + ClusterPad * 2f;
+        originX = ClusterPad + side;
+        originY = ClusterPad + below;
+    }
+
+    static Image EnsureGem(RectTransform slot, float gemSize, Sprite frame)
+    {
+        Transform existing = slot.Find("Gem");
+        RectTransform gemRt;
+        Image image;
+        if (existing == null)
+        {
+            var go = new GameObject("Gem", typeof(RectTransform));
+            go.layer = slot.gameObject.layer;
+            go.transform.SetParent(slot, false);
+            go.transform.SetAsFirstSibling();
+            gemRt = (RectTransform)go.transform;
+            image = go.AddComponent<Image>();
+        }
+        else
+        {
+            gemRt = (RectTransform)existing;
+            image = existing.GetComponent<Image>();
+            if (image == null)
+                image = existing.gameObject.AddComponent<Image>();
+        }
+
+        gemRt.anchorMin = gemRt.anchorMax = new Vector2(0.5f, 0.5f);
+        gemRt.pivot = new Vector2(0.5f, 0.5f);
+        gemRt.sizeDelta = new Vector2(gemSize, gemSize);
+        gemRt.anchoredPosition = Vector2.zero;
+        gemRt.localRotation = Quaternion.Euler(0f, 0f, 45f);
+        gemRt.localScale = Vector3.one;
+        image.sprite = frame;
+        image.type = Image.Type.Simple;
+        image.raycastTarget = false;
+        return image;
+    }
+
+    static void EnsureIndex(RectTransform slot, int index, TMP_Text fontSource)
+    {
+        Transform existing = slot.Find("Index");
+        TextMeshProUGUI label;
+        if (existing == null)
+        {
+            var go = new GameObject("Index", typeof(RectTransform));
+            go.layer = slot.gameObject.layer;
+            go.transform.SetParent(slot, false);
+            label = go.AddComponent<TextMeshProUGUI>();
+        }
+        else
+        {
+            label = existing.GetComponent<TextMeshProUGUI>();
+            if (label == null)
+                label = existing.gameObject.AddComponent<TextMeshProUGUI>();
+        }
+
+        if (fontSource != null && fontSource.font != null)
+            label.font = fontSource.font;
+
+        bool aa = index == BatterySlot;
+        label.text = (index + 1).ToString();
+        label.fontSize = aa ? 11f : 13f;
+        label.fontStyle = FontStyles.Bold;
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = IndexColor;
+        label.raycastTarget = false;
+        label.textWrappingMode = TextWrappingModes.NoWrap;
+
+        var rt = label.rectTransform;
+        rt.anchorMin = rt.anchorMax = aa ? new Vector2(0.32f, 0.68f) : new Vector2(0.26f, 0.74f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = aa ? new Vector2(16f, 12f) : new Vector2(22f, 16f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.localRotation = Quaternion.identity;
+        rt.localScale = Vector3.one;
+    }
+
+    static Sprite RoughFrame() => HudRoughSprite.Get(128, 128);
 
     void RefreshUI()
     {
@@ -413,28 +681,47 @@ public class PlayerInventory : MonoBehaviour
 
         for (int i = 0; i < SlotCount; i++)
         {
+            bool aaSlot = i == BatterySlot;
+            bool selected = i == selectedSlot;
+            int aaCount = aaStock != null ? aaStock.Count : 0;
+
             if (slotTexts[i] != null)
             {
-                string itemText = slots[i].type switch
+                if (aaSlot)
+                    slotTexts[i].text = "x" + aaCount;
+                else
                 {
-                    InventoryItemType.Battery => "BAT",
-                    InventoryItemType.Key => "KEY",
-                    InventoryItemType.Flashlight => "LIGHT",
-                    InventoryItemType.Medkit => "MED",
-                    _ => "-"
-                };
+                    slotTexts[i].text = slots[i].type switch
+                    {
+                        InventoryItemType.Battery => "BAT",
+                        InventoryItemType.Key => "KEY",
+                        InventoryItemType.Flashlight => "LIGHT",
+                        InventoryItemType.Medkit => "MED",
+                        _ => ""
+                    };
+                }
 
-                slotTexts[i].text = (i + 1) + "\n" + itemText;
+                if (lockedSlots[i])
+                    slotTexts[i].color = new Color(0.45f, 0.42f, 0.38f, 0.55f);
+                else if (aaSlot && aaCount > 0)
+                    slotTexts[i].color = FrameStocked;
+                else
+                    slotTexts[i].color = selected ? FrameSelected : TextIdle;
             }
+
+            if (slotIndexTexts[i] != null)
+                slotIndexTexts[i].color = lockedSlots[i] ? new Color(0.4f, 0.38f, 0.34f, 0.55f) : IndexColor;
 
             if (slotImages[i] != null)
             {
                 if (lockedSlots[i])
                     slotImages[i].color = lockedSlotTint;
+                else if (selected)
+                    slotImages[i].color = PlateSelected;
+                else if (aaSlot && aaCount > 0)
+                    slotImages[i].color = PlateStocked;
                 else
-                    slotImages[i].color = i == selectedSlot
-                        ? new Color(0.72f, 0.68f, 0.22f, 1f)
-                        : normalSlotColors[i];
+                    slotImages[i].color = FrameIdle;
             }
 
             RefreshLockOverlay(i);
@@ -466,7 +753,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (locked && slots[index].type != InventoryItemType.None)
         {
-            int target = FindFirstEmptySlot(); // 잠긴 슬롯은 자동 제외
+            int target = FindFirstEmptySlot(); // 잠긴 슬롯과 6시 AA 칸은 제외
             if (target >= 0)
             {
                 slots[target].type = slots[index].type;
@@ -554,7 +841,11 @@ public class PlayerInventory : MonoBehaviour
             if (!locked || inventorySlotsRoot == null || i >= inventorySlotsRoot.childCount)
                 return;
 
-            lockOverlays[i] = CreateLockOverlay(inventorySlotsRoot.GetChild(i));
+            Transform host = inventorySlotsRoot.GetChild(i);
+            Transform gem = host.Find("Gem");
+            if (gem != null)
+                host = gem;
+            lockOverlays[i] = CreateLockOverlay(host);
         }
 
         lockOverlays[i].SetActive(locked);
@@ -584,8 +875,10 @@ public class PlayerInventory : MonoBehaviour
         bg.color = new Color(0f, 0f, 0f, 0.45f);
         bg.raycastTarget = false;
 
-        CreateXBar(rt, 45f);
-        CreateXBar(rt, -45f);
+        // Gem 이 이미 45도 돌아가 있으므로, 막대는 로컬 0/90 이어야 화면에서 X가 된다.
+        bool diamond = Mathf.Abs(Mathf.DeltaAngle(slot.localEulerAngles.z, 45f)) < 1f;
+        CreateXBar(rt, diamond ? 0f : 45f);
+        CreateXBar(rt, diamond ? 90f : -45f);
         return root;
     }
 

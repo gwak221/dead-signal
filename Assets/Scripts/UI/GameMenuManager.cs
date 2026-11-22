@@ -14,11 +14,12 @@ using UnityEngine.UI;
 /// - Pause 상태: 같은 방식. 재개 시 '일시정지 직전에 켜져 있던 것만' 복구(숨기/QTE 등 다른 시스템 잠금 유지).
 /// - QTE 진행 중 / 잡힘 연출 / GAME OVER·ESCAPED 중에는 ESC를 무시한다.
 /// - Quit to Title: 씬을 다시 로드(항상 Title부터 시작).
+/// - Pause / Settings / Controls 는 제목을 제외한 항목이 왼쪽에서 스와이프되며, 마우스를 올리면 밝아지고 화살표가 붙는다.
 /// </summary>
 [DefaultExecutionOrder(1000)]
 public class GameMenuManager : MonoBehaviour
 {
-    enum State { Title, TitleControls, Playing, Paused, PauseControls }
+    enum State { Title, TitleControls, Playing, Paused, PauseControls, PauseSettings, PauseLog }
 
     public static GameMenuManager Instance { get; private set; }
     /// <summary>Title/Pause 메뉴가 열려 있는 동안 true.</summary>
@@ -37,7 +38,12 @@ public class GameMenuManager : MonoBehaviour
     bool prevControls, prevInteraction;
     float prevTimeScale = 1f;
 
-    GameObject root, titlePanel, pausePanel, controlsPanel;
+    GameObject root, titlePanel, pausePanel, controlsPanel, settingsPanel;
+    RectTransform pauseItems;
+    RectTransform logRoot;
+    CanvasGroup logGroup;
+    float logSlide;
+    float logTarget;
     TMP_Text titleText;
     bool controlsFromPause;
     float glitchTimer;
@@ -91,6 +97,8 @@ public class GameMenuManager : MonoBehaviour
         if (menuScaler != null && Screen.height > 0)
             menuScaler.matchWidthOrHeight = Screen.width / (float)Screen.height >= 16f / 9f ? 1f : 0f;
 
+        TickLogSlide();
+
         if (state == State.Title)
         {
             AnimateTitle();
@@ -115,6 +123,13 @@ public class GameMenuManager : MonoBehaviour
                 break;
             case State.PauseControls:
                 CloseControls();
+                break;
+            case State.PauseSettings:
+                CloseSettings();
+                break;
+            case State.PauseLog:
+                if (!RecoveredItemLog.ClosePopup())
+                    CloseRecoveredLog();
                 break;
         }
     }
@@ -175,7 +190,7 @@ public class GameMenuManager : MonoBehaviour
 
     void OpenControls()
     {
-        controlsFromPause = state == State.Paused;
+        controlsFromPause = state == State.Paused || state == State.PauseLog;
         state = controlsFromPause ? State.PauseControls : State.TitleControls;
         ShowOnly(controlsPanel);
     }
@@ -191,6 +206,60 @@ public class GameMenuManager : MonoBehaviour
         {
             state = State.Title;
             ShowOnly(titlePanel);
+        }
+    }
+
+    void OpenSettings()
+    {
+        state = State.PauseSettings;
+        ShowOnly(settingsPanel);
+    }
+
+    void CloseSettings()
+    {
+        state = State.Paused;
+        ShowOnly(pausePanel);
+    }
+
+    void OpenRecoveredLog()
+    {
+        if (state == State.PauseLog)
+        {
+            CloseRecoveredLog();
+            return;
+        }
+        state = State.PauseLog;
+        logTarget = 1f;
+    }
+
+    void CloseRecoveredLog()
+    {
+        RecoveredItemLog.ClosePopup();
+        state = State.Paused;
+        logTarget = 0f;
+    }
+
+    void TickLogSlide()
+    {
+        if (pauseItems == null || pausePanel == null || !pausePanel.activeInHierarchy) return;
+        float dt = Time.unscaledDeltaTime;
+        logSlide = Mathf.Lerp(logSlide, logTarget, 1f - Mathf.Exp(-18f * dt));
+        if (Mathf.Abs(logSlide - logTarget) < 0.001f) logSlide = logTarget;
+        ApplyLogPose();
+    }
+
+    void ApplyLogPose()
+    {
+        if (pauseItems != null)
+            pauseItems.anchoredPosition = new Vector2(500f * logSlide, 0f);
+        if (logRoot != null)
+            logRoot.anchoredPosition = new Vector2(-900f - (1f - logSlide) * 220f, 10f);
+        if (logGroup != null)
+        {
+            logGroup.alpha = logSlide;
+            bool open = logSlide > 0.45f;
+            logGroup.blocksRaycasts = open;
+            logGroup.interactable = open;
         }
     }
 
@@ -224,6 +293,7 @@ public class GameMenuManager : MonoBehaviour
         titlePanel.SetActive(false);
         pausePanel.SetActive(false);
         controlsPanel.SetActive(false);
+        settingsPanel.SetActive(false);
         root.SetActive(false);
     }
 
@@ -233,6 +303,14 @@ public class GameMenuManager : MonoBehaviour
         titlePanel.SetActive(panel == titlePanel);
         pausePanel.SetActive(panel == pausePanel);
         controlsPanel.SetActive(panel == controlsPanel);
+        settingsPanel.SetActive(panel == settingsPanel);
+        if (panel == pausePanel && state != State.PauseLog)
+        {
+            logSlide = 0f;
+            logTarget = 0f;
+            ApplyLogPose();
+            RecoveredItemLog.ClosePopup();
+        }
         if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
     }
 
@@ -297,49 +375,254 @@ public class GameMenuManager : MonoBehaviour
         MakeButton(titlePanel.transform, "QUIT", new Vector2(0f, -220f), QuitApp);
 
         // ── Pause ──
-        pausePanel = MakePanel("PausePanel", canvasGo.transform, new Color(0f, 0f, 0f, 0.92f));
-        MakeText(pausePanel.transform, "Paused", "PAUSED", 100, Bone, new Vector2(0f, 190f), new Vector2(1200f, 150f)).characterSpacing = 14f;
-        MakeButton(pausePanel.transform, "RESUME", new Vector2(0f, 20f), Resume);
-        MakeButton(pausePanel.transform, "CONTROLS", new Vector2(0f, -80f), OpenControls);
-        MakeButton(pausePanel.transform, "QUIT TO TITLE", new Vector2(0f, -180f), QuitToTitle);
+        pausePanel = MakeVignettePanel("PausePanel", canvasGo.transform);
+        MakeHeading(pausePanel.transform, "PAUSED", 230f, 22f);
+        var items = new GameObject("PauseItems", typeof(RectTransform));
+        items.transform.SetParent(pausePanel.transform, false);
+        pauseItems = (RectTransform)items.transform;
+        pauseItems.anchorMin = pauseItems.anchorMax = new Vector2(0.5f, 0.5f);
+        pauseItems.pivot = new Vector2(0.5f, 0.5f);
+        pauseItems.anchoredPosition = Vector2.zero;
+        pauseItems.sizeDelta = Vector2.zero;
+        MakeMenuRow(pauseItems, "RESUME", new Vector2(-190f, 80f), Resume, null, true, 36f, 0f);
+        MakeMenuRow(pauseItems, "SETTINGS", new Vector2(-190f, 4f), OpenSettings, null, true, 36f, 0.05f);
+        MakeMenuRow(pauseItems, "CONTROLS", new Vector2(-190f, -72f), OpenControls, null, true, 36f, 0.10f);
+        MakeMenuRow(pauseItems, "RECOVERED ITEMS LOG", new Vector2(-190f, -148f), OpenRecoveredLog, null, true, 32f, 0.15f);
+        MakeMenuRow(pauseItems, "QUIT TO TITLE", new Vector2(-190f, -224f), QuitToTitle, null, true, 36f, 0.20f);
+        pausePanel.AddComponent<MenuColumn>();
+        BuildRecoveredLog(pausePanel.transform);
+
+        // ── Settings (Pause 전용) ──
+        settingsPanel = MakeVignettePanel("SettingsPanel", canvasGo.transform);
+        MakeHeading(settingsPanel.transform, "SETTINGS", 230f, 14f);
+        var settings = settingsPanel.AddComponent<SettingsMenu>();
+        var sens = MakeMenuRow(settingsPanel.transform, "SENSITIVITY", new Vector2(-190f, 48f), settings.CycleSensitivity, "100%", true, 36f, 0f);
+        var vol = MakeMenuRow(settingsPanel.transform, "VOLUME", new Vector2(-190f, -40f), settings.CycleVolume, "100%", true, 36f, 0.05f);
+        var window = MakeMenuRow(settingsPanel.transform, "WINDOW", new Vector2(-190f, -128f), settings.ToggleWindow, "WINDOW", true, 36f, 0.10f);
+        MakeMenuRow(settingsPanel.transform, "BACK", new Vector2(-190f, -216f), CloseSettings, null, true, 36f, 0.15f);
+        settings.Bind(sens.value, vol.value, window.value);
+        settingsPanel.AddComponent<MenuColumn>();
 
         // ── Controls (Title / Pause 공용) ──
-        controlsPanel = MakePanel("ControlsPanel", canvasGo.transform, Ink);
-        MakeText(controlsPanel.transform, "Heading", "CONTROLS", 80, Bone, new Vector2(0f, 400f), new Vector2(1200f, 110f)).characterSpacing = 14f;
+        controlsPanel = MakeVignettePanel("ControlsPanel", canvasGo.transform);
+        MakeHeading(controlsPanel.transform, "CONTROLS", 430f, 14f);
         BuildControlRows(controlsPanel.transform);
-        MakeButton(controlsPanel.transform, "BACK", new Vector2(0f, -440f), CloseControls);
+        var controlsColumn = controlsPanel.AddComponent<MenuColumn>();
+        controlsColumn.focusFirst = false;
 
         root.SetActive(false);
     }
 
     void BuildControlRows(Transform parent)
     {
-        const float rowH = 66f, startY = 290f;
-        for (int i = 0; i < ControlRows.GetLength(0); i++)
+        const float startY = 292f;
+        const float step = 48f;
+        int n = ControlRows.GetLength(0);
+        for (int i = 0; i < n; i++)
         {
-            float y = startY - i * rowH;
-
-            // 키캡
-            var cap = new GameObject("Key_" + ControlRows[i, 0], typeof(RectTransform), typeof(Image));
-            cap.transform.SetParent(parent, false);
-            var crt = (RectTransform)cap.transform;
-            crt.anchorMin = crt.anchorMax = crt.pivot = new Vector2(0.5f, 0.5f);
-            crt.anchoredPosition = new Vector2(-250f, y);
-            crt.sizeDelta = new Vector2(320f, 52f);
-            var img = cap.GetComponent<Image>();
-            img.color = new Color(0.16f, 0.15f, 0.14f, 1f);
-            img.raycastTarget = false;
-            var outline = cap.AddComponent<Outline>();
-            outline.effectColor = new Color(0.6f, 0.57f, 0.5f, 0.9f);
-            outline.effectDistance = new Vector2(2f, -2f);
-
-            var k = MakeText(cap.transform, "Label", ControlRows[i, 0], 30, Bone, Vector2.zero, new Vector2(320f, 52f));
-            k.fontStyle = FontStyles.Bold;
-
-            // 기능
-            var f = MakeText(parent, "Action_" + i, ControlRows[i, 1], 34, Dim, new Vector2(250f, y), new Vector2(560f, 52f));
-            f.alignment = TextAlignmentOptions.MidlineLeft;
+            MakeMenuRow(parent, ControlRows[i, 0], new Vector2(-220f, startY - i * step), null,
+                ControlRows[i, 1], false, 28f, i * 0.035f);
         }
+        MakeMenuRow(parent, "BACK", new Vector2(-220f, startY - n * step - 28f), CloseControls, null, true, 36f, n * 0.035f);
+    }
+
+    void BuildRecoveredLog(Transform parent)
+    {
+        var go = new GameObject("RecoveredLog", typeof(RectTransform), typeof(CanvasGroup));
+        go.transform.SetParent(parent, false);
+        logRoot = (RectTransform)go.transform;
+        logRoot.anchorMin = logRoot.anchorMax = new Vector2(0.5f, 0.5f);
+        logRoot.pivot = new Vector2(0f, 0.5f);
+        logRoot.sizeDelta = new Vector2(640f, 560f);
+        logRoot.anchoredPosition = new Vector2(-1120f, 10f);
+        logGroup = go.GetComponent<CanvasGroup>();
+        logGroup.alpha = 0f;
+        logGroup.blocksRaycasts = false;
+        logGroup.interactable = false;
+
+        var title = MakeText(go.transform, "Title", "RECOVERED ITEMS", 44, Bone, Vector2.zero, new Vector2(600f, 64f));
+        title.alignment = TextAlignmentOptions.MidlineLeft;
+        title.characterSpacing = 6f;
+        var tr = title.rectTransform;
+        tr.anchorMin = tr.anchorMax = new Vector2(0f, 1f);
+        tr.pivot = new Vector2(0f, 1f);
+        tr.anchoredPosition = new Vector2(4f, -36f);
+        tr.sizeDelta = new Vector2(600f, 64f);
+
+        var rule = new GameObject("Rule", typeof(RectTransform), typeof(Image));
+        rule.transform.SetParent(go.transform, false);
+        var rr = (RectTransform)rule.transform;
+        rr.anchorMin = rr.anchorMax = new Vector2(0f, 1f);
+        rr.pivot = new Vector2(0f, 0.5f);
+        rr.anchoredPosition = new Vector2(4f, -112f);
+        rr.sizeDelta = new Vector2(220f, 2f);
+        var img = rule.GetComponent<Image>();
+        img.sprite = WhiteSprite();
+        img.color = new Color(Bone.r, Bone.g, Bone.b, 0.45f);
+        img.raycastTarget = false;
+
+        var entries = new GameObject("Entries", typeof(RectTransform));
+        entries.transform.SetParent(go.transform, false);
+        var er = (RectTransform)entries.transform;
+        er.anchorMin = new Vector2(0f, 0f);
+        er.anchorMax = new Vector2(1f, 1f);
+        er.offsetMin = new Vector2(4f, 16f);
+        er.offsetMax = new Vector2(-12f, -128f);
+        RecoveredItemLog.Build(er, parent);
+    }
+
+    void MakeHeading(Transform parent, string text, float y, float spacing)
+    {
+        var t = MakeText(parent, "Heading", text, 76, Bone, new Vector2(0f, y), new Vector2(1100f, 100f));
+        t.characterSpacing = spacing;
+        MakeRule(parent, y - 72f);
+    }
+
+    static void MakeRule(Transform parent, float y)
+    {
+        var go = new GameObject("Rule", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0f, y);
+        rt.sizeDelta = new Vector2(240f, 2f);
+        var img = go.GetComponent<Image>();
+        img.sprite = WhiteSprite();
+        img.color = new Color(Bone.r, Bone.g, Bone.b, 0.45f);
+        img.raycastTarget = false;
+    }
+
+    MenuRowMotion MakeMenuRow(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick, string value, bool selectable, float fontSize, float delay)
+    {
+        float height = selectable ? 70f : 44f;
+        var go = new GameObject("Row_" + label.Replace("/", "-"), typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
+        go.transform.SetParent(parent, false);
+        go.SetActive(false);
+
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.sizeDelta = new Vector2(760f, height);
+        rt.anchoredPosition = pos;
+
+        var img = go.GetComponent<Image>();
+        img.sprite = WhiteSprite();
+        img.color = new Color(0f, 0f, 0f, 0f);
+        img.raycastTarget = selectable;
+
+        var group = go.GetComponent<CanvasGroup>();
+        group.alpha = 0f;
+        group.blocksRaycasts = false;
+
+        TMP_Text chevron = null;
+        if (selectable)
+        {
+            chevron = MakeText(go.transform, "Mark", ">", fontSize, Bone, Vector2.zero, new Vector2(36f, height));
+            var crt = chevron.rectTransform;
+            crt.anchorMin = crt.anchorMax = new Vector2(0f, 0.5f);
+            crt.pivot = new Vector2(0f, 0.5f);
+            crt.anchoredPosition = new Vector2(4f, 0f);
+            crt.sizeDelta = new Vector2(36f, height);
+            chevron.alignment = TextAlignmentOptions.MidlineLeft;
+            chevron.color = new Color(Bone.r, Bone.g, Bone.b, 0f);
+        }
+
+        float labelW = value == null ? 700f : selectable ? 440f : 250f;
+        float valueW = selectable ? 220f : 470f;
+        var labelText = MakeText(go.transform, "Label", label, fontSize, selectable ? Dim : Bone, Vector2.zero, new Vector2(labelW, height));
+        labelText.characterSpacing = selectable ? 4f : 1.5f;
+        var lrt = labelText.rectTransform;
+        lrt.anchorMin = lrt.anchorMax = new Vector2(0f, 0.5f);
+        lrt.pivot = new Vector2(0f, 0.5f);
+        lrt.anchoredPosition = new Vector2(selectable ? 36f : 8f, 0f);
+        lrt.sizeDelta = new Vector2(labelW, height);
+        labelText.alignment = TextAlignmentOptions.MidlineLeft;
+
+        TMP_Text valueText = null;
+        if (!string.IsNullOrEmpty(value))
+        {
+            valueText = MakeText(go.transform, "Value", value, fontSize, selectable ? Dim : new Color(0.62f, 0.60f, 0.55f, 1f), Vector2.zero, new Vector2(valueW, height));
+            valueText.characterSpacing = 1.5f;
+            var vrt = valueText.rectTransform;
+            vrt.anchorMin = vrt.anchorMax = new Vector2(1f, 0.5f);
+            vrt.pivot = new Vector2(1f, 0.5f);
+            vrt.anchoredPosition = new Vector2(-8f, 0f);
+            vrt.sizeDelta = new Vector2(valueW, height);
+            valueText.alignment = TextAlignmentOptions.MidlineRight;
+        }
+
+        if (selectable)
+        {
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.transition = Selectable.Transition.None;
+            btn.navigation = new Navigation { mode = Navigation.Mode.None };
+            if (onClick != null) btn.onClick.AddListener(onClick);
+        }
+
+        var motion = go.AddComponent<MenuRowMotion>();
+        motion.rect = rt;
+        motion.group = group;
+        motion.label = labelText;
+        motion.chevron = chevron;
+        motion.value = valueText;
+        motion.restX = pos.x;
+        motion.restY = pos.y;
+        motion.delay = delay;
+        motion.selectable = selectable;
+        go.SetActive(true);
+        return motion;
+    }
+
+    GameObject MakeVignettePanel(string name, Transform parent)
+    {
+        var go = MakePanel(name, parent, Color.white);
+        var img = go.GetComponent<Image>();
+        img.sprite = VignetteSprite();
+        img.type = Image.Type.Simple;
+        img.color = Color.white;
+        return go;
+    }
+
+    static Sprite whiteSprite;
+    static Sprite vignetteSprite;
+
+    static Sprite WhiteSprite()
+    {
+        if (whiteSprite != null) return whiteSprite;
+        var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+        tex.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
+        tex.Apply(false);
+        whiteSprite = Sprite.Create(tex, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 100f);
+        whiteSprite.hideFlags = HideFlags.HideAndDontSave;
+        return whiteSprite;
+    }
+
+    static Sprite VignetteSprite()
+    {
+        if (vignetteSprite != null) return vignetteSprite;
+        const int n = 128;
+        var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+        tex.hideFlags = HideFlags.HideAndDontSave;
+        tex.wrapMode = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Bilinear;
+        var px = new Color[n * n];
+        for (int y = 0; y < n; y++)
+        {
+            for (int x = 0; x < n; x++)
+            {
+                float dx = (x + 0.5f) / n * 2f - 1f;
+                float dy = (y + 0.5f) / n * 2f - 1f;
+                float r = Mathf.Sqrt(dx * dx * 0.82f + dy * dy);
+                float a = Mathf.Lerp(0.82f, 0.96f, Mathf.SmoothStep(0.08f, 1.05f, r));
+                px[y * n + x] = new Color(0f, 0f, 0f, a);
+            }
+        }
+        tex.SetPixels(px);
+        tex.Apply(false);
+        vignetteSprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f);
+        vignetteSprite.hideFlags = HideFlags.HideAndDontSave;
+        return vignetteSprite;
     }
 
     static GameObject MakePanel(string name, Transform parent, Color color)
@@ -419,4 +702,169 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
     public void OnPointerEnter(PointerEventData e) { if (label != null) label.text = "[ " + baseText + " ]"; }
     public void OnPointerExit(PointerEventData e) { if (label != null) label.text = baseText; }
     void OnDisable() { if (label != null) label.text = baseText; }
+}
+
+/// <summary>메뉴가 켜질 때 첫 선택 항목에 화살표를 둔다.</summary>
+public class MenuColumn : MonoBehaviour
+{
+    public bool focusFirst = true;
+
+    void OnEnable()
+    {
+        if (!focusFirst)
+        {
+            MenuRowMotion.Focus(null);
+            return;
+        }
+
+        var rows = GetComponentsInChildren<MenuRowMotion>(true);
+        for (int i = 0; i < rows.Length; i++)
+        {
+            if (rows[i] == null || !rows[i].selectable) continue;
+            MenuRowMotion.Focus(rows[i]);
+            return;
+        }
+    }
+}
+
+/// <summary>왼쪽에서 스와이프되고, 마우스를 올리면 밝아지며 화살표가 붙는다.</summary>
+public class MenuRowMotion : MonoBehaviour, IPointerEnterHandler
+{
+    public RectTransform rect;
+    public CanvasGroup group;
+    public TMP_Text label;
+    public TMP_Text chevron;
+    public TMP_Text value;
+    public float restX;
+    public float restY;
+    public float delay;
+    public bool selectable = true;
+
+    static readonly Color Hot = new Color(0.94f, 0.91f, 0.84f, 1f);
+    static readonly Color Cold = new Color(0.42f, 0.40f, 0.37f, 1f);
+
+    static MenuRowMotion focused;
+    float elapsed;
+    float hot;
+    float nudge;
+
+    public static void Focus(MenuRowMotion row) => focused = row;
+
+    public void OnPointerEnter(PointerEventData e)
+    {
+        if (selectable) Focus(this);
+    }
+
+    void OnEnable()
+    {
+        elapsed = 0f;
+        hot = 0f;
+        nudge = 0f;
+        Apply(0f);
+    }
+
+    void Update()
+    {
+        float dt = Time.unscaledDeltaTime;
+        elapsed += dt;
+        if (selectable)
+        {
+            float k = 1f - Mathf.Exp(-14f * dt);
+            bool on = focused == this;
+            hot = Mathf.Lerp(hot, on ? 1f : 0f, k);
+            nudge = Mathf.Lerp(nudge, on ? 18f : 0f, k);
+        }
+        Apply((elapsed - delay) / 0.36f);
+    }
+
+    void Apply(float u)
+    {
+        float e = 1f - Mathf.Pow(1f - Mathf.Clamp01(u), 3f);
+        if (group != null)
+        {
+            group.alpha = e;
+            bool ready = selectable && e > 0.45f;
+            group.blocksRaycasts = ready;
+            group.interactable = ready;
+        }
+        if (rect != null)
+            rect.anchoredPosition = new Vector2(restX + Mathf.Lerp(-380f, nudge, e), restY);
+        if (!selectable || label == null) return;
+
+        label.color = Color.Lerp(Cold, Hot, hot);
+        if (value != null) value.color = Color.Lerp(Cold, Hot, hot);
+        if (chevron != null)
+        {
+            var c = Hot;
+            c.a = hot;
+            chevron.color = c;
+        }
+    }
+}
+
+/// <summary>일시정지 설정. 항목을 누르면 다음 값으로 넘어간다.</summary>
+public class SettingsMenu : MonoBehaviour
+{
+    TMP_Text sensText;
+    TMP_Text volText;
+    TMP_Text windowText;
+    FirstPersonController fps;
+
+    static readonly float[] Sens = { 0.03f, 0.05f, 0.08f, 0.12f, 0.18f };
+    static readonly float[] Vol = { 0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f };
+
+    public void Bind(TMP_Text sens, TMP_Text vol, TMP_Text window)
+    {
+        sensText = sens;
+        volText = vol;
+        windowText = window;
+        Refresh();
+    }
+
+    void OnEnable() => Refresh();
+
+    public void CycleSensitivity()
+    {
+        if (fps == null) fps = FindFirstObjectByType<FirstPersonController>();
+        if (fps == null) return;
+        fps.mouseSensitivity = Next(fps.mouseSensitivity, Sens);
+        Refresh();
+    }
+
+    public void CycleVolume()
+    {
+        AudioListener.volume = Prev(AudioListener.volume, Vol);
+        Refresh();
+    }
+
+    public void ToggleWindow()
+    {
+        Screen.fullScreenMode = Screen.fullScreen ? FullScreenMode.Windowed : FullScreenMode.FullScreenWindow;
+        Refresh();
+    }
+
+    void Refresh()
+    {
+        if (sensText == null) return;
+        if (fps == null) fps = FindFirstObjectByType<FirstPersonController>();
+        float sens = fps != null ? fps.mouseSensitivity : 0.05f;
+        sensText.text = Mathf.RoundToInt(sens / 0.05f * 100f) + "%";
+        if (volText != null) volText.text = Mathf.RoundToInt(AudioListener.volume * 100f) + "%";
+        if (windowText != null) windowText.text = Screen.fullScreen ? "FULLSCREEN" : "WINDOW";
+    }
+
+    static float Next(float current, float[] steps) => steps[Step(current, steps, 1)];
+    static float Prev(float current, float[] steps) => steps[Step(current, steps, -1)];
+
+    static int Step(float current, float[] steps, int dir)
+    {
+        int best = 0;
+        float bestD = float.MaxValue;
+        for (int i = 0; i < steps.Length; i++)
+        {
+            float d = Mathf.Abs(steps[i] - current);
+            if (d < bestD) { bestD = d; best = i; }
+        }
+        return (best + dir + steps.Length) % steps.Length;
+    }
 }

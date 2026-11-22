@@ -37,7 +37,7 @@ public class SafeDoor : MonoBehaviour, IInteractable
         // 키가 인벤토리에 있는 것만으로는 안 되고, 실제로 손에 들어야 한다.
         if (player.Inventory == null || !player.Inventory.IsSelected(InventoryItemType.Key))
         {
-            player.Notify("Equip Key (1-3)");
+            player.Notify("Equip Key (1-3)"); // 키는 일반 칸(1/2/3). 4번은 배터리 전용.
             AnyLocked?.Invoke(this);
             return;
         }

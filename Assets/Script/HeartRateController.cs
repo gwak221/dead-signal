@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 심박수(BPM). 기존 HUD(HeartRateUI 의 HeartRate_Text / HeartIcon)를 그대로 사용한다.
+/// 심박수(BPM). 화면 표시는 HeartRateEcgView 심전도가 맡는다.
 /// - Sprint 중: restingBpm → maxBpm 으로 서서히 상승 (sprintIncreaseRate BPM/초)
 /// - Sprint 종료: 수 초에 걸쳐 안정 상태로 감소 (recoveryRate BPM/초)
 /// - DetectionMultiplier: MonsterChase 의 탐지 '거리'에 곱해진다 (시야/LOS 판정은 그대로).
@@ -51,6 +51,19 @@ public class HeartRateController : MonoBehaviour
     FirstPersonController player;
 
     public float CurrentBpm => currentBpm;
+
+    /// <summary>안정은 초록, 올라갈수록 주황, maxBpm(160)에서 빨강.</summary>
+    public Color TraceColor
+    {
+        get
+        {
+            float t = Mathf.Clamp01(Mathf.InverseLerp(restingBpm, maxBpm, currentBpm));
+            Color green = new Color(0.22f, 0.86f, 0.34f, 1f);
+            Color orange = new Color(1f, 0.50f, 0.08f, 1f);
+            Color red = new Color(0.92f, 0.10f, 0.09f, 1f);
+            return t < 0.5f ? Color.Lerp(green, orange, t * 2f) : Color.Lerp(orange, red, (t - 0.5f) * 2f);
+        }
+    }
     public float MinBpm => minBpm;
     public float MaxBpm => maxBpm;
     public float RestingBpm => restingBpm;
@@ -128,10 +141,9 @@ public class HeartRateController : MonoBehaviour
 
     void UpdateUI()
     {
-        if (heartRateText == null) return;
+        if (heartRateText == null || !heartRateText.gameObject.activeInHierarchy) return;
         heartRateText.text = Mathf.RoundToInt(currentBpm) + " BPM";
-        float ratio = Mathf.InverseLerp(restingBpm + idleFluctuation, maxBpm, currentBpm);
-        heartRateText.color = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.25f), ratio);
+        heartRateText.color = TraceColor;
     }
 
     /// <summary>UI 하트 아이콘이 한 번 뛸 때마다 호출 (사운드 동기화용).</summary>
@@ -144,7 +156,7 @@ public class HeartRateController : MonoBehaviour
         float interval = Mathf.Lerp(uiBeatIntervalResting, uiBeatIntervalMax, t);
         beatPhase += Time.deltaTime / Mathf.Max(0.1f, interval);
         if (beatPhase >= 1f) { beatPhase -= Mathf.Floor(beatPhase); OnBeat?.Invoke(); }
-        if (heartIconTrans == null) return;
+        if (heartIconTrans == null || !heartIconTrans.gameObject.activeInHierarchy) return;
 
         // 한 번 부드럽게 부풀었다가 가라앉는 단일 박동 (전체 주기의 앞 22%)
         float k = beatPhase < 0.22f ? Mathf.Sin(beatPhase / 0.22f * Mathf.PI) : 0f;

@@ -1,21 +1,22 @@
-Dead Signal - 3 Slot Inventory / Hotbar Update
+Dead Signal - Inventory / Hotbar
 
 Controls
 - E: pick up / interact
-- 1, 2, 3: equip item in inventory slot 1/2/3
+- 1, 2, 3: equip item in the diamond slots (9 o'clock, 12 o'clock, 3 o'clock)
 - Press the same equipped number again: bare hands
 - 0: bare hands
-- F: throw/drop the currently equipped item forward
+- F: pick up
 
 Rules
-- Batteries and the key occupy one slot each, up to 3 slots total.
-- Picking an item puts it in the first empty slot; it is not equipped automatically.
-- A battery must be equipped before it can be inserted into an escape device.
+- Slots are diamonds in a tight cross. The bottom (6 o'clock) diamond is about 70% size and shows the flashlight AA count (xN, reloaded with R). It is not an equip slot.
+- Beacon batteries, the key, the flashlight, and medkits use the three full-size diamonds.
+- Picking an item puts it in the first empty general slot; it is not equipped automatically.
+- A beacon battery must be equipped (1/2/3) before it can be inserted into an escape device.
 - The key must be equipped before the safe can be opened or closed.
 - Inserting a battery consumes that battery and frees its slot.
 - The key is not consumed by the safe.
-- Dropped items can be picked up again with E.
-- The selected slot is highlighted in the bottom-left inventory UI.
+- Dropped items can be picked up again with F.
+- The selected slot's frame turns gold.
 
 Run Assets/Scenes/Integrated_Week6.unity.
 

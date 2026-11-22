@@ -18692,11 +18692,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 8595028947839255282}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 24, y: -24}
-  m_SizeDelta: {x: 100, y: 44}
-  m_Pivot: {x: 0, y: 1}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -24, y: -108}
+  m_SizeDelta: {x: 40, y: 40}
+  m_Pivot: {x: 1, y: 1}
 --- !u!114 &355917920
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18709,8 +18709,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475fd79baa6cdbe41be1c1a8e28b2855, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BodyHeartsUI
-  heartSize: 44
-  spacing: 8
+  heartSize: 40
 --- !u!1001 &355991598
 PrefabInstance:
   m_ObjectHideFlags: 0
