@@ -29,8 +29,12 @@ public class LoopSoundEmitter : MonoBehaviour
 
     void Awake()
     {
-        source = gameObject.AddComponent<AudioSource>();
+        // 자기 전용 자식에 만든다: 한 오브젝트에 루프가 여러 개 붙어도 필터(occlusion)가 각자 걸리도록
+        var go = new GameObject("Loop");
+        go.transform.SetParent(transform, false);
+        source = go.AddComponent<AudioSource>();
         source.playOnAwake = false;
+        AudioOcclusion.Attach(source, transform);
         source.loop = true;
         source.volume = 0f;
     }
