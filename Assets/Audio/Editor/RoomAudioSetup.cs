@@ -75,9 +75,6 @@ public static class RoomAudioSetup
         new ZoneDef { name = "Zone_WasteStorage",    profile = "WasteStorage",    x0 = 100.6f, x1 = 118.4f, z0 = 38.0f, z1 = 56.9f },
     };
 
-    // 2D인데 방 잔향을 받아야 하는 소리 (플레이어 발소리는 2D라서 직접 켠다)
-    static readonly string[] ForceReverbCues = { "plr_step_walk", "plr_step_run" };
-
     [MenuItem("Tools/Dead Signal/Audio/Rooms/1. Setup Room Audio (Profiles, Prefab, Zones)")]
     public static void SetupAll()
     {
@@ -85,11 +82,10 @@ public static class RoomAudioSetup
         EnsureFolder("Assets/Audio/Cues", "Rooms");
         int cues = EnsureCues();
         int profiles = EnsureProfiles();
-        int forced = ForceFootstepReverb();
         AssetDatabase.SaveAssets();
         bool prefab = EnsureController();
         int zones = EnsureZones();
-        Debug.Log($"[RoomAudio] Cue {cues}개, 프로필 {profiles}개 생성 / 발소리 잔향 {forced}개 켬 / 프리팹 컨트롤러 {(prefab ? "추가" : "이미 있음")} / Zone {zones}개 생성");
+        Debug.Log($"[RoomAudio] Cue {cues}개, 프로필 {profiles}개 생성 / 프리팹 컨트롤러 {(prefab ? "추가" : "이미 있음")} / Zone {zones}개 생성");
     }
 
     [MenuItem("Tools/Dead Signal/Audio/Rooms/2. Add Zone Here (Scene view center)")]
@@ -195,19 +191,6 @@ public static class RoomAudioSetup
         return n;
     }
 
-    static int ForceFootstepReverb()
-    {
-        int n = 0;
-        foreach (var guid in AssetDatabase.FindAssets("t:SoundCue", new[] { "Assets/Audio/Cues" }))
-        {
-            var cue = AssetDatabase.LoadAssetAtPath<SoundCue>(AssetDatabase.GUIDToAssetPath(guid));
-            if (cue == null || !ForceReverbCues.Contains(cue.name) || cue.roomReverb != RoomReverbMode.Auto) continue;
-            cue.roomReverb = RoomReverbMode.On;
-            EditorUtility.SetDirty(cue);
-            n++;
-        }
-        return n;
-    }
 
     static bool EnsureController()
     {
@@ -291,7 +274,7 @@ public static class RoomAudioSetup
     public static bool ApplyZoneToPrefab(RoomAudioZone z)
     {
         if (!PrefabUtility.IsPartOfPrefabInstance(z)) return false;
-        string path = PrefabUtility.GetPrefabAssetPathOfNearestPrefabInstanceRoot(z);
+        string path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(z);
         PrefabUtility.ApplyObjectOverride(z, path, InteractionMode.UserAction);
         PrefabUtility.ApplyObjectOverride(z.transform, path, InteractionMode.UserAction);
         PrefabUtility.ApplyObjectOverride(z.gameObject, path, InteractionMode.UserAction);

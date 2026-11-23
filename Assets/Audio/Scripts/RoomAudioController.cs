@@ -5,9 +5,9 @@ using UnityEngine;
 /// 방마다 다른 소리. AudioSystem 프리팹에 하나.
 /// 매 프레임 AudioListener 위치가 어느 RoomAudioZone 안에 있는지 보고, 그 방의 RoomAudioProfile로 부드럽게 바꾼다.
 ///   - 잔향: 리스너를 따라다니는 AudioReverbZone 하나의 값을 프로필 값으로 보간
-///           (SoundCue의 roomReverb 설정에 따라 소리마다 잔향을 받을지 결정. UI/BGM은 기본적으로 안 받음)
+///           (applyReverb를 켰을 때만. 모든 소리에 걸리므로 기본은 꺼짐)
 ///   - 방 환경음: 프로필마다 LoopSoundEmitter를 하나씩 만들어 크로스페이드
-///   - 드론 볼륨: WorldAudio가 DroneWeight를 곱해서 쓴다
+///   - DroneWeight: 프로필의 드론 비율 (기존 WorldAudio는 사용하지 않음)
 ///   - 랜덤 소리: 방에 있는 동안 플레이어 주변에서 가끔 재생
 /// 어떤 Zone에도 없으면 defaultProfile (복도) 사용.
 /// </summary>
@@ -26,8 +26,9 @@ public class RoomAudioController : MonoBehaviour
     [Tooltip("방이 바뀔 때 콘솔에 로그")]
     public bool logRoomChanges = false;
 
-    [Header("Occlusion (벽 너머 소리 먹먹하게)")]
-    public AudioOcclusion.Settings occlusion = new AudioOcclusion.Settings();
+    [Header("Reverb")]
+    [Tooltip("방 잔향. 켜면 리스너를 따라다니는 AudioReverbZone이 BGM/UI 포함 모든 소리에 걸린다. 기존 사운드에 영향이 없도록 기본은 꺼 둔다")]
+    public bool applyReverb = false;
 
     public RoomAudioProfile CurrentProfile { get; private set; }
     public RoomAudioZone CurrentZone { get; private set; }
@@ -45,6 +46,7 @@ public class RoomAudioController : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        if (!applyReverb) return;
         var go = new GameObject("RoomReverb");
         go.transform.SetParent(transform, false);
         reverbZone = go.AddComponent<AudioReverbZone>();
@@ -55,15 +57,13 @@ public class RoomAudioController : MonoBehaviour
 
     void OnDestroy() { if (Instance == this) Instance = null; }
 
-    void OnValidate() => AudioOcclusion.ClearWallCache();
-
     void Start()
     {
         var listener = Listener();
         CurrentZone = listener != null ? RoomAudioZone.Find(listener.position) : null;
         CurrentProfile = CurrentZone != null ? CurrentZone.profile : defaultProfile;
         currentReverb = CurrentProfile != null ? CurrentProfile.GetReverb() : RoomReverb.FromPreset(RoomReverbPreset.Off);
-        currentReverb.ApplyTo(reverbZone);
+        if (reverbZone != null) currentReverb.ApplyTo(reverbZone);
         DroneWeight = CurrentProfile != null ? CurrentProfile.droneWeight : 1f;
         ApplyAmbience(CurrentProfile);
         ScheduleRandom();
@@ -73,7 +73,7 @@ public class RoomAudioController : MonoBehaviour
     {
         var listener = Listener();
         if (listener == null) return;
-        reverbZone.transform.position = listener.position;
+        if (reverbZone != null) reverbZone.transform.position = listener.position;
 
         // 현재 방 판정 (경계 깜빡임 방지 딜레이)
         var zone = RoomAudioZone.Find(listener.position);
@@ -88,7 +88,7 @@ public class RoomAudioController : MonoBehaviour
         float t = 1f - Mathf.Exp(-transitionSpeed * Time.deltaTime);
         var targetReverb = CurrentProfile != null ? CurrentProfile.GetReverb() : RoomReverb.FromPreset(RoomReverbPreset.Off);
         currentReverb = RoomReverb.MoveTowards(currentReverb, targetReverb, t);
-        currentReverb.ApplyTo(reverbZone);
+        if (reverbZone != null) currentReverb.ApplyTo(reverbZone);
         DroneWeight = Mathf.Lerp(DroneWeight, CurrentProfile != null ? CurrentProfile.droneWeight : 1f, t);
 
         // 방 안 랜덤 소리
