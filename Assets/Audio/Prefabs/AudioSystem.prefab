@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &191528398462580966
+--- !u!1 &699915295742116612
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,248 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 863725581787863097}
-  - component: {fileID: 7249623764022007770}
-  m_Layer: 0
-  m_Name: Zone_Toilet
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &863725581787863097
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 191528398462580966}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 91.38464, y: 1.6, z: 10.075}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7249623764022007770
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 191528398462580966}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: f1d76a9e8e3174a4186ac57468ec5811, type: 2}
-  size: {x: 10.429251, y: 3.4, z: 14.749998}
-  priority: 0
-  gizmoColor: {r: 0.3, g: 0.9706001, b: 1, a: 1}
---- !u!1 &1034533021922423686
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7750069207202176611}
-  - component: {fileID: 776557433943602370}
-  m_Layer: 0
-  m_Name: Zone_Ward_North
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7750069207202176611
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1034533021922423686}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17, y: 1.6, z: 47.6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &776557433943602370
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1034533021922423686}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 8767947bb64110747891282685280149, type: 2}
-  size: {x: 19.400002, y: 3.4, z: 20.8}
-  priority: 0
-  gizmoColor: {r: 1, g: 0.8754, b: 0.3, a: 1}
---- !u!1 &1314708470642686474
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6053796404403971330}
-  - component: {fileID: 545081584825431234}
-  m_Layer: 0
-  m_Name: Zone_Lobby
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6053796404403971330
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1314708470642686474}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 43.15, y: 1.6, z: 46.6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &545081584825431234
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1314708470642686474}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 176697b13412e034fb772347b38aac3d, type: 2}
-  size: {x: 16.100002, y: 3.4, z: 14.399998}
-  priority: 0
-  gizmoColor: {r: 0.37699977, g: 0.3, b: 1, a: 1}
---- !u!1 &2899880618537098587
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3608356360051389411}
-  - component: {fileID: 907410537194625695}
-  m_Layer: 0
-  m_Name: Zone_Room04
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3608356360051389411
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2899880618537098587}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 83.2, y: 1.6, z: 42.4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &907410537194625695
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2899880618537098587}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: d97d36327159822479a540f8d9da5237, type: 2}
-  size: {x: 29.599998, y: 3.4, z: 12.600002}
-  priority: 0
-  gizmoColor: {r: 1, g: 0.3, b: 0.4722002, a: 1}
---- !u!1 &2943882260871929775
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2212816702456358305}
-  - component: {fileID: 6951547243115369956}
-  m_Layer: 0
-  m_Name: Zone_Ward_Middle
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2212816702456358305
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2943882260871929775}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.9, y: 1.6, z: 26.4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6951547243115369956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2943882260871929775}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 8767947bb64110747891282685280149, type: 2}
-  size: {x: 18.8, y: 3.4, z: 12.799999}
-  priority: 0
-  gizmoColor: {r: 0.54920006, g: 1, b: 0.3, a: 1}
---- !u!1 &3239892846197588860
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8340125633378185227}
-  - component: {fileID: 4647767549083508921}
+  - component: {fileID: 2296377143651370674}
+  - component: {fileID: 5830876042545106340}
   m_Layer: 0
   m_Name: Zone_Room09
   m_TagString: Untagged
@@ -257,28 +17,28 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8340125633378185227
+--- !u!4 &2296377143651370674
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3239892846197588860}
+  m_GameObject: {fileID: 699915295742116612}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 81.3, y: 1.6, z: 10.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6512511872264213361}
+  m_Father: {fileID: 8635518071374113432}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4647767549083508921
+--- !u!114 &5830876042545106340
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3239892846197588860}
+  m_GameObject: {fileID: 699915295742116612}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
@@ -288,7 +48,7 @@ MonoBehaviour:
   size: {x: 9.400002, y: 3.4, z: 14.8}
   priority: 0
   gizmoColor: {r: 0.3, g: 1, b: 0.45399988, a: 1}
---- !u!1 &3439329134704999168
+--- !u!1 &1993003509070653661
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -296,8 +56,200 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 814421935670851028}
-  - component: {fileID: 301088174087725991}
+  - component: {fileID: 143279205586497932}
+  - component: {fileID: 8631226898250521734}
+  m_Layer: 0
+  m_Name: Zone_Room04
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &143279205586497932
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1993003509070653661}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 83.2, y: 1.6, z: 42.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8631226898250521734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1993003509070653661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: d97d36327159822479a540f8d9da5237, type: 2}
+  size: {x: 29.599998, y: 3.4, z: 12.600002}
+  priority: 0
+  gizmoColor: {r: 1, g: 0.3, b: 0.4722002, a: 1}
+--- !u!1 &2254767199511785181
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1558653615249879680}
+  - component: {fileID: 3715464554598651705}
+  m_Layer: 0
+  m_Name: Zone_Ward_North
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1558653615249879680
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2254767199511785181}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 17, y: 1.6, z: 47.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3715464554598651705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2254767199511785181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 8767947bb64110747891282685280149, type: 2}
+  size: {x: 19.400002, y: 3.4, z: 20.8}
+  priority: 0
+  gizmoColor: {r: 1, g: 0.8754, b: 0.3, a: 1}
+--- !u!1 &2796361343941022072
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6135086244521009261}
+  - component: {fileID: 8992780723329674844}
+  m_Layer: 0
+  m_Name: Zone_Ward_Middle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6135086244521009261
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2796361343941022072}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 17.9, y: 1.6, z: 26.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8992780723329674844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2796361343941022072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 8767947bb64110747891282685280149, type: 2}
+  size: {x: 18.8, y: 3.4, z: 12.799999}
+  priority: 0
+  gizmoColor: {r: 0.54920006, g: 1, b: 0.3, a: 1}
+--- !u!1 &2998691839442415064
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1249306554142757378}
+  - component: {fileID: 6706625607123870499}
+  m_Layer: 0
+  m_Name: Zone_Room12
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1249306554142757378
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2998691839442415064}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 107.25, y: 1.6, z: 6.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6706625607123870499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2998691839442415064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 2e5079d401420744db44ef5998377779, type: 2}
+  size: {x: 10.699997, y: 3.4, z: 6.2}
+  priority: 0
+  gizmoColor: {r: 0.3, g: 0.39520028, b: 1, a: 1}
+--- !u!1 &4464884097006066949
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8193007804575548605}
+  - component: {fileID: 1684846403140456316}
   m_Layer: 0
   m_Name: Zone_WasteStorage
   m_TagString: Untagged
@@ -305,28 +257,28 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &814421935670851028
+--- !u!4 &8193007804575548605
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3439329134704999168}
+  m_GameObject: {fileID: 4464884097006066949}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 109.5, y: 1.6, z: 47.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6512511872264213361}
+  m_Father: {fileID: 8635518071374113432}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &301088174087725991
+--- !u!114 &1684846403140456316
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3439329134704999168}
+  m_GameObject: {fileID: 4464884097006066949}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
@@ -336,7 +288,7 @@ MonoBehaviour:
   size: {x: 17.800003, y: 3.4, z: 18.900002}
   priority: 0
   gizmoColor: {r: 1, g: 0.3, b: 0.6444004, a: 1}
---- !u!1 &3689400113480188273
+--- !u!1 &5862562211377729547
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -344,94 +296,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4053417894488625920}
-  - component: {fileID: 8584244087947744600}
+  - component: {fileID: 7601892868198175316}
+  - component: {fileID: 5503507083257724679}
   m_Layer: 0
-  m_Name: Zone_Consultation
+  m_Name: Zone_StartRoom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4053417894488625920
+--- !u!4 &7601892868198175316
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3689400113480188273}
+  m_GameObject: {fileID: 5862562211377729547}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 22.95, y: 1.6, z: 9.25}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 3.8999999, y: 1.6, z: -3.6999998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6512511872264213361}
+  m_Father: {fileID: 8635518071374113432}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8584244087947744600
+--- !u!114 &5503507083257724679
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3689400113480188273}
+  m_GameObject: {fileID: 5862562211377729547}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 54980e08debe3ec4085541e4815f77bd, type: 2}
-  size: {x: 12.9, y: 3.4, z: 11.9}
+  profile: {fileID: 11400000, guid: 2e5079d401420744db44ef5998377779, type: 2}
+  size: {x: 17, y: 3.4, z: 23}
   priority: 0
-  gizmoColor: {r: 0.3, g: 1, b: 0.6261999, a: 1}
---- !u!1 &5184697753133560149
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3550898583171964327}
-  - component: {fileID: 8158171011538313765}
-  m_Layer: 0
-  m_Name: Zone_PharmacyStorage
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3550898583171964327
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5184697753133560149}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 83.7, y: 1.6, z: 27.7}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8158171011538313765
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5184697753133560149}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 4430b08b0bee5e449b6a774b6169c26a, type: 2}
-  size: {x: 15.400002, y: 3.4, z: 7.3999996}
-  priority: 0
-  gizmoColor: {r: 0.72140014, g: 1, b: 0.3, a: 1}
+  gizmoColor: {r: 1, g: 0.3, b: 0.3, a: 1}
 --- !u!1 &6131406282196671152
 GameObject:
   m_ObjectHideFlags: 0
@@ -441,6 +345,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6512511872264213361}
+  - component: {fileID: 7612650540283165963}
+  - component: {fileID: 2641088833508761658}
+  - component: {fileID: 7201953398853677204}
+  - component: {fileID: 3139889259017838459}
   m_Layer: 0
   m_Name: AudioSystem
   m_TagString: Untagged
@@ -456,220 +364,113 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6131406282196671152}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1666624559008473385}
-  - {fileID: 7750069207202176611}
-  - {fileID: 2212816702456358305}
-  - {fileID: 4053417894488625920}
-  - {fileID: 9106206710977515975}
-  - {fileID: 6053796404403971330}
-  - {fileID: 6623812545433332657}
-  - {fileID: 3608356360051389411}
-  - {fileID: 3550898583171964327}
-  - {fileID: 8340125633378185227}
-  - {fileID: 863725581787863097}
-  - {fileID: 6438591516318816744}
-  - {fileID: 5030315000697986458}
-  - {fileID: 814421935670851028}
+  - {fileID: 3637426263246680971}
+  - {fileID: 6202914474098166929}
+  - {fileID: 8635518071374113432}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6259523117396832814
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6438591516318816744}
-  - component: {fileID: 6639690545958189879}
-  m_Layer: 0
-  m_Name: Zone_Room12
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6438591516318816744
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6259523117396832814}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 107.25, y: 1.6, z: 6.6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6639690545958189879
+--- !u!114 &7612650540283165963
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6259523117396832814}
+  m_GameObject: {fileID: 6131406282196671152}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Script: {fileID: 11500000, guid: 22d4298ec120e524c918d80cda4fc770, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 2e5079d401420744db44ef5998377779, type: 2}
-  size: {x: 10.699997, y: 3.4, z: 6.2}
-  priority: 0
-  gizmoColor: {r: 0.3, g: 0.39520028, b: 1, a: 1}
---- !u!1 &8128258639179431490
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5030315000697986458}
-  - component: {fileID: 9168182177684059286}
-  m_Layer: 0
-  m_Name: Zone_OperatingRoom
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5030315000697986458
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8128258639179431490}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 83.8, y: 1.6, z: -10.9}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9168182177684059286
+  m_EditorClassIdentifier: Assembly-CSharp::ChaseMusicController
+  chaseBgmCue: {fileID: 11400000, guid: 96b43a82bcca24247b3cfdc51d83095b, type: 2}
+  escapedCue: {fileID: 11400000, guid: 5aebf3d4cfebe2f4f9087448e578cb63, type: 2}
+  fadeInTime: 0.6
+  fadeOutTime: 2.5
+  endGraceTime: 1
+  rescanInterval: 2
+--- !u!114 &2641088833508761658
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8128258639179431490}
+  m_GameObject: {fileID: 6131406282196671152}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc5893bb6e047f4994783128301b6cd, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 029822b4d0bf504498351a3bf217f32a, type: 2}
-  size: {x: 14.400002, y: 3.4, z: 13.400001}
-  priority: 0
-  gizmoColor: {r: 0.7801996, g: 0.3, b: 1, a: 1}
---- !u!1 &8237683812773477301
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6623812545433332657}
-  - component: {fileID: 498591904707796297}
-  m_Layer: 0
-  m_Name: Zone_Room03
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6623812545433332657
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8237683812773477301}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 60.05, y: 1.6, z: 44.300003}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &498591904707796297
+  m_EditorClassIdentifier: Assembly-CSharp::WorldAudio
+  doorOpenCue: {fileID: 11400000, guid: 0097cf5ebbc24f34aba78f76ed8fb3b7, type: 2}
+  doorCloseCue: {fileID: 11400000, guid: 63cccbdf624157944bea8611fbc09976, type: 2}
+  doorOpenMonsterCue: {fileID: 11400000, guid: 8267bd6b1f4294d46ba5b29f8735ebd7, type: 2}
+  doorLockedCue: {fileID: 11400000, guid: 08e3a1e91fb8ecb4ebd793e75d0eb21d, type: 2}
+  safeOpenCue: {fileID: 11400000, guid: 818b1e5c1a3b2c243bbcf26bce203e79, type: 2}
+  escapeDoorOpenCue: {fileID: 11400000, guid: 919a833d013fe32429ca4a0083bda540, type: 2}
+  flashlightOnCue: {fileID: 11400000, guid: 3d17aace7e4319e48aae1c9b95b12e7b, type: 2}
+  flashlightOffCue: {fileID: 11400000, guid: ed5e5892918f2ed49ad8006bc6ca400a, type: 2}
+  flashChargeCue: {fileID: 11400000, guid: 790b64824c656a049864351fd7480bb3, type: 2}
+  flashCue: {fileID: 11400000, guid: 47658cb17c40e274ba0b14a2183cf8ef, type: 2}
+  flashlightReloadCue: {fileID: 11400000, guid: 229835dd72a9b6b4fabdbbe020541192, type: 2}
+  flashlightEmptyCue: {fileID: 11400000, guid: 80e3e74fbcb2ffe43ae9e30fe4c467e1, type: 2}
+  keypadPressCue: {fileID: 11400000, guid: 9e1c8e7d49ec72c4bb2038de417f14fa, type: 2}
+  keypadOkCue: {fileID: 11400000, guid: 3b58d14e2354c0b419b25e43aa793207, type: 2}
+  keypadNgCue: {fileID: 11400000, guid: a589c18f53e36324fb55cc0bfb7c4e9d, type: 2}
+  allBeaconsCue: {fileID: 11400000, guid: 981eb807db59ef341a4b156e84ddd12a, type: 2}
+  gameOverCue: {fileID: 11400000, guid: db538a30758e14641892b4110e7688d2, type: 2}
+  escapedCue: {fileID: 11400000, guid: b21771e5aa8e99841be66dbd56eac911, type: 2}
+  drone: {fileID: 4357588496018365646}
+  chaseDuck: 0.35
+  randomAmbience: {fileID: 7819048844658496191}
+  fluorescentCue: {fileID: 11400000, guid: 3f27425b6b178504eb2e0da8baba042e, type: 2}
+  fluorescentLightPrefix: Fluo
+  fluorescentSpacing: 9
+  fluorescentMax: 24
+  emergencyCue: {fileID: 11400000, guid: 9975cb083abe6bd49afde2cc32946eb7, type: 2}
+  emergencyLightPrefix: Emergency
+  emergencySpacing: 6
+  emergencyMax: 16
+  muffleWhenHiding: 1
+  muffledCutoff: 1400
+  muffleSpeed: 4
+--- !u!114 &7201953398853677204
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8237683812773477301}
+  m_GameObject: {fileID: 6131406282196671152}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d1d50c1632e8db4e904c1faf59ef123, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 2e5079d401420744db44ef5998377779, type: 2}
-  size: {x: 13.299995, y: 3.4, z: 9.799999}
-  priority: 0
-  gizmoColor: {r: 0.9523998, g: 0.3, b: 1, a: 1}
---- !u!1 &8332381408485394309
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1666624559008473385}
-  - component: {fileID: 3090664803714510581}
-  m_Layer: 0
-  m_Name: Zone_StartRoom
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1666624559008473385
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8332381408485394309}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.8999999, y: 1.6, z: -3.6999998}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6512511872264213361}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3090664803714510581
+  m_EditorClassIdentifier: Assembly-CSharp::MenuAudio
+  hoverCue: {fileID: 11400000, guid: 77bc00a97baefa94199a549862aa488f, type: 2}
+  clickCue: {fileID: 11400000, guid: 2ced817a1e4272a46a920c287cab65e3, type: 2}
+  menuMusicCue: {fileID: 11400000, guid: b3748d8663f94df4e8dc79fe7b57e15f, type: 2}
+  pauseOpenCue: {fileID: 11400000, guid: 2ced817a1e4272a46a920c287cab65e3, type: 2}
+--- !u!114 &3139889259017838459
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8332381408485394309}
+  m_GameObject: {fileID: 6131406282196671152}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Script: {fileID: 11500000, guid: 43e12c10aefc3a449a6590f11d0452d6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
-  profile: {fileID: 11400000, guid: 2e5079d401420744db44ef5998377779, type: 2}
-  size: {x: 17, y: 3.4, z: 23}
-  priority: 0
-  gizmoColor: {r: 1, g: 0.3, b: 0.3, a: 1}
---- !u!1 &8841243092878559045
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioController
+  defaultProfile: {fileID: 11400000, guid: 077118019405aba43b6db91642df972d, type: 2}
+  transitionSpeed: 2.5
+  ambienceFade: 1.5
+  switchDelay: 0.15
+  logRoomChanges: 0
+  applyReverb: 0
+--- !u!1 &6180693624383910313
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -677,8 +478,298 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 9106206710977515975}
-  - component: {fileID: 3094573288376288566}
+  - component: {fileID: 6202914474098166929}
+  - component: {fileID: 7819048844658496191}
+  m_Layer: 0
+  m_Name: AmbienceRandom
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6202914474098166929
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6180693624383910313}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6512511872264213361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7819048844658496191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6180693624383910313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d97af8ec7fd51445af5ccba72049904, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RandomVocalizer
+  idleCue: {fileID: 11400000, guid: 22147c61100f16b4b8512f8da235be35, type: 2}
+  idleInterval: {x: 12, y: 30}
+  activeCue: {fileID: 0}
+  activeInterval: {x: 1.5, y: 4}
+  randomOffset: 18
+  emitter: {fileID: 0}
+--- !u!1 &6317833964842175852
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4401276958507037147}
+  - component: {fileID: 1862564683444960588}
+  m_Layer: 0
+  m_Name: Zone_PharmacyStorage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4401276958507037147
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6317833964842175852}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 83.7, y: 1.6, z: 27.7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1862564683444960588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6317833964842175852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 4430b08b0bee5e449b6a774b6169c26a, type: 2}
+  size: {x: 15.400002, y: 3.4, z: 7.3999996}
+  priority: 0
+  gizmoColor: {r: 0.72140014, g: 1, b: 0.3, a: 1}
+--- !u!1 &6393945135341981917
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8635518071374113432}
+  m_Layer: 0
+  m_Name: RoomAudioZones
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8635518071374113432
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6393945135341981917}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7601892868198175316}
+  - {fileID: 1558653615249879680}
+  - {fileID: 6135086244521009261}
+  - {fileID: 4018675395223884304}
+  - {fileID: 8211122175874102858}
+  - {fileID: 3716007800932433141}
+  - {fileID: 1773254373073767250}
+  - {fileID: 143279205586497932}
+  - {fileID: 4401276958507037147}
+  - {fileID: 2296377143651370674}
+  - {fileID: 5965501033004224965}
+  - {fileID: 1249306554142757378}
+  - {fileID: 6296206789168500291}
+  - {fileID: 8193007804575548605}
+  m_Father: {fileID: 6512511872264213361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6987680368516116478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5965501033004224965}
+  - component: {fileID: 1329529444040643091}
+  m_Layer: 0
+  m_Name: Zone_Toilet
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5965501033004224965
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6987680368516116478}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 91.38464, y: 1.6, z: 10.075}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1329529444040643091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6987680368516116478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: f1d76a9e8e3174a4186ac57468ec5811, type: 2}
+  size: {x: 10.429251, y: 3.4, z: 14.749998}
+  priority: 0
+  gizmoColor: {r: 0.3, g: 0.9706001, b: 1, a: 1}
+--- !u!1 &7190193361055638609
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3716007800932433141}
+  - component: {fileID: 4274112888024264017}
+  m_Layer: 0
+  m_Name: Zone_Lobby
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3716007800932433141
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7190193361055638609}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 43.15, y: 1.6, z: 46.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4274112888024264017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7190193361055638609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 176697b13412e034fb772347b38aac3d, type: 2}
+  size: {x: 16.100002, y: 3.4, z: 14.399998}
+  priority: 0
+  gizmoColor: {r: 0.37699977, g: 0.3, b: 1, a: 1}
+--- !u!1 &7406431096882111332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3637426263246680971}
+  - component: {fileID: 4357588496018365646}
+  m_Layer: 0
+  m_Name: AmbienceDrone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3637426263246680971
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7406431096882111332}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6512511872264213361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4357588496018365646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7406431096882111332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 173fdf043e48b234383292da734d75a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LoopSoundEmitter
+  cue: {fileID: 11400000, guid: b3dea52b5a531dd40901720727c88679, type: 2}
+  playOnStart: 1
+  fadeInTime: 3
+  fadeOutTime: 0.8
+  randomStartTime: 1
+  volumeWeight: 1
+  useUnscaledTime: 0
+--- !u!1 &7871847101628782622
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8211122175874102858}
+  - component: {fileID: 5347787385322359931}
   m_Layer: 0
   m_Name: Zone_PhysicalTherapy
   m_TagString: Untagged
@@ -686,28 +777,28 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &9106206710977515975
+--- !u!4 &8211122175874102858
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8841243092878559045}
+  m_GameObject: {fileID: 7871847101628782622}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 45.800003, y: 1.6, z: 10.05}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6512511872264213361}
+  m_Father: {fileID: 8635518071374113432}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3094573288376288566
+--- !u!114 &5347787385322359931
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8841243092878559045}
+  m_GameObject: {fileID: 7871847101628782622}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
@@ -717,3 +808,147 @@ MonoBehaviour:
   size: {x: 18.8, y: 3.4, z: 10.1}
   priority: 0
   gizmoColor: {r: 0.3, g: 0.7984001, b: 1, a: 1}
+--- !u!1 &8660956661360972852
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6296206789168500291}
+  - component: {fileID: 4304862483747756585}
+  m_Layer: 0
+  m_Name: Zone_OperatingRoom
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6296206789168500291
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8660956661360972852}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 83.8, y: 1.6, z: -10.9}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4304862483747756585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8660956661360972852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 029822b4d0bf504498351a3bf217f32a, type: 2}
+  size: {x: 14.400002, y: 3.4, z: 13.400001}
+  priority: 0
+  gizmoColor: {r: 0.7801996, g: 0.3, b: 1, a: 1}
+--- !u!1 &8681961531907080749
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1773254373073767250}
+  - component: {fileID: 1668751478612724866}
+  m_Layer: 0
+  m_Name: Zone_Room03
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1773254373073767250
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8681961531907080749}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 60.05, y: 1.6, z: 44.300003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1668751478612724866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8681961531907080749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 2e5079d401420744db44ef5998377779, type: 2}
+  size: {x: 13.299995, y: 3.4, z: 9.799999}
+  priority: 0
+  gizmoColor: {r: 0.9523998, g: 0.3, b: 1, a: 1}
+--- !u!1 &8752856783344664468
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4018675395223884304}
+  - component: {fileID: 6739853065844350045}
+  m_Layer: 0
+  m_Name: Zone_Consultation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4018675395223884304
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8752856783344664468}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 22.95, y: 1.6, z: 9.25}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8635518071374113432}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6739853065844350045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8752856783344664468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac02897e08463048b10a685e60c3369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioZone
+  profile: {fileID: 11400000, guid: 54980e08debe3ec4085541e4815f77bd, type: 2}
+  size: {x: 12.9, y: 3.4, z: 11.9}
+  priority: 0
+  gizmoColor: {r: 0.3, g: 1, b: 0.6261999, a: 1}

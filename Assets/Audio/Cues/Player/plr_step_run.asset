@@ -23,8 +23,6 @@ MonoBehaviour:
   rolloff: 1
   mixerGroup: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
   minInterval: 0.05
-  ignoreListenerPause: 0
-  roomReverb: 1
   note: "\uB6F0\uAE30 \uBC1C\uC18C\uB9AC. \uD074\uB9BD 4~6\uAC1C. footstep run tile\n\uD074\uB9BD
     \uD3F4\uB354: Assets/Audio/Clips/Player/  \uD30C\uC77C \uC774\uB984: plr_step_run_01,
     plr_step_run_02 ..."

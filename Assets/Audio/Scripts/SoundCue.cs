@@ -27,8 +27,6 @@ public class SoundCue : ScriptableObject
     [Tooltip("이 거리(m)부터는 들리지 않음 (Linear 기준)")]
     public float maxDistance = 20f;
     public AudioRolloffMode rolloff = AudioRolloffMode.Linear;
-    [Tooltip("벽 너머에서 먹먹해지는 정도 (3D 소리만). 1 = 설정값 그대로, 0 = 벽 무시")]
-    [Range(0f, 1f)] public float occlusion = 1f;
 
     [Header("Routing")]
     [Tooltip("AudioMixer 그룹 (BGM / Ambience / Player / Enemy / World / UI)")]
@@ -37,8 +35,6 @@ public class SoundCue : ScriptableObject
     public float minInterval = 0.05f;
     [Tooltip("메뉴/일시정지(AudioListener.pause) 중에도 재생 (메뉴 UI, 메뉴 음악용)")]
     public bool ignoreListenerPause = false;
-    [Tooltip("방 잔향(RoomAudioZone)을 받을지. Auto = 3D 소리만 받음 (UI/BGM 같은 2D 소리는 안 울림)")]
-    public RoomReverbMode roomReverb = RoomReverbMode.Auto;
 
     [TextArea(2, 4)]
     [Tooltip("어떤 소리인지, 검색 키워드 등 메모 (게임에는 영향 없음)")]
@@ -87,11 +83,6 @@ public class SoundCue : ScriptableObject
         src.rolloffMode = rolloff;
         src.dopplerLevel = 0f;
         src.ignoreListenerPause = ignoreListenerPause;
-        bool reverb = roomReverb == RoomReverbMode.On || (roomReverb == RoomReverbMode.Auto && spatial3D);
-        src.reverbZoneMix = reverb ? 1f : 0f;
         if (mixerGroup != null) src.outputAudioMixerGroup = mixerGroup;
-        AudioOcclusion.Configure(src, spatial3D ? occlusion : 0f);
     }
 }
-
-public enum RoomReverbMode { Auto, On, Off }

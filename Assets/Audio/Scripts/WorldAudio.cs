@@ -119,8 +119,7 @@ public class WorldAudio : MonoBehaviour
         if (drone != null)
         {
             bool chase = ChaseMusicController.Instance != null && ChaseMusicController.Instance.IsChaseMusicOn;
-            float room = RoomAudioController.Instance != null ? RoomAudioController.Instance.DroneWeight : 1f;
-            drone.volumeWeight = Mathf.MoveTowards(drone.volumeWeight, Mathf.Clamp01((chase ? chaseDuck : 1f) * room), Time.deltaTime * 0.8f);
+            drone.volumeWeight = Mathf.MoveTowards(drone.volumeWeight, chase ? chaseDuck : 1f, Time.deltaTime * 0.8f);
         }
 
         // 랜덤 환경음은 리스너 주변에서

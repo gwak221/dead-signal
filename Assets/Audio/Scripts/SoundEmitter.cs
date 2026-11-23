@@ -23,12 +23,8 @@ public class SoundEmitter : MonoBehaviour
         {
             if (source == null)
             {
-                // 자기 전용 자식에 만든다: 한 오브젝트에 AudioSource가 여러 개면 필터(occlusion)가 제대로 안 걸린다
-                var go = new GameObject("SFX");
-                go.transform.SetParent(transform, false);
-                source = go.AddComponent<AudioSource>();
+                source = gameObject.AddComponent<AudioSource>();
                 source.playOnAwake = false;
-                AudioOcclusion.Attach(source, transform);
             }
             return source;
         }
@@ -80,7 +76,7 @@ public class SoundEmitter : MonoBehaviour
     {
         var listener = Object.FindFirstObjectByType<AudioListener>();
         var src = PlayAt(cue, listener != null ? listener.transform.position : Vector3.zero, volumeMultiplier);
-        if (src != null) { src.spatialBlend = 0f; AudioOcclusion.Configure(src, 0f); }
+        if (src != null) src.spatialBlend = 0f;
         return src;
     }
 }
