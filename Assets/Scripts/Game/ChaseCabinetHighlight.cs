@@ -8,7 +8,7 @@ using UnityEngine;
 ///   먼 거리  : 모서리 라인 + 본체 Emission (강한 외곽 Highlight)
 ///   중거리   : 문/손잡이 쪽 집중 Pulse 헤일로 + Cabinet 옆 World Space 안내 "[E] 숨기"
 ///   근거리   : 기존 PlayerInteraction 하단 프롬프트 "[E] 숨기" (이때 월드 안내는 자동으로 숨어 겹치지 않음)
-///  - MonsterChase.IsChasing / OnChaseStarted / OnChaseEnded 만 읽는다 (MonsterChase는 이 클래스를 모른다).
+///  - MonsterChase.IsChasing(Monster 1) 과 MonsterHoundAI.IsChasingPlayer(Monster 2) 를 읽기만 한다. 하나라도 추격 중이면 표시.
 ///  - 플레이어가 숨어 있으면(PlayerHide.IsPlayerHiding) 모두 꺼진다.
 ///  - 깊이 테스트만 사용(벽 뒤 X-ray 없음), 월드 안내는 카메라→안내 Linecast 로 벽 차단 시 숨김. 새 Light 없음.
 /// </summary>
@@ -61,6 +61,7 @@ public class ChaseCabinetHighlight : MonoBehaviour
     }
 
     readonly List<MonsterChase> monsters = new List<MonsterChase>();
+    readonly List<MonsterHoundAI> hounds = new List<MonsterHoundAI>();
     readonly List<Cabinet> cabinets = new List<Cabinet>();
     Material mat;
     float fade;
@@ -181,6 +182,8 @@ public class ChaseCabinetHighlight : MonoBehaviour
             m.OnChaseStarted += OnChanged;
             m.OnChaseEnded += OnChanged;
         }
+        hounds.Clear();
+        hounds.AddRange(FindObjectsByType<MonsterHoundAI>(FindObjectsInactive.Include, FindObjectsSortMode.None));
     }
 
     // 이벤트는 상태 변경 훅. 실제 표시 여부는 Update 에서 IsChasing 으로 평가한다.
@@ -198,7 +201,18 @@ public class ChaseCabinetHighlight : MonoBehaviour
         if (PlayerHide.IsPlayerHiding) return false;
         foreach (var m in monsters)
             if (m != null && m.IsChasing) return true;
+        foreach (var h in hounds)
+            if (HoundChasing(h)) return true;
         return false;
+    }
+
+    // Monster 2: 등장 컷씬 전(AI 비활성)에는 추격으로 보지 않는다. 손전등 스턴 중에는 AI 가 잠시 꺼져도 추격 상태는 유지되므로 깜빡임 없이 유지한다.
+    static bool HoundChasing(MonsterHoundAI h)
+    {
+        if (h == null || !h.gameObject.activeInHierarchy || !h.IsChasingPlayer) return false;
+        if (h.enabled) return true;
+        var stun = h.GetComponent<MonsterStun>();
+        return stun != null && stun.IsStunned;
     }
 
     void Update()
@@ -209,7 +223,7 @@ public class ChaseCabinetHighlight : MonoBehaviour
         if (rescanTimer <= 0f)
         {
             rescanTimer = 3f;
-            if (monsters.Count == 0 || monsters.Exists(m => m == null)) RescanMonsters();
+            if (monsters.Count == 0 || hounds.Count == 0 || monsters.Exists(m => m == null) || hounds.Exists(h => h == null)) RescanMonsters();
         }
 
         bool want = WantHighlight();
