@@ -9,7 +9,8 @@ using UnityEngine.SceneManagement;
 ///   메뉴 음악 : 타이틀 화면(GameMenuManager.InTitle)에 있는 동안 bgm_menu 루프. 게임 시작 시 페이드 아웃.
 ///               타이틀은 일시정지(AudioListener.pause, timeScale 0) 상태라 항목은 ignorePause, 페이드는 unscaled 시간.
 ///   추격 음악 : 쫓는 적(MonsterChase.IsChasing / MonsterHoundAI.IsChasingPlayer) 수가 0 → 1 이상이 되면 bgm_chase 루프.
-///               적이 여러 마리여도 하나만. 0이 되고 endGraceTime이 지나면 페이드 아웃 + sfx_chase_escaped(따돌림).
+///               적이 여러 마리여도 하나만. 0이 되고 endGraceTime이 지나면 0.8초 페이드 아웃 + sfx_chase_escaped(따돌림).
+///               (기존 2.5초 페이드는 따돌림 소리가 추격 음악에 묻혀서 줄임)
 ///               잡혀서 끝나면(PlayerCaughtSequence) 따돌림 소리 없이 빠르게 끈다.
 ///   결말      : GameProgress.IsEnded가 되면 1회 — 탈출이면 bgm_escape, 아니면 bgm_gameover. 추격 음악은 끈다.
 /// </summary>
@@ -25,10 +26,11 @@ public class MusicSounds : MonoBehaviour
     public string chaseMusic = "bgm_chase";
     public string chaseEscapedSound = "sfx_chase_escaped";
     [Tooltip("추격 시작 시 음악이 커지는 시간(초)")] public float chaseFadeIn = 0.6f;
-    [Tooltip("따돌렸을 때 음악이 작아지는 시간(초)")] public float chaseFadeOut = 2.5f;
+    [Tooltip("따돌렸을 때 음악이 작아지는 시간(초). 길면 따돌림 소리가 추격 음악에 묻힌다")] public float chaseFadeOut = 0.8f;
     [Tooltip("잡히거나 게임이 끝났을 때 음악이 작아지는 시간(초)")] public float chaseCutFade = 0.15f;
     [Tooltip("추격이 끝나고 이 시간(초) 안에 다시 쫓기면 음악을 끊지 않고 이어간다")] public float endGraceTime = 1f;
     [Tooltip("새로 생긴 적을 다시 찾는 간격(초)")] public float rescanInterval = 2f;
+    [Tooltip("추격 시작/끝을 콘솔에 남긴다 (에디터·개발 빌드만)")] public bool logChase = true;
 
     [Header("결말")]
     public string gameOverMusic = "bgm_gameover";
@@ -48,6 +50,7 @@ public class MusicSounds : MonoBehaviour
     readonly List<MonsterHoundAI> hounds = new List<MonsterHoundAI>();
 
     bool endedSeen;
+    int lastCount;
 
     /// <summary>추격 음악이 켜져 있는지 (환경음 줄이기 등에 사용).</summary>
     public static bool IsChaseMusicOn => instance != null && instance.chasing;
@@ -157,6 +160,7 @@ public class MusicSounds : MonoBehaviour
         bool caught = PlayerCaughtSequence.IsRunning;
         bool ended = GameProgress.IsEnded;
 
+        lastCount = count;
         if (count > 0 && !caught && !ended)
         {
             noChaserSince = -1f;
@@ -184,6 +188,7 @@ public class MusicSounds : MonoBehaviour
         chasing = true;
         chase.Stop(chaseCutFade);
         chase = AudioManager.Play(chaseMusic);
+        Log("추격 시작 — 쫓는 적 " + lastCount + "마리");
         chaseFade = chaseFadeIn > 0f ? 0f : 1f;
         chase.SetVolume(chaseFade);
     }
@@ -195,6 +200,13 @@ public class MusicSounds : MonoBehaviour
         chase.Stop(escaped ? chaseFadeOut : chaseCutFade);
         chase = SoundHandle.None;
         if (escaped) AudioManager.Play(chaseEscapedSound);
+        Log(escaped ? "추격 끝 — 따돌림 (" + chaseEscapedSound + ")" : "추격 끝 — 잡힘/결말 (따돌림 소리 없음)");
+    }
+
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+    void Log(string msg)
+    {
+        if (logChase) Debug.Log("[MusicSounds] " + msg);
     }
 
     // ───────────── 결말 ─────────────
