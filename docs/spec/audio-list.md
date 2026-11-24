@@ -23,7 +23,13 @@
   - 적이 문을 열면 `door_open_monster`가 등록될 때까지 `door_open`으로 대체. 금고 여는 소리 `pz_safe_open`은 등록 전까지 무음
   - 잠김 소리는 같은 문에서 0.4초 안에 다시 나지 않는다 (연타 방지, 기존 동작과 같음)
   - 탈출 문 소리는 램프가 모두 켜지고 `openDelay`(1초) 뒤, 문이 움직이기 시작할 때 2D로 재생
-- **나머지 항목 (5~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
+  - QTE 성공/실패 `qte_success`, `qte_fail`: 이제 **아이템이 든 상자**의 잠금 QTE(`LootQteGate` → `SkillCheckManager`)에서 난다. 원래 비콘용(`bcn_qte_*`)이던 것을 이름을 바꿔 옮겼다
+- **5장 비콘 (4개)**: `bcn_hum_off`, `bcn_hum_on`, `bcn_battery_insert`, `bcn_activate` — 호출은 `WorldSounds`
+  - 비콘 QTE는 파이프 연결 미니게임(`BeaconPipeQte`)으로 바뀌었다. 미니게임에는 실패가 없고(성공 / ESC 취소만), 미니게임 소리는 클립을 찾는 중이라 비워 둔다 → 대기 목록 `pz_pipe_rotate`, `pz_pipe_connect`
+  - 비콘마다 작동음 루프 하나: `IsActivated`를 보고 off/on을 고른다. 바뀔 때 0.6초 페이드아웃 + 1.5초 페이드인 (기존 동작과 같음). 비콘 오브젝트가 꺼지면 소리도 끈다
+  - 소리 위치: 비콘 피벗이 바닥이라 모델 중심(약 1.47m)에 실행 중에만 쓰는 점(`[AudioPoint]`)을 만든다. 예전 "Audio" 자식이 있으면 그걸 쓴다
+  - 작동음 클립 2개는 Load Type = Streaming으로 바꿈 (62초·81초)
+- **나머지 항목 (6~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
 
 ## 출처
 - **클립**: `Assets/Audio/find_cilp/` (오디오 담당이 고른 개선 클립 112개). 아래 "클립" 열은 이 폴더의 파일 이름이다.
@@ -141,6 +147,8 @@
 | `box_open` | box_open_01 | 새 | 가구(7종) 파츠가 열리기 시작할 때. 여러 파츠가 동시에 움직이면 **한 번만** (0.08초 안 중복 무시) | | 3D | World | `OpenableSound` | O |
 | `box_close` | box_close_01 | 새 | 가구 파츠가 닫히기 시작할 때 (같은 중복 규칙) | | 3D | World | `OpenableSound` | O |
 | `esc_door_open` | esc_door_open (7.9초) | 동일 (기존 `bcn_all_done_01`과 같은 파일) | 램프가 모두 켜져 **탈출 문이 열리기 시작**할 때. 맵 어디에 있든 들리도록 **2D** | | 2D | World | `EscapeDoorController.onAllLampsActive` | O |
+| `qte_success` | qte_success_01 | 새 | **아이템이 든 상자**의 잠금 QTE(원형 스킬체크) 성공 | | 2D | UI | `SkillCheckManager.OnSuccess` (`LootQteGate`) | |
+| `qte_fail` | qte_fail_01 | 새 | 아이템 상자 QTE 실패. 잡혀서 QTE가 취소될 때는 안 남 | | 2D | UI | `SkillCheckManager.OnFail` | |
 
 ## 5. 비콘
 
@@ -150,8 +158,6 @@
 | `bcn_hum_on` | bcn_hum_on_01 (81.3초) | 동일 | 비콘이 **활성** 상태인 동안 계속 | (게임 끝까지) | 3D L | World | 〃 | |
 | `bcn_battery_insert` | bcn_battery_insert_01 | 동일 | 비콘에 배터리를 꽂을 때 | | 3D | World | `Beacon.AnyActivated` | |
 | `bcn_activate` | bcn_activate_01 | 동일 | 배터리 장착 소리 **0.35초 뒤** | | 3D | World | 〃 (지연 호출) | |
-| `bcn_qte_success` | qte_success_01 | 새 | 비콘 QTE 성공 | | 2D | UI | `Beacon.AnyQteResult(true)` | |
-| `bcn_qte_fail` | qte_fail_01 | 새 | 비콘 QTE 실패 | | 2D | UI | `Beacon.AnyQteResult(false)` | |
 
 ## 6. 음악 · 진행
 
@@ -228,6 +234,8 @@
 | `pz_keypad_ok` | 비밀번호 정답 (`OnSubmitted(true)`) | 2D | UI | 클립 없음 |
 | `pz_keypad_ng` | 비밀번호 오답 (`OnSubmitted(false)`) | 2D | UI | 클립 없음 |
 | `pz_safe_open` | 금고가 열릴 때 | 3D | World | 클립 없음 |
+| `pz_pipe_rotate` | 비콘 파이프 미니게임에서 파이프를 클릭해 돌릴 때 (`PipeTile.RotatePipe`) | 2D | UI | 클립 찾는 중 (비워 둠) |
+| `pz_pipe_connect` | 파이프가 끝까지 연결된 순간 (`PuzzleManager.Solved`). 창이 닫힌 뒤 배터리 장착 → 활성화 소리가 이어진다 | 2D | UI | 클립 찾는 중 (비워 둠) |
 
 ## 등록하지 않음
 

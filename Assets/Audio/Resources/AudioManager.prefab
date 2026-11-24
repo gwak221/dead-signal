@@ -596,3 +596,105 @@ MonoBehaviour:
     ignorePause: 0
     note: "\uD0C8\uCD9C \uBB38\uC774 \uC6C0\uC9C1\uC774\uAE30 \uC2DC\uC791\uD560
       \uB54C, \uB9F5 \uC5B4\uB514\uC11C\uB4E0 \uB4E4\uB9AC\uAC8C 2D (WorldSounds)"
+  - name: bcn_hum_off
+    clips:
+    - {fileID: 8300000, guid: 47f020e137e7c7f44ad349f217466230, type: 3}
+    avoidRepeat: 1
+    volume: 0.5
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 8
+    rolloff: 1
+    loop: 1
+    ignorePause: 0
+    note: "\uBE44\uCF58 \uBE44\uD65C\uC131 \uB3D9\uC548 \uACC4\uC18D (\uB8E8\uD504,
+      WorldSounds). \uD65C\uC131\uD654\uB418\uBA74 hum_on\uC73C\uB85C \uD398\uC774\uB4DC
+      \uC804\uD658"
+  - name: bcn_hum_on
+    clips:
+    - {fileID: 8300000, guid: 0762788da92547d4c99da3ae32415681, type: 3}
+    avoidRepeat: 1
+    volume: 0.5
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 10
+    rolloff: 1
+    loop: 1
+    ignorePause: 0
+    note: "\uBE44\uCF58 \uD65C\uC131 \uB3D9\uC548 \uACC4\uC18D (\uB8E8\uD504, WorldSounds)"
+  - name: bcn_battery_insert
+    clips:
+    - {fileID: 8300000, guid: 37560bef1922d4f4bb8d38e71eebfc7e, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 12
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uBE44\uCF58\uC5D0 \uBC30\uD130\uB9AC \uC7A5\uCC29 (Beacon.AnyActivated,
+      WorldSounds)"
+  - name: bcn_activate
+    clips:
+    - {fileID: 8300000, guid: 7edcd34747af8cc4fbbd2540d6b13f93, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uBC30\uD130\uB9AC \uC7A5\uCC29 0.35\uCD08 \uB4A4 \uBE44\uCF58 \uD65C\uC131\uD654
+      (WorldSounds)"
+  - name: qte_success
+    clips:
+    - {fileID: 8300000, guid: ef5d041e5d01502409f204f090e5f4ff, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: -237546405140584250, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 10
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC544\uC774\uD15C \uC0C1\uC790 QTE \uC131\uACF5 (SkillCheckManager.OnSuccess,
+      WorldSounds)"
+  - name: qte_fail
+    clips:
+    - {fileID: 8300000, guid: f481bf3d255579444b1af1c27eaec4f8, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: -237546405140584250, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 10
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC544\uC774\uD15C \uC0C1\uC790 QTE \uC2E4\uD328 (SkillCheckManager.OnFail,
+      WorldSounds). \uC7A1\uD600\uC11C \uCDE8\uC18C\uB420 \uB54C\uB294 \uC548 \uB0A8"
