@@ -537,9 +537,21 @@ public class PlayerInteraction : MonoBehaviour
             if (c.transform.IsChildOf(owner.transform)) continue;       // 대상 자신
             if (GetPickupOwner(c) != null) continue;                    // 다른 줍기 아이템은 시야를 막지 않음
             if (IsOpenCabinetOpening(c, blockHits[i].point)) continue;   // 열린 약장의 출입구(앞면)로 들어가는 광선
+            if (IsOwnOpenContainer(c, owner)) continue;                 // 아이템이 들어 있는 '열린 서랍/문' 자신의 박스 Collider (속이 찬 박스라 안쪽 아이템을 가림)
             return false;                                                // 벽/바닥/가구/닫힌 문 등 실제 구조물
         }
         return true;
+    }
+
+    /// <summary>
+    /// 줍기 아이템이 자식으로 들어 있는 OpenablePart(filing 서랍 등)가 열려 있으면, 그 서랍 자신의 Collider 는 시야를 막지 않는다.
+    /// 서랍 Collider 는 속이 찬 박스라 서랍을 열어도 안쪽 아이템이 항상 가려졌다. 가구 몸통/벽/닫힌 서랍 등 다른 Collider 는 그대로 막는다
+    /// (몸통 반대편에서는 몸통 Collider 가 먼저 막으므로 벽/가구를 뚫고 줍는 일은 생기지 않는다).
+    /// </summary>
+    static bool IsOwnOpenContainer(Collider c, Component owner)
+    {
+        var part = c.GetComponentInParent<OpenablePart>();
+        return part != null && part.IsOpen && owner.transform.IsChildOf(part.transform);
     }
 
     /// <summary>
