@@ -1,0 +1,18 @@
+{
+    "name": "DeadSignal.Audio.Editor",
+    "rootNamespace": "DeadSignal.Audio.Editor",
+    "references": [
+        "DeadSignal.Audio"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,463 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8898525613022171649
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2344663635587177940}
+  - component: {fileID: 8707141935637813428}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2344663635587177940
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8898525613022171649}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8707141935637813428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8898525613022171649}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07331f90093983743aa6c9fd2280bfd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DeadSignal.Audio::DeadSignal.Audio.AudioManager
+  mixer: {fileID: 24100000, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  defaultGroup: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+  voiceCount: 32
+  sounds:
+  - name: en1_idle
+    clips:
+    - {fileID: 8300000, guid: c9cb5af62a7d34b47bb1df5167f21749, type: 3}
+    - {fileID: 8300000, guid: 45b9283461a5cf44393328b61b2426d1, type: 3}
+    - {fileID: 8300000, guid: 526f70f69f1d5074f96f68b19f29d8cb, type: 3}
+    - {fileID: 8300000, guid: 42ce3515673d48b4c850a6aecc5a7373, type: 3}
+    - {fileID: 8300000, guid: 4a96e1d4a33045d408d8bf0e76b08de2, type: 3}
+    - {fileID: 8300000, guid: 1e41ff0ed4b09294ba14dd73bbeb9699, type: 3}
+    - {fileID: 8300000, guid: 97c70fc4d5a56e444a60ab09c58dab8c, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.07
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 2
+    maxDistance: 25
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy1 \uD3C9\uC0C1\uC2DC \uC6B8\uC74C (4~10\uCD08 \uAC04\uACA9, MonsterVoice)"
+  - name: en1_chase
+    clips:
+    - {fileID: 8300000, guid: 17bccc618f3b7c140997278f25c72fac, type: 3}
+    - {fileID: 8300000, guid: 49024f5601098ec47ab14b6698ca4631, type: 3}
+    avoidRepeat: 1
+    volume: 0.9
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.07
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 2
+    maxDistance: 30
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy1 \uCD94\uACA9 \uC911 \uC6B8\uC74C (1.5~4\uCD08 \uAC04\uACA9, MonsterVoice)"
+  - name: en1_hear
+    clips:
+    - {fileID: 8300000, guid: 8773e1eecd5abc94c8acad7fb0b2b0e2, type: 3}
+    - {fileID: 8300000, guid: 6ac0bf1f9ac10614e8303e7270b1bc22, type: 3}
+    avoidRepeat: 1
+    volume: 0.9
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 2
+    maxDistance: 25
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy1 \uC18C\uB9AC \uAC10\uC9C0 (MonsterVoice.PlayHear)"
+  - name: en1_spot
+    clips:
+    - {fileID: 8300000, guid: e9ca5211c88bc504d953b23dbfc98379, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 2
+    maxDistance: 35
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy1 \uCD94\uACA9 \uC2DC\uC791 (\uCFE8\uB2E4\uC6B4 6\uCD08, MonsterVoice)"
+  - name: en1_step_walk
+    clips:
+    - {fileID: 8300000, guid: 85f8dd99ba3bfa1419fa4aad6cfd3ec0, type: 3}
+    - {fileID: 8300000, guid: 8eea80c6f31988443869a319b73baa75, type: 3}
+    - {fileID: 8300000, guid: 43491dad3088c0547ad9aaeb57245d9d, type: 3}
+    - {fileID: 8300000, guid: 0b375166f287b694b8e1cea1bd60d047, type: 3}
+    - {fileID: 8300000, guid: bb128e8dd959be94b9e33a209f274b3d, type: 3}
+    - {fileID: 8300000, guid: a6543b01067ba074798aeed210b2b8c8, type: 3}
+    - {fileID: 8300000, guid: 29736a2127d198f4faefbf5e7eff3e08, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 2
+    maxDistance: 25
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Monster_Walk \uC560\uB2C8\uBA54\uC774\uC158 \uC774\uBCA4\uD2B8 OnFootstep"
+  - name: en1_step_run
+    clips:
+    - {fileID: 8300000, guid: e348c2d644fc6f443b5f8879d8c39c26, type: 3}
+    - {fileID: 8300000, guid: 85dd23e3aa8b22846b7c207fe5104e06, type: 3}
+    - {fileID: 8300000, guid: 17f80bc6da8402b448ceef181b7bf1e0, type: 3}
+    - {fileID: 8300000, guid: 7b7482ec67976ee40b71d8492abdd91c, type: 3}
+    - {fileID: 8300000, guid: b7406c0445a11b74c90b7e267fecd405, type: 3}
+    - {fileID: 8300000, guid: c0de311e266b0a843a456d118db8e1d2, type: 3}
+    - {fileID: 8300000, guid: 8863b61403f413c4a9cf73452c717d05, type: 3}
+    avoidRepeat: 1
+    volume: 0.9
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 2
+    maxDistance: 30
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Monster_Run \uC560\uB2C8\uBA54\uC774\uC158 \uC774\uBCA4\uD2B8 OnFootstep"
+  - name: box_open
+    clips:
+    - {fileID: 8300000, guid: 0a24df9608b198e41b159c4e80975c63, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 15
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uAC00\uAD6C \uD30C\uCE20 \uC5F4\uB9BC (OpenableSound)"
+  - name: box_close
+    clips:
+    - {fileID: 8300000, guid: b36845c2a54d7044cbdcffb1e000c2a4, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 15
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uAC00\uAD6C \uD30C\uCE20 \uB2EB\uD798 (OpenableSound)"
+  - name: plr_step_walk
+    clips:
+    - {fileID: 8300000, guid: bc299f67130285a4a9a65b36fc5ac21c, type: 3}
+    - {fileID: 8300000, guid: 6715e953ea7983d4396804ecba1b9236, type: 3}
+    - {fileID: 8300000, guid: 8c268afa9b5f2574a8fa813ac355f5f3, type: 3}
+    - {fileID: 8300000, guid: 0c452ceef4f2ad942b31862bc74b9ec2, type: 3}
+    - {fileID: 8300000, guid: 8c152f8c755e90e4db405cea1e8493cf, type: 3}
+    - {fileID: 8300000, guid: 9e25b1bc9c7ecea4e87937e646ad2d73, type: 3}
+    - {fileID: 8300000, guid: 1125d1af2d2caf9469b26a0297084246, type: 3}
+    - {fileID: 8300000, guid: 6b9f30c30fca33a48b0443aa3203c9d8, type: 3}
+    - {fileID: 8300000, guid: 667feb32889f47941bb064eb286bcd5d, type: 3}
+    - {fileID: 8300000, guid: 5f3dc640a65692f469ce23404fec4d1e, type: 3}
+    avoidRepeat: 1
+    volume: 0.6
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.08
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 12
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uAC77\uB294 \uC911 \uD55C \uAC78\uC74C\uB9C8\uB2E4 (PlayerSounds)"
+  - name: plr_step_run
+    clips:
+    - {fileID: 8300000, guid: 3e8900aea9ee04e4e9695ca1ad0d52c4, type: 3}
+    - {fileID: 8300000, guid: 01457e3147881e840bc9eb9a6336fae4, type: 3}
+    - {fileID: 8300000, guid: 3950bdb19c454ec45ba7e54de6cb6195, type: 3}
+    - {fileID: 8300000, guid: 3d8ff2574d692db4ba8b320dde338324, type: 3}
+    - {fileID: 8300000, guid: fe7fe39b31cf750419b324420e3d540d, type: 3}
+    - {fileID: 8300000, guid: c90f5bb100d413e46b105f69f0454c98, type: 3}
+    - {fileID: 8300000, guid: 921dfcb06b032914a883465776706ace, type: 3}
+    - {fileID: 8300000, guid: 594a5e6b55d1b5c47a4db7810a407b22, type: 3}
+    - {fileID: 8300000, guid: 281d2b097e528f94cbe57ccd72f36baa, type: 3}
+    - {fileID: 8300000, guid: 47558a0340410614aa794a14d15dabbc, type: 3}
+    avoidRepeat: 1
+    volume: 0.75
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.08
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 15
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uB2EC\uB9AC\uB294 \uC911 \uD55C \uAC78\uC74C\uB9C8\uB2E4 (PlayerSounds)"
+  - name: plr_breath_idle
+    clips:
+    - {fileID: 8300000, guid: eedb8fb5fec9eef438934f4b05a52a75, type: 3}
+    - {fileID: 8300000, guid: 063a909cf4677674695fa13b25f0fa1b, type: 3}
+    - {fileID: 8300000, guid: 9f2729912d9f58d4ebc704949706e888, type: 3}
+    - {fileID: 8300000, guid: 3be7afcc12c19b147ad606a466a607d4, type: 3}
+    - {fileID: 8300000, guid: 0efaf8dbfbb87ec4faa41c345743bf11, type: 3}
+    - {fileID: 8300000, guid: 14f8e7b7cb6c3024e8f630fe3c419dd4, type: 3}
+    avoidRepeat: 1
+    volume: 0.35
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.04
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC77C\uBC18 \uC228 \u2014 110 BPM \uC774\uD558\uB85C \uB3CC\uC544\uC624\uBA74
+      (PlayerBreathing)"
+  - name: plr_breath_tense
+    clips:
+    - {fileID: 8300000, guid: 2c5974e2e8ad8db41bc003ebfeb9bbb1, type: 3}
+    - {fileID: 8300000, guid: d77513eac8a50694ead55de04841d90c, type: 3}
+    - {fileID: 8300000, guid: 66d726ac3cc232743901242cc28a694b, type: 3}
+    - {fileID: 8300000, guid: e7ee34b0fe2c3a943b00fd8e146daf02, type: 3}
+    - {fileID: 8300000, guid: 7d62385f3b7017b419a1922c348d1701, type: 3}
+    - {fileID: 8300000, guid: 869a507afcd58964fa4a452041a469c2, type: 3}
+    avoidRepeat: 1
+    volume: 0.6
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.04
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uAC70\uCE5C \uC228 \u2014 120 BPM \uC774\uC0C1 (PlayerBreathing)"
+  - name: plr_heartbeat
+    clips:
+    - {fileID: 8300000, guid: ee94a162252e8484c93d41d7989d51b5, type: 3}
+    - {fileID: 8300000, guid: 6161a7ff03174d34baaac937efdb5e85, type: 3}
+    - {fileID: 8300000, guid: e3cdc27e284715c4087c26550a26a590, type: 3}
+    - {fileID: 8300000, guid: 803630b9499316a4cabd8ba1dd3f8b4a, type: 3}
+    - {fileID: 8300000, guid: 27612a0c95c29e844902eeddc5baaafd, type: 3}
+    - {fileID: 8300000, guid: 1e5bdf78bf079964d8d93143a85470b1, type: 3}
+    - {fileID: 8300000, guid: 0cbd3dc22b922384bb75a7e92154cc59, type: 3}
+    - {fileID: 8300000, guid: 6be48ff03afae1e439a014ffbb74378e, type: 3}
+    avoidRepeat: 1
+    volume: 0.7
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.02
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC2EC\uC7A5 \uBC15\uB3D9\uB9C8\uB2E4, 95 BPM \uBBF8\uB9CC \uBB34\uC74C
+      (PlayerSounds)"
+  - name: plr_interact
+    clips:
+    - {fileID: 8300000, guid: dc0fa5ef31e37554888d62d65d941ce3, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC0C1\uD638\uC791\uC6A9 \u2014 \uAC19\uC740 \uD504\uB808\uC784 \uC90D\uAE30\uBA74
+      \uC0DD\uB7B5 (PlayerSounds)"
+  - name: plr_slot_select
+    clips:
+    - {fileID: 8300000, guid: 8465280b4f9e19144b1f40064c658485, type: 3}
+    avoidRepeat: 1
+    volume: 0.7
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.03
+    group: {fileID: -237546405140584250, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uD56B\uBC14 \uC2AC\uB86F \uC120\uD0DD"
+  - name: plr_slot_deselect
+    clips:
+    - {fileID: 8300000, guid: e89d952068afed64ea1467d932b540cb, type: 3}
+    avoidRepeat: 1
+    volume: 0.7
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.03
+    group: {fileID: -237546405140584250, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uD56B\uBC14 \uC2AC\uB86F \uD574\uC81C"
+  - name: item_pickup_battery
+    clips:
+    - {fileID: 8300000, guid: 0d50cafeb290f5a49b51b2ed7d995d48, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uBC30\uD130\uB9AC \uC90D\uAE30"
+  - name: item_pickup
+    clips:
+    - {fileID: 8300000, guid: bab0cba561b1e024ea68bbf65fcde4aa, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uADF8 \uBC16\uC758 \uC544\uC774\uD15C \uC90D\uAE30 (\uC885\uB958\uBCC4
+      \uC18C\uB9AC\uAC00 \uC5C6\uC744 \uB54C\uB3C4 \uC0AC\uC6A9)"
+  - name: item_docu
+    clips:
+    - {fileID: 8300000, guid: 305e7994e182a2a49b44002fdec3d981, type: 3}
+    - {fileID: 8300000, guid: 5b66b348e4237474a97191dd7754606b, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uBB38\uC11C\xB7\uCABD\uC9C0 \uC90D\uAE30 \u2014 \uC544\uC774\uD15C \uCD94\uAC00
+      \uC608\uC815, \uBBF8\uB9AC \uB4F1\uB85D"
+  - name: plr_hide_enter
+    clips:
+    - {fileID: 8300000, guid: 63b849cb407f3d247b52e2a1655ee33f, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC228\uB294 \uC7A5\uC18C\uC5D0 \uB4E4\uC5B4\uAC08 \uB54C"
+  - name: plr_hide_exit
+    clips:
+    - {fileID: 8300000, guid: 45df6daf0ca338e48ab883a29c8ffb81, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC228\uB294 \uC7A5\uC18C\uC5D0\uC11C \uB098\uC62C \uB54C"
+  - name: plr_caught_bite
+    clips:
+    - {fileID: 8300000, guid: 60337c06a48a0d94da0eaa2fb014f9b0, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.03
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC7A1\uD798 \uC5F0\uCD9C \u2014 \uBB3C\uB9AC\uB294 \uC21C\uAC04"

@@ -38,8 +38,6 @@ public static class SceneMergeTool
     // 옮길 대상으로 보는 컴포넌트 (타입 이름)
     static readonly HashSet<string> FeatureTypes = new HashSet<string>
     {
-        "SoundEmitter", "FootstepEmitter", "BreathingAudio", "PlayerAudio", "MonsterAudio", "RandomVocalizer",
-        "BeaconAudio", "LoopSoundEmitter", "WorldAudio", "ChaseMusicController", "UISoundTrigger", "MenuAudio",
         "ExitCutsceneController", "FlashlightBatteryPickup", "FlashlightBatteryStock", "FlashlightBatteryCountUI",
         "MonsterDoorOpener",
     };
@@ -47,7 +45,6 @@ public static class SceneMergeTool
     // 옮길 대상으로 보는 프리팹 (에셋 경로 접두어)
     static readonly string[] FeaturePrefabPrefixes =
     {
-        "Assets/Audio/",
         "Assets/HospitalMap/Rooms/Layouts/",
         "Assets/Prefabs/FlashlightBattery_AA.prefab",
     };
@@ -426,12 +423,7 @@ public static class SceneMergeTool
 
         if (!dryRun)
         {
-            // 10. 팀원 씬에서 새로 생긴 비콘/몬스터에 오디오가 없으면 기존 세팅 툴로 채움 (있는 건 값 유지).
-            //     AudioSetupTool 은 열린 씬 전체를 검색/저장하므로 SOURCE 를 닫은 뒤, OUTPUT 만 열린 상태에서 실행.
-            int Count() => Object.FindObjectsByType<BeaconAudio>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
-            int before = Count();
-            AudioSetupTool.SetupBeaconAndWorldAudio(); // 비어 있는 Cue 만 채움. (SetupEnemyAudio 는 보폭 등을 덮어써서 호출하지 않음)
-            rep.AppendLine($"== 10. 오디오 없는 비콘 보충: BeaconAudio {before} → {Count()}\n");
+            // (기존 10단계 "오디오 없는 비콘 보충"은 오디오 시스템 교체로 제거됨. 새 AudioManager는 씬 배치가 필요 없다.)
             rep.AppendLine("남은 작업: NavMesh 다시 Bake → 플레이 테스트 → 3번 메뉴로 메인 씬 교체");
             EditorSceneManager.SaveScene(output);
         }
