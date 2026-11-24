@@ -858,6 +858,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 409a261dee4ae48f8b5277e9c698f53b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7828755530404208772}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 409a261dee4ae48f8b5277e9c698f53b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4216608167405785932}
   m_SourcePrefab: {fileID: 100100000, guid: 409a261dee4ae48f8b5277e9c698f53b, type: 3}
 --- !u!1 &1294779401314765302 stripped
 GameObject:
@@ -953,6 +956,7 @@ MonoBehaviour:
   maxViewMultiplier: 1.1
   viewRadius: 8
   viewAngle: 90
+  limitToFov: 0
   loseTargetTime: 5
   chaseColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   colorChangeSpeed: 5
@@ -978,6 +982,8 @@ MonoBehaviour:
   speedDampTime: 0.1
   syncAnimSpeedWithAgent: 1
   baseMoveSpeed: 2.5
+  baseRunSpeed: 6.5
+  attackAnimDuration: 1.15
   minAnimSpeed: 0.8
   maxAnimSpeed: 2.2
 --- !u!114 &5760962221753098698
@@ -1040,3 +1046,23 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4216608167405785932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1294779401314765302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee947d8c2a9d59d408c5afc64b873eb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterVoice
+  spotSound: en1_spot
+  hearSound: en1_hear
+  idleSound: en1_idle
+  chaseSound: en1_chase
+  spotCooldown: 6
+  idleInterval: {x: 4, y: 10}
+  chaseInterval: {x: 1.5, y: 4}
+  footstepMinWeight: 0.5
