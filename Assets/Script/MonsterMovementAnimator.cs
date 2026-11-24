@@ -1,4 +1,3 @@
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -61,23 +60,34 @@ public class MonsterMovementAnimator : MonoBehaviour
         if (animator != null)
         {
             animator.speed = 1.0f;
+            animator.ResetTrigger(HashAttack);
             animator.SetTrigger(HashAttack);
         }
     }
-
-    // MonsterChase의 isChasing 상태 안전 리플렉션
-    private FieldInfo isChasingField;
 
     void Awake()
     {
         if (animator == null) animator = GetComponent<Animator>();
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (monsterChase == null) monsterChase = GetComponent<MonsterChase>();
+    }
 
-        if (monsterChase != null)
-        {
-            isChasingField = typeof(MonsterChase).GetField("isChasing", BindingFlags.Instance | BindingFlags.NonPublic);
-        }
+    void OnEnable()
+    {
+        if (monsterChase == null) monsterChase = GetComponent<MonsterChase>();
+        if (monsterChase != null) monsterChase.OnAttack += HandleChaseAttack;
+    }
+
+    void OnDisable()
+    {
+        if (monsterChase != null) monsterChase.OnAttack -= HandleChaseAttack;
+    }
+
+    void HandleChaseAttack(MonsterChase _)
+    {
+        // PlayerCaughtSequence 진행 중에는 카메라가 몬스터를 마주본 직후 동기화해 TriggerAttack을 호출한다.
+        if (!PlayerCaughtSequence.IsRunning)
+            TriggerAttack();
     }
 
     void Start()
@@ -106,6 +116,7 @@ public class MonsterMovementAnimator : MonoBehaviour
         {
             animator.SetBool(HashIsMoving, false);
             animator.SetFloat(HashSpeed, 0f);
+            animator.SetBool(HashIsChasing, false);
             if (syncAnimSpeedWithAgent) animator.speed = 1.0f;
             return;
         }
@@ -122,12 +133,8 @@ public class MonsterMovementAnimator : MonoBehaviour
         animator.SetFloat(HashSpeed, currentSpeed, speedDampTime, Time.deltaTime);
 
         // 4. 추격 상태(IsChasing) 전달
-        bool isChasing = false;
-        if (isChasingField != null && monsterChase != null)
-        {
-            isChasing = (bool)isChasingField.GetValue(monsterChase);
-            animator.SetBool(HashIsChasing, isChasing);
-        }
+        bool isChasing = monsterChase != null && monsterChase.IsChasing;
+        animator.SetBool(HashIsChasing, isChasing);
 
         // 5. 발 미끄러짐 방지를 위한 애니메이션 재생 속도 동기화
         if (syncAnimSpeedWithAgent)

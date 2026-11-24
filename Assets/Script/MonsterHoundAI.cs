@@ -909,6 +909,41 @@ public class MonsterHoundAI : MonoBehaviour
         RecordVisitedPoint(transform.position);
     }
 
+    /// <summary>디버그/연출용: 포획 공격 상태(HoundState.Attack)로 전환해 MonsterHoundAnimator가 05_Attack을 재생하도록 한다.</summary>
+    public void ForceCaughtAttackState()
+    {
+        if (agent == null) agent = GetComponent<NavMeshAgent>();
+        state = HoundState.Attack;
+        hasSpottedPlayer = false;
+        attackTriggeredThisCycle = true;
+        stateTimer = 0.2f;
+        attackStopTimer = attackStopDuration;
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        {
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            agent.isStopped = true;
+            agent.updateRotation = true;
+        }
+    }
+
+    /// <summary>해제 전 디버그 포획(F12) 종료 후 원래 잠금 위치와 Idle 상태로 복원한다.</summary>
+    public void RestoreDebugPosition(Vector3 pos, Quaternion rot)
+    {
+        if (agent == null) agent = GetComponent<NavMeshAgent>();
+        state = HoundState.Patrol;
+        hasSpottedPlayer = false;
+        attackTriggeredThisCycle = false;
+        stateTimer = 0f;
+        attackStopTimer = 0f;
+        if (agent != null)
+        {
+            if (agent.enabled && agent.isOnNavMesh) agent.ResetPath();
+            agent.enabled = false;
+        }
+        transform.SetPositionAndRotation(pos, rot);
+    }
+
     // ───────────────────────── 스마트 광역 순찰 (1번 몬스터 참고) ─────────────────────────
 
     private void SmartPatrolBehavior()

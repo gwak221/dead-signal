@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f733af234106222d61129b2f54349ecd, type: 3}
+  m_Name: DeadSignal_OriginalLighting
+  m_EditorClassIdentifier: Assembly-CSharp::HorrorLightingPreset
+  autoApplyOnPlay: 0
+  fog: 1
+  fogMode: 3
+  fogColor: {r: 0.03137255, g: 0.043137256, b: 0.043137256, a: 1}
+  fogDensity: 0.03
+  ambientMode: 3
+  ambientSky: {r: 0.0256, g: 0.032, b: 0.0384, a: 1}
+  ambientEquator: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  ambientGround: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  reflectionIntensity: 0.15
+  subtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  applyPostProcessing: 0
+  volumePriority: 10
+  tonemapping: 2
+  postExposure: 0
+  contrast: 18
+  saturation: -29
+  colorFilter: {r: 0.85882354, g: 1, b: 0.9607843, a: 1}
+  whiteBalanceTemperature: 0
+  whiteBalanceTint: 0
+  shadowsTint: {x: 1, y: 1, z: 1, w: 0}
+  bloomThreshold: 1
+  bloomIntensity: 0.7
+  bloomScatter: 0.6
+  vignetteIntensity: 0.431
+  vignetteSmoothness: 0.454
+  chromaticAberration: 0.113
+  filmGrainType: 1
+  filmGrainIntensity: 0.386
+  filmGrainResponse: 0.704
+  lensDistortion: 0
+  shadowDistance: 50
+  shadowCascadeCount: 4
+  mainLightShadowResolution: 2048
+  additionalLightShadowResolution: 2048
+  additionalLightsPerObject: 4
+  softShadows: 1
+  shadowDepthBias: 0.1
+  shadowNormalBias: 0.5

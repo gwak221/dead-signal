@@ -291,7 +291,7 @@ public static class RoomAudioSetup
     public static bool ApplyZoneToPrefab(RoomAudioZone z)
     {
         if (!PrefabUtility.IsPartOfPrefabInstance(z)) return false;
-        string path = PrefabUtility.GetPrefabAssetPathOfNearestPrefabInstanceRoot(z);
+        string path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(z);
         PrefabUtility.ApplyObjectOverride(z, path, InteractionMode.UserAction);
         PrefabUtility.ApplyObjectOverride(z.transform, path, InteractionMode.UserAction);
         PrefabUtility.ApplyObjectOverride(z.gameObject, path, InteractionMode.UserAction);

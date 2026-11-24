@@ -441,6 +441,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6512511872264213361}
+  - component: {fileID: 7612650540283165963}
+  - component: {fileID: 2641088833508761658}
+  - component: {fileID: 7201953398853677204}
+  - component: {fileID: 4501132923357120472}
   m_Layer: 0
   m_Name: AudioSystem
   m_TagString: Untagged
@@ -475,8 +479,179 @@ Transform:
   - {fileID: 6438591516318816744}
   - {fileID: 5030315000697986458}
   - {fileID: 814421935670851028}
+  - {fileID: 3637426263246680971}
+  - {fileID: 6202914474098166929}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7612650540283165963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6131406282196671152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22d4298ec120e524c918d80cda4fc770, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChaseMusicController
+  chaseBgmCue: {fileID: 11400000, guid: 96b43a82bcca24247b3cfdc51d83095b, type: 2}
+  escapedCue: {fileID: 11400000, guid: 5aebf3d4cfebe2f4f9087448e578cb63, type: 2}
+  fadeInTime: 0.6
+  fadeOutTime: 2.5
+  endGraceTime: 1
+  rescanInterval: 2
+--- !u!114 &2641088833508761658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6131406282196671152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cc5893bb6e047f4994783128301b6cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldAudio
+  doorOpenCue: {fileID: 11400000, guid: 0097cf5ebbc24f34aba78f76ed8fb3b7, type: 2}
+  doorCloseCue: {fileID: 11400000, guid: 63cccbdf624157944bea8611fbc09976, type: 2}
+  doorOpenMonsterCue: {fileID: 11400000, guid: 8267bd6b1f4294d46ba5b29f8735ebd7, type: 2}
+  doorLockedCue: {fileID: 11400000, guid: 08e3a1e91fb8ecb4ebd793e75d0eb21d, type: 2}
+  safeOpenCue: {fileID: 11400000, guid: 818b1e5c1a3b2c243bbcf26bce203e79, type: 2}
+  escapeDoorOpenCue: {fileID: 11400000, guid: 919a833d013fe32429ca4a0083bda540, type: 2}
+  flashlightOnCue: {fileID: 11400000, guid: 3d17aace7e4319e48aae1c9b95b12e7b, type: 2}
+  flashlightOffCue: {fileID: 11400000, guid: ed5e5892918f2ed49ad8006bc6ca400a, type: 2}
+  flashChargeCue: {fileID: 11400000, guid: 790b64824c656a049864351fd7480bb3, type: 2}
+  flashCue: {fileID: 11400000, guid: 47658cb17c40e274ba0b14a2183cf8ef, type: 2}
+  flashlightReloadCue: {fileID: 11400000, guid: 229835dd72a9b6b4fabdbbe020541192, type: 2}
+  flashlightEmptyCue: {fileID: 11400000, guid: 80e3e74fbcb2ffe43ae9e30fe4c467e1, type: 2}
+  keypadPressCue: {fileID: 11400000, guid: 9e1c8e7d49ec72c4bb2038de417f14fa, type: 2}
+  keypadOkCue: {fileID: 11400000, guid: 3b58d14e2354c0b419b25e43aa793207, type: 2}
+  keypadNgCue: {fileID: 11400000, guid: a589c18f53e36324fb55cc0bfb7c4e9d, type: 2}
+  allBeaconsCue: {fileID: 11400000, guid: 981eb807db59ef341a4b156e84ddd12a, type: 2}
+  gameOverCue: {fileID: 11400000, guid: db538a30758e14641892b4110e7688d2, type: 2}
+  escapedCue: {fileID: 11400000, guid: b21771e5aa8e99841be66dbd56eac911, type: 2}
+  drone: {fileID: 4357588496018365646}
+  chaseDuck: 0.35
+  randomAmbience: {fileID: 7819048844658496191}
+  fluorescentCue: {fileID: 11400000, guid: 3f27425b6b178504eb2e0da8baba042e, type: 2}
+  fluorescentLightPrefix: Fluo
+  fluorescentSpacing: 9
+  fluorescentMax: 24
+  emergencyCue: {fileID: 11400000, guid: 9975cb083abe6bd49afde2cc32946eb7, type: 2}
+  emergencyLightPrefix: Emergency
+  emergencySpacing: 6
+  emergencyMax: 16
+  muffleWhenHiding: 1
+  muffledCutoff: 1400
+  muffleSpeed: 4
+--- !u!114 &7201953398853677204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6131406282196671152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1d50c1632e8db4e904c1faf59ef123, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MenuAudio
+  hoverCue: {fileID: 11400000, guid: 77bc00a97baefa94199a549862aa488f, type: 2}
+  clickCue: {fileID: 11400000, guid: 2ced817a1e4272a46a920c287cab65e3, type: 2}
+  menuMusicCue: {fileID: 11400000, guid: b3748d8663f94df4e8dc79fe7b57e15f, type: 2}
+  pauseOpenCue: {fileID: 11400000, guid: 2ced817a1e4272a46a920c287cab65e3, type: 2}
+--- !u!114 &4501132923357120472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6131406282196671152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43e12c10aefc3a449a6590f11d0452d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomAudioController
+  defaultProfile: {fileID: 11400000, guid: 077118019405aba43b6db91642df972d, type: 2}
+  transitionSpeed: 2.5
+  ambienceFade: 1.5
+  switchDelay: 0.15
+  logRoomChanges: 0
+  occlusion:
+    enabled: 1
+    obstacleMask:
+      serializedVersion: 2
+      m_Bits: 4294967259
+    checkInterval: 0.1
+    smoothing: 8
+    rayCount: 3
+    raySpread: 0.6
+    maxWalls: 2
+    minWallHeight: 2.8
+    alwaysBlockNames:
+    - DoorLeaf
+    ignoreNames:
+    - cutton
+    - curtain
+    mergeDistance: 0.6
+    oneWallCutoff: 3000
+    oneWallVolume: 0.8
+    twoWallCutoff: 1500
+    twoWallVolume: 0.6
+    listenerPadding: 0.3
+    sourcePadding: 0.5
+    debugDraw: 0
+--- !u!1 &6180693624383910313
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6202914474098166929}
+  - component: {fileID: 7819048844658496191}
+  m_Layer: 0
+  m_Name: AmbienceRandom
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6202914474098166929
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6180693624383910313}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6512511872264213361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7819048844658496191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6180693624383910313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d97af8ec7fd51445af5ccba72049904, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RandomVocalizer
+  idleCue: {fileID: 11400000, guid: 22147c61100f16b4b8512f8da235be35, type: 2}
+  idleInterval: {x: 12, y: 30}
+  activeCue: {fileID: 0}
+  activeInterval: {x: 1.5, y: 4}
+  randomOffset: 18
+  emitter: {fileID: 0}
 --- !u!1 &6259523117396832814
 GameObject:
   m_ObjectHideFlags: 0
@@ -525,6 +700,57 @@ MonoBehaviour:
   size: {x: 10.699997, y: 3.4, z: 6.2}
   priority: 0
   gizmoColor: {r: 0.3, g: 0.39520028, b: 1, a: 1}
+--- !u!1 &7406431096882111332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3637426263246680971}
+  - component: {fileID: 4357588496018365646}
+  m_Layer: 0
+  m_Name: AmbienceDrone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3637426263246680971
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7406431096882111332}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6512511872264213361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4357588496018365646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7406431096882111332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 173fdf043e48b234383292da734d75a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LoopSoundEmitter
+  cue: {fileID: 11400000, guid: b3dea52b5a531dd40901720727c88679, type: 2}
+  playOnStart: 1
+  fadeInTime: 3
+  fadeOutTime: 0.8
+  randomStartTime: 1
+  volumeWeight: 1
+  useUnscaledTime: 0
 --- !u!1 &8128258639179431490
 GameObject:
   m_ObjectHideFlags: 0

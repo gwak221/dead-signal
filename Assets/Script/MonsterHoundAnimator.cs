@@ -67,7 +67,8 @@ public class MonsterHoundAnimator : MonoBehaviour
         switch (houndAI.CurrentState)
         {
             case MonsterHoundAI.HoundState.Patrol:
-                bool walking = (agent == null || !agent.isStopped) && moveSpeed >= moveThreshold;
+                bool agentCanWalk = agent == null || (agent.enabled && agent.isOnNavMesh && !agent.isStopped);
+                bool walking = houndAI.enabled && agentCanWalk && moveSpeed >= moveThreshold;
                 isMoving = walking;
                 animState = walking ? 1 : 0;
                 if (walking && baseWalkSpeed > 0.01f)

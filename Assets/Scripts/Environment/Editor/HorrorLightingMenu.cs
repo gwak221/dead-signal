@@ -90,6 +90,67 @@ public static class HorrorLightingMenu
         Debug.Log("[HorrorLighting] URP 그림자 설정 적용: " + AssetDatabase.GetAssetPath(rp));
     }
 
+    // ───────────── 프리셋 비교 / 전환 (씬·에셋을 수정하지 않는다) ─────────────
+    public const string OriginalPresetPath = "Assets/Scripts/Environment/Presets/DeadSignal_OriginalLighting.asset";
+
+    [MenuItem("Dead Signal/Lighting/Preview/Scene Original (revert)", priority = 20)]
+    static void PreviewOriginal() => HorrorLightingApplier.ClearPreview();
+
+    [MenuItem("Dead Signal/Lighting/Preview/Horror Preset (PR #13 candidate)", priority = 21)]
+    static void PreviewHorror() => HorrorLightingApplier.PreviewPreset(EnsurePreset());
+
+    [MenuItem("Dead Signal/Lighting/Preview/Original Preset Asset", priority = 22)]
+    static void PreviewOriginalAsset()
+    {
+        var p = AssetDatabase.LoadAssetAtPath<HorrorLightingPreset>(OriginalPresetPath);
+        if (p == null) { Debug.LogWarning("[HorrorLighting] 원본 프리셋 에셋이 없습니다: " + OriginalPresetPath); return; }
+        HorrorLightingApplier.PreviewPreset(p);
+    }
+
+    [MenuItem("Dead Signal/Lighting/Preview/Scene Original (revert)", true)]
+    [MenuItem("Dead Signal/Lighting/Preview/Horror Preset (PR #13 candidate)", true)]
+    [MenuItem("Dead Signal/Lighting/Preview/Original Preset Asset", true)]
+    static bool PreviewValidate() => Application.isPlaying;
+
+    /// <summary>열린 씬(Edit Mode)의 RenderSettings 와 Global Volume 프로필 값을 읽어 '원본 분위기' 프리셋 에셋을 만든다. 이미 있으면 덮어쓰지 않는다.</summary>
+    [MenuItem("Dead Signal/Lighting/Create Original Preset From Open Scene", priority = 10)]
+    public static void CreateOriginalFromScene()
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[HorrorLighting] Edit Mode 에서만 실행하세요 (씬 저장값을 읽어야 합니다)."); return; }
+        if (AssetDatabase.LoadAssetAtPath<HorrorLightingPreset>(OriginalPresetPath) != null) { Debug.Log("[HorrorLighting] 원본 프리셋이 이미 있습니다: " + OriginalPresetPath); return; }
+        if (Object.FindFirstObjectByType<HorrorLightingApplier>(FindObjectsInactive.Include) != null) { Debug.LogWarning("[HorrorLighting] 씬에 Applier 가 있어 RenderSettings 가 이미 덮어써졌을 수 있습니다. 중단."); return; }
+
+        var p = ScriptableObject.CreateInstance<HorrorLightingPreset>();
+        p.autoApplyOnPlay = false;
+        p.fog = RenderSettings.fog; p.fogMode = RenderSettings.fogMode; p.fogColor = RenderSettings.fogColor; p.fogDensity = RenderSettings.fogDensity;
+        p.ambientMode = RenderSettings.ambientMode; p.ambientSky = RenderSettings.ambientSkyColor; p.ambientEquator = RenderSettings.ambientEquatorColor;
+        p.ambientGround = RenderSettings.ambientGroundColor; p.reflectionIntensity = RenderSettings.reflectionIntensity; p.subtractiveShadowColor = RenderSettings.subtractiveShadowColor;
+        // 포스트 프로세싱은 씬의 Global Volume 이 이미 담당하므로 이 프리셋은 적용하지 않는다(값은 참고용으로만 기록).
+        p.applyPostProcessing = false;
+        foreach (var v in Object.FindObjectsByType<Volume>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!v.isGlobal || v.sharedProfile == null || v.priority != 0) continue;
+            var prof = v.sharedProfile;
+            if (prof.TryGet(out Tonemapping tm) && tm.mode.overrideState) p.tonemapping = tm.mode.value;
+            if (prof.TryGet(out ColorAdjustments ca)) { p.postExposure = ca.postExposure.value; p.contrast = ca.contrast.value; p.saturation = ca.saturation.value; p.colorFilter = ca.colorFilter.value; }
+            if (prof.TryGet(out Bloom b)) { p.bloomThreshold = b.threshold.value; p.bloomIntensity = b.intensity.value; p.bloomScatter = b.scatter.value; }
+            if (prof.TryGet(out Vignette vg)) { p.vignetteIntensity = vg.intensity.value; p.vignetteSmoothness = vg.smoothness.value; }
+            if (prof.TryGet(out ChromaticAberration c)) p.chromaticAberration = c.intensity.value; else p.chromaticAberration = 0f;
+            if (prof.TryGet(out FilmGrain fg)) { p.filmGrainType = fg.type.value; p.filmGrainIntensity = fg.intensity.value; p.filmGrainResponse = fg.response.value; }
+            p.whiteBalanceTemperature = 0f; p.whiteBalanceTint = 0f; p.shadowsTint = new Vector4(1f, 1f, 1f, 0f); p.lensDistortion = 0f;
+            break;
+        }
+        // URP 그림자 값(기록용): PR #13 이전 PC_RPAsset 값. 에셋에 자동 적용되지 않는다.
+        p.shadowDistance = 50f; p.shadowCascadeCount = 4; p.mainLightShadowResolution = 2048; p.additionalLightShadowResolution = 2048;
+        p.additionalLightsPerObject = 4; p.softShadows = true; p.shadowDepthBias = 0.1f; p.shadowNormalBias = 0.5f;
+
+        var dir = System.IO.Path.GetDirectoryName(OriginalPresetPath).Replace('\\', '/');
+        if (!AssetDatabase.IsValidFolder(dir)) { System.IO.Directory.CreateDirectory(dir); AssetDatabase.Refresh(); }
+        AssetDatabase.CreateAsset(p, OriginalPresetPath);
+        AssetDatabase.SaveAssets();
+        Debug.Log("[HorrorLighting] 원본 프리셋 생성: " + OriginalPresetPath);
+    }
+
     static void Set(SerializedObject so, string path, float v)
     {
         var p = so.FindProperty(path);

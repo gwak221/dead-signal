@@ -44,21 +44,40 @@ public class MonsterSpawnPoints : MonoBehaviour
         if (current == null) current = Nearest(monster.transform.position);
         if (initial == null) initial = current;
 
-        var good = new List<Transform>(); Transform farthest = null; float fd = -1f;
-        Vector3 eye = playerPos + Vector3.up * 1.6f;
-        foreach (Transform c in transform)
-        {
-            if (c == current || c == initial) continue;
-            float d = Vector3.Distance(c.position, playerPos);
-            if (d > fd) { fd = d; farthest = c; }
-            if (d >= minDistanceFromPlayer && Physics.Linecast(eye, c.position + Vector3.up, ~0, QueryTriggerInteraction.Ignore))
-                good.Add(c);
-        }
-        Transform pick = good.Count > 0 ? good[Random.Range(0, good.Count)] : farthest;
+        Transform pick = PickCandidate(playerPos, excludeTracked: true, monster.transform.position);
         if (pick == null) return false;
         current = pick;
         monster.Relocate(pick.position, pick.rotation);
         Debug.Log("[MonsterSpawnPoints] Monster -> " + pick.name + " " + pick.position);
         return true;
+    }
+
+    /// <summary>Monster 2 (E-07 Hound) 를 플레이어에서 충분히 떨어진 스폰 지점으로 재배치한다.</summary>
+    public bool RelocateHound(MonsterHoundAI hound, Vector3 playerPos)
+    {
+        if (hound == null || transform.childCount == 0) return false;
+        Transform pick = PickCandidate(playerPos, excludeTracked: false, hound.transform.position);
+        if (pick == null) return false;
+        hound.Relocate(pick.position, pick.rotation);
+        Debug.Log("[MonsterSpawnPoints] Hound -> " + pick.name + " " + pick.position);
+        return true;
+    }
+
+    Transform PickCandidate(Vector3 playerPos, bool excludeTracked, Vector3 currentMonsterPos)
+    {
+        var good = new List<Transform>();
+        Transform farthest = null;
+        float fd = -1f;
+        Vector3 eye = playerPos + Vector3.up * 1.6f;
+        foreach (Transform c in transform)
+        {
+            if (excludeTracked && (c == current || c == initial)) continue;
+            if (!excludeTracked && (c.position - currentMonsterPos).sqrMagnitude < 25f) continue;
+            float d = Vector3.Distance(c.position, playerPos);
+            if (d > fd) { fd = d; farthest = c; }
+            if (d >= minDistanceFromPlayer && Physics.Linecast(eye, c.position + Vector3.up, ~0, QueryTriggerInteraction.Ignore))
+                good.Add(c);
+        }
+        return good.Count > 0 ? good[Random.Range(0, good.Count)] : farthest;
     }
 }
