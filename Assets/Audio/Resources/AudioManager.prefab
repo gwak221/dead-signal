@@ -527,3 +527,72 @@ MonoBehaviour:
     ignorePause: 0
     note: "\uC12C\uAD11 \uBC1C\uC0AC\uB85C \uC801 \uAE30\uC808 (OnMonsterStunned,
       PlayerSounds)"
+  - name: door_open
+    clips:
+    - {fileID: 8300000, guid: 51781bcc50877f74d855139c44565d39, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 15
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC77C\uBC18 \uBB38\xB7\uBE44\uBC00\uBC88\uD638 \uBB38 \uC5F4\uB9BC (WorldSounds).
+      \uC801\uC774 \uC5F4 \uB54C\uB3C4 door_open_monster \uB4F1\uB85D \uC804\uAE4C\uC9C0
+      \uC774 \uC18C\uB9AC"
+  - name: door_close
+    clips:
+    - {fileID: 8300000, guid: 7f74dd1acff6c62429ea705d435d2ea5, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 15
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC77C\uBC18 \uBB38\xB7\uBE44\uBC00\uBC88\uD638 \uBB38\xB7\uAE08\uACE0
+      \uB2EB\uD798 (WorldSounds)"
+  - name: door_locked
+    clips:
+    - {fileID: 8300000, guid: c92ce45409224d840aed1a51b105c958, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 1
+    maxDistance: 12
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC7A0\uAE34 \uBB38\xB7\uAE08\uACE0 \uC5F4\uAE30 \uC2DC\uB3C4. \uAC19\uC740
+      \uBB38 0.4\uCD08 \uC548 \uC7AC\uC2DC\uB3C4 \uBB34\uC2DC (WorldSounds)"
+  - name: esc_door_open
+    clips:
+    - {fileID: 8300000, guid: 3f5a0281237c4d547af09fe7b1f3f89b, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: -3298862565618462941, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 25
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uD0C8\uCD9C \uBB38\uC774 \uC6C0\uC9C1\uC774\uAE30 \uC2DC\uC791\uD560
+      \uB54C, \uB9F5 \uC5B4\uB514\uC11C\uB4E0 \uB4E4\uB9AC\uAC8C 2D (WorldSounds)"

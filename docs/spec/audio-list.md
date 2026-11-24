@@ -18,7 +18,12 @@
   - `item_docu`는 등록만 됨. 문서 아이템이 생기면 `PlayerSounds.HandleItemAdded`에 종류를 추가
 - **3장 손전등 (4개)**: `fl_on`, `fl_off`, `fl_charge`, `fl_flash` — `PlayerSounds`가 `FlashlightController` 이벤트를 받아 재생
   - 충전 소리(1.66초)가 충전 시간(0.6초)보다 길어서, 섬광 발사 또는 충전 게이지가 0으로 돌아가면 0.08초 페이드로 끊는다
-- **나머지 항목 (4~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
+- **4장 문·퍼즐 (4개)**: `door_open`, `door_close`, `door_locked`, `esc_door_open` (`box_open`/`box_close`는 1장에서 등록)
+  - 호출: `Assets/Scripts/Game/WorldSounds.cs` — 게임 시작 때 스스로 생겨서(`[WorldSounds]`, 씬 배치 불필요) `DoorPair` / `PasswordDoor` / `SafeDoor`의 정적 이벤트와 `EscapeDoorController.onAllLampsActive`를 받는다
+  - 적이 문을 열면 `door_open_monster`가 등록될 때까지 `door_open`으로 대체. 금고 여는 소리 `pz_safe_open`은 등록 전까지 무음
+  - 잠김 소리는 같은 문에서 0.4초 안에 다시 나지 않는다 (연타 방지, 기존 동작과 같음)
+  - 탈출 문 소리는 램프가 모두 켜지고 `openDelay`(1초) 뒤, 문이 움직이기 시작할 때 2D로 재생
+- **나머지 항목 (5~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
 
 ## 출처
 - **클립**: `Assets/Audio/find_cilp/` (오디오 담당이 고른 개선 클립 112개). 아래 "클립" 열은 이 폴더의 파일 이름이다.
