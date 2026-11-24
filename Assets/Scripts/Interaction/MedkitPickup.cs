@@ -28,7 +28,7 @@ public class MedkitPickup : MonoBehaviour, IInteractable, IPickupable
         if (player == null || player.Inventory == null) return;
         CaptureScale();
         if (!player.Inventory.TryAddWorldItem(InventoryItemType.Medkit, gameObject))
-            player.Notify("INVENTORY FULL");
+            player.Notify("INVENTORY FULL - SELECT AN ITEM, PRESS [G] TO DROP", 1.6f);
     }
 
     /// <summary>선택 중인 Medkit 을 사용. 건강하면 소비하지 않고 false.</summary>
@@ -47,6 +47,7 @@ public class MedkitPickup : MonoBehaviour, IInteractable, IPickupable
 
         player.Inventory.TryConsumeSelected(InventoryItemType.Medkit);
         body.ClearAllPenalties();   // Eye / Arm / Leg 패널티 해제 → 하트 ♥♥, Sprint/슬롯 잠금 복구
+        ItemUseScreenEffect.Pulse(ItemUseScreenEffect.MedkitColor);
         player.Notify("MEDKIT USED - HEALTH RESTORED", 1.4f);
         return true;
     }

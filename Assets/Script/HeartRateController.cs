@@ -47,6 +47,13 @@ public class HeartRateController : MonoBehaviour
     [SerializeField] float uiBeatScale = 0.10f;
     float beatPhase;
 
+    // 주사기: 일정 시간 동안 심박수 Sprint Lock(FirstPersonController)을 무시한다. BPM 자체는 평소대로 오르내린다.
+    float sprintUnlockUntil;
+
+    /// <summary>심박수와 상관없이 달릴 수 있는 남은 시간(초). 0이면 효과 없음.</summary>
+    public float SprintUnlockRemaining => Mathf.Max(0f, sprintUnlockUntil - Time.time);
+    public bool IsSprintUnlocked => Time.time < sprintUnlockUntil;
+
     [SerializeField] float currentBpm = 70f;
     FirstPersonController player;
 
@@ -138,6 +145,15 @@ public class HeartRateController : MonoBehaviour
 
     /// <summary>외부(QTE 실패 등)에서 심박수를 즉시 올린다. maxBpm 을 넘지 않는다. 회복은 기존 recoveryRate 로 자연스럽게.</summary>
     public void AddHeartRate(float amount) => currentBpm = Mathf.Clamp(currentBpm + amount, minBpm, maxBpm);
+
+    /// <summary>
+    /// seconds 동안 최대 심박수여도 달리기가 막히지 않게 한다 (주사기, 15초). BPM 상승/탐지 배율은 그대로.
+    /// 이미 효과 중이면 남은 시간을 새로 갱신한다(중첩되지 않음). 효과가 끝났을 때 최대 BPM 이면 곧바로 다시 막힌다.
+    /// </summary>
+    public void ApplySprintUnlock(float seconds)
+    {
+        sprintUnlockUntil = Time.time + Mathf.Max(0f, seconds);
+    }
 
     void UpdateUI()
     {

@@ -8,14 +8,14 @@
 - 기준: 게임플레이 = origin/main a09b319, 최신 맵 = origin/mapwork-taema 9de20f9, 우리 고유 기능 = 8d09f62
 - 공식 씬: `Assets/Scenes/DeadSignal_Main.unity` (텍스트 YAML, GUID `3827ac68…` 유지) / NavMesh 에셋 GUID `c3bd4705…` 유지
 - 커밋 이력 (위가 최신)
+  - `0139ec2` fix: refine hospital lighting and item interactions
   - `1831cc7` feat: improve item distribution, flashlight balance and medkit interactions
   - `0ba719b` fix: unify AA battery models and update medical cabinets
   - `e9d6aac` fix: secure director room access and improve Monster 2 sequence
   - `5940c44` fix: restore runtime systems on restart and correct cabinet QTE gates
   - `7113868` checkpoint: integrate latest hospital map and gameplay systems
-- **미커밋 변경 (이 문서 갱신 시점)**: 조명 재조정 2회분 + filing 배터리 획득 수정 + bench 장식 처리 + 문서.
-  파일: `PlayerInteraction.cs`, `DeadSignal_Main.unity`, `HospitalMapProfile.asset`, `Poster1~3.mat`, `wp_led_cool_dim.mat`, `Openables/Materials/wp_led_warm.mat`,
-  FBX meta 4개(`chandelier/downlight/linear_pendant/smoke_detector.fbx.meta`), 신규 `Assets/Materials/wp_led_{cool,warm}_soft.mat`, `wp_red_led_soft.mat`.
+- **미커밋 변경 (이 문서 갱신 시점)**: 팀원 주사기 통합(8a86076 선별 적용) + 주사기 4개 추가 배치 + G키 아이템 버리기 + 문서.
+  신규 `Assets/Syringe/`, `HeldItemOutline.cs`, `ItemUseScreenEffect.cs`(+meta), 수정 `HeartRateController`, `FirstPersonController`, `PlayerInventory`, `PlayerInteraction`, `MedkitPickup`, `RecoveredItemLog`, `AimOutlineHull.shader`, `LootQteGate`, `DeadSignal_Main.unity`.
 
 ## 1. 구현된 것 (통합 결과)
 - **맵**: main 의 b06c463 맵 + mapwork 9de20f9 변경(xrayRoom 그룹, tile_chunks, 침대/휠체어/문짝 이동, DoorLeaf_L.004 삭제, bed_016 (77)). NavMesh 재베이크.
@@ -32,13 +32,29 @@
 - **filing 배터리 획득 버그**: 열린 서랍의 속이 찬 BoxCollider 가 시야 검사를 막던 문제. `PlayerInteraction.IsOwnOpenContainer` 로 '아이템이 든 열린 서랍 자신'의 콜라이더만 통과 — 사용자 검증 완료(수정 금지).
 - **장식용 처리(DecorativeOpenable)**: `filing_005 (1)`, `filing_006 (1)`(둘 다 Z 311° 기울어진 장식용, 개폐/안내/QTE 없음, 내부 아이템 없음, 모델·콜라이더 유지). 기존: `Room_WasteStorage/filing`, `med_cabinet_005 (1)/(2)` 등. `filing_006`, `filing_006 (2)` 는 정상적으로 열리는 가구(내부 AA 유지). (`bench_b_003 (12)` 에 잘못 붙였던 표시는 제거해 원복.)
 
-## 2. 아이템 최종 수량 / 배치
+### 1-b. 주사기 (팀원 PR #20 / 커밋 8a86076 선별 통합)
+- 통합 방식: `git diff b7a8df1 8a86076`(씬 제외)를 `git apply --3way` 로 적용 → 우리 `PlayerInventory`/`PlayerInteraction` 수정(구급상자 자세/모션, 서랍 획득, 아래 버리기)은 보존. 씬은 통째로 가져오지 않고 `ItemUseScreenEffect` 루트 오브젝트(팀원 값)와 Syringe 프리팹 인스턴스만 이식.
+- **실제 효과(정정)**: F 로 획득 → 슬롯 선택 후 E 로 사용(주입 애니메이션 약 0.65초) → **15초 동안 심박수에 의한 달리기 제한(Sprint Lock)만 해제**. **심박수(BPM) 자체는 기존대로 상승하고 몬스터 탐지 배율도 그대로.** 효과 중 화면 가장자리에 청록색 효과(`ItemUseScreenEffect.Sustain`), 중복 사용 시 지속시간 갱신, 사용 후 아이템 소비. 효과 종료 시 BPM 이 높으면 바로 다시 달리기 잠김.
+  (이전 문서/대화의 "심박수 상승 억제" 설명은 틀렸음. `HeartRateController.ApplySprintUnlock`, `IsSprintUnlocked`.)
+- 재시작: `HeartRateController` 가 씬과 함께 새로 만들어져 효과가 초기화됨(검증 완료).
+- 주사기 5개: `Syringe`(팀원 배치, 시작방 `tea_niche_002 (1)` 상단 칸 안 → 기존 QTE 규칙 적용), `Syringe_lobby`(로비 `drawer(2)` 상판), `Syringe_pharmacy`(약제실 `med_cart` 상판), `Syringe_room07`(Room07 재활 플랫폼 `stair2` 상판), `Syringe_cabinet001`(`med_cabinet_001` 맨 위 선반, QTE).
+
+### 1-c. G키 아이템 버리기
+- 기존 `EjectSlotItemToWorld`(부상 시 슬롯 잠금용, 물리로 굴림)는 그대로 두고, `PlayerInventory.TryDropSelected` 를 새로 추가. G 키는 기존에 쓰이지 않음(충돌 없음).
+- 대상: 2/3번 자유 슬롯의 **비콘 배터리, 구급상자, 주사기**. 손전등(1번)과 AA 슬롯(4번)은 불가.
+- 처리: 삭제/복제 없이 같은 오브젝트를 플레이어 앞 **안전한 바닥**에 내려놓음(원래 눕힌 자세와 `worldScale`, 콜라이더, 획득 컴포넌트 복원). 후보 위치마다 바닥(발 높이 ±0.3, 위로 향한 면) + NavMesh 위 + 카메라 시야가 안 막힘 + 아이템 크기 박스가 다른 콜라이더와 안 겹침을 검사. 앞 → 옆 → 뒤 순으로 시도하고 모두 실패하면 `NO SPACE TO DROP` 으로 취소(손에 그대로).
+- `LootQteGate.Unregister` 로 이전 수납장 게이트에서 분리 → 닫힌 수납장 때문에 버린 아이템을 못 줍는 일 방지.
+- 불가 상태: 사용 중(구급상자/주사기), QTE(SkillCheck/Pipe), 숨기, 포획, 게임 종료, 메뉴, 컷씬(Exit/Monster2), 조작 잠금.
+- UI: 버릴 수 있는 아이템을 들면 `[G] DROP` 안내(구급상자/주사기 프롬프트 뒤에 붙음, 비콘 배터리는 단독 표시). 인벤토리가 가득 차면 `INVENTORY FULL - SELECT AN ITEM, PRESS [G] TO DROP`.
+- 검증: 비콘 배터리 획득 → G → 바닥에 복원 → F 재획득, 비콘 배터리 총 5개 유지.
+
 - 비콘용 배터리 `BatteryPickup` **5** (battery_002/003/004/004 (1)/004 (2)) — **절대 수정 금지** (위치/회전/모델/참조)
 - 손전등 AA `FlashlightBatteryPickup` **14**
   - 튜토리얼: `…_cab4` = `med_cabinet_004` **맨 위 선반**(이동/삭제 금지, `cabinetDoor` 유지)
   - filing 서랍: `filing003`(filing_003 서랍3), `filing004`(filing_004 서랍3), `filing006`(filing_006 서랍2), `filing006_2`(filing_006 (2) 서랍3)
   - 벽 약장: `cabinet004_4`(med_cabinet_004 (4)), `cabinet005`, `cabinet006`
   - 상판/바닥: `lobby_floor`(로비 바닥), `xray_desk`, `waste_cart1/2`(폐기물 창고 wire_cart), `southEast_cart`(wagon_v2), `wardSouth_desk`(check_in)
+- 주사기 `SyringePickup` **5** (위 1-b)
 - 구급상자 `MedkitPickup` **7**: (115,6) tea_niche(1), (37,12) tea_niche_001, (-5,-1) 시작방, (52,-7) tea_niche_001 (1), (10,37), (107,36) filing_003 서랍2, (90,-13) 수술실 카트
 - 아이템이 없는 방: 상담실, 화장실, Room12, Room07, 원장실(최종 스테이지 예정)
 - 참고: `filing_006 (1)` 은 사용자 확인으로 장식용 처리 완료(비워 둠).
@@ -57,7 +73,7 @@
 
 ## 4. 후속 작업 목록
 1. **box1.fbx 약장 투명화 버그** — 여전히 발생(사용자 확인). 문 메시(Door_PlusX)만 교체했고 box.009 평면은 베이크에 포함된 적 없음. 원인 재조사 필요(재질/렌더 큐/컬링/문 뒷면 법선 등).
-2. **주사기 아이템 통합** — 팀원이 거의 완성. 효과: 사용 후 일정 시간 달려도 심박수가 상승하지 않음. **작업물 전달 대기 중, 임의 구현 금지.** 받으면 `PlayerInventory`(슬롯), `HeartRateController`, 사용 모션과 통합.
+2. ~~주사기 아이템 통합~~ — 통합 완료(위 1-b). 남은 것: 주사기 보유 중 시각(손에 든 모습)·밸런스(효과 15초, 개수 5)는 사용자 플레이 피드백 대기.
 3. **Monster 2 사운드** — 이번 알파에서는 제외 결정. (조사 결과: `Enemy2/en2_*.wav` 7개는 md5 동일한 6.6KB 플레이스홀더, AudioManager 항목에 `en2_*` 없음, Hound 에 `MonsterVoice` 류 없음, 컷씬 사운드 트리거 없음)
 4. **방별 룸 오디오 존/리버브/차폐 복구** — main 의 AudioManager 교체로 삭제됨(구 시스템은 8d09f62). `AudioManager.VoiceStarted/Stopped` 확장점으로 `DeadSignal.Audio` 확장 모듈을 새로 작성하는 방식으로 가능(AudioReverbZone + 방 환경음 크로스페이드 + AudioSource 로우패스). Zone 은 씬 독립 루트로.
 5. 비콘 Pipe QTE 실제 플레이 검증(F11/F9 는 `DebugComplete` 로 진행 상태만 채움).

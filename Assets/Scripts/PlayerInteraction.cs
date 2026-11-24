@@ -36,6 +36,12 @@ public class PlayerInteraction : MonoBehaviour
     bool usingMedkit;
     float medkitUseEnd;
     public bool IsUsingMedkit => usingMedkit;
+
+    // 주사기: E 로 주입 애니메이션 시작 → 끝나면 효과 적용 + 소비 (SyringePickup)
+    bool usingSyringe;
+    float syringeUseEnd;
+    SyringePickup activeSyringe;
+    public bool IsUsingSyringe => usingSyringe;
     string pendingPickupText; // 이번 프레임 F 줍기 대상의 프롬프트 (없으면 null)
     Component aimOwner;       // 이번 프레임 조준 중인 대상 (하이라이트용)
     bool aimIsPickup;
@@ -76,6 +82,7 @@ public class PlayerInteraction : MonoBehaviour
         aimIsPickup = false;
 
         UpdateMedkitUse();
+        UpdateSyringeUse();
 
         if (!interactionEnabled)
         {
@@ -110,6 +117,7 @@ public class PlayerInteraction : MonoBehaviour
         if (!enabled)
         {
             CancelMedkitUse();
+            CancelSyringeUse();
             ResetHold();
             HideInteractionText();
         }
@@ -140,6 +148,7 @@ public class PlayerInteraction : MonoBehaviour
     void OnDisable()
     {
         usingMedkit = false;
+        CancelSyringeUse();
         ResetHold();
     }
 
@@ -167,6 +176,13 @@ public class PlayerInteraction : MonoBehaviour
             ResetHold();
             float left = Mathf.Max(0f, medkitUseEnd - Time.time);
             ShowMessage("USING MEDKIT... " + left.ToString("0.0") + "s");
+            return;
+        }
+
+        if (usingSyringe)
+        {
+            ResetHold();
+            ShowMessage("INJECTING...");
             return;
         }
 
@@ -241,7 +257,7 @@ public class PlayerInteraction : MonoBehaviour
 
             if (aimOwner == null && !(interactable is IPickupable) && interactable is Component ic) aimOwner = ic;
 
-            if (interactable is IPickupable && TryMedkitUse(kb))
+            if (interactable is IPickupable && (TryMedkitUse(kb) || TrySyringeUse(kb)))
                 return;
 
             if (interactable is IPickupable)
@@ -274,8 +290,13 @@ public class PlayerInteraction : MonoBehaviour
 
         ResetHold();
         if (TryMedkitUse(Keyboard.current)) return;
+        if (TrySyringeUse(Keyboard.current)) return;
+        if (inventory != null && inventory.CanDropSelected) { ShowMessage("[G] DROP"); return; }   // 비콘 배터리 등 E 안내가 없는 아이템
         HideInteractionText();
     }
+
+    /// <summary>손에 든 아이템을 G 로 버릴 수 있으면 프롬프트 뒤에 붙는 안내.</summary>
+    string DropHint() => inventory != null && inventory.CanDropSelected ? "     [G] DROP" : "";
 
     // ───────────────────────── 조준 하이라이트 (AimOutline) ─────────────────────────
 
@@ -334,7 +355,7 @@ public class PlayerInteraction : MonoBehaviour
         if (inventory == null || !inventory.IsSelected(InventoryItemType.Medkit)) return false;
         var body = GetComponent<PlayerBodyStatus>();
         bool injured = body != null && body.DamagedCount > 0;
-        ShowMessage(injured ? "[E] USE MEDKIT" : "HEALTH FULL");
+        ShowMessage((injured ? "[E] USE MEDKIT" : "HEALTH FULL") + DropHint());
         if (injured && kb != null && kb.eKey.wasPressedThisFrame && CanUseMedkitNow())
             BeginMedkitUse();
         return true;
@@ -418,6 +439,57 @@ public class PlayerInteraction : MonoBehaviour
         usingMedkit = false;
         RestoreMedkitPose();   // 소비되지 않는 경우(그 사이 건강해짐)를 위해 원래 자세 복원
         MedkitPickup.TryUseSelected(this);   // 치료 + 소비 (그 사이 건강해졌다면 소비 없이 HEALTH FULL)
+    }
+
+    // ───────────────────────── 주사기 사용 (E) ─────────────────────────
+
+    /// <summary>주사기를 손에 들고 있고 E 로 반응할 환경 대상이 없을 때: [E] USE SYRINGE.</summary>
+    bool TrySyringeUse(Keyboard kb)
+    {
+        if (inventory == null || !inventory.IsSelected(InventoryItemType.Syringe)) return false;
+        var hr = HeartRateController.Instance;
+        string prompt = hr != null && hr.IsSprintUnlocked
+            ? "[E] USE SYRINGE (ACTIVE " + hr.SprintUnlockRemaining.ToString("0") + "s)"
+            : "[E] USE SYRINGE";
+        ShowMessage(prompt + DropHint());
+        if (kb != null && kb.eKey.wasPressedThisFrame && !usingSyringe && !usingMedkit && StateAllowsMedkit())
+            BeginSyringeUse();
+        return true;
+    }
+
+    void BeginSyringeUse()
+    {
+        activeSyringe = SyringePickup.Selected(inventory);
+        if (activeSyringe == null) return;
+        usingSyringe = true;
+        syringeUseEnd = Time.time + Mathf.Max(0.05f, activeSyringe.InjectSeconds);
+        activeSyringe.BeginInject();
+        ShowMessage("INJECTING...");
+        OnInteracted?.Invoke();
+    }
+
+    /// <summary>주입 도중 취소 (잡힘/컷씬/잠금/슬롯 변경 등). 소비 없음, 플런저 원위치.</summary>
+    public void CancelSyringeUse()
+    {
+        if (!usingSyringe) return;
+        usingSyringe = false;
+        if (activeSyringe != null) activeSyringe.CancelInject();
+        activeSyringe = null;
+        HideInteractionText();
+    }
+
+    void UpdateSyringeUse()
+    {
+        if (!usingSyringe) return;
+        if (!StateAllowsMedkit() || activeSyringe == null || SyringePickup.Selected(inventory) != activeSyringe)
+        {
+            CancelSyringeUse();
+            return;
+        }
+        if (Time.time < syringeUseEnd) return;
+        usingSyringe = false;
+        activeSyringe = null;
+        SyringePickup.FinishUse(this);
     }
 
     // ───────────────────────── F 줍기 판정 (E 판정과 분리) ─────────────────────────
@@ -576,7 +648,7 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (owner is BatteryPickup battery)
         {
-            if (!battery.Collect(this)) Notify("INVENTORY FULL");
+            if (!battery.Collect(this)) Notify("INVENTORY FULL - SELECT AN ITEM, PRESS [G] TO DROP", 1.6f);
             else OnInteracted?.Invoke();
             return;
         }

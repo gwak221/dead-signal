@@ -9,7 +9,8 @@ public enum InventoryItemType
     Battery,
     Key,
     Flashlight, // 기존 값 순서 유지를 위해 맨 뒤에 추가
-    Medkit
+    Medkit,
+    Syringe     // 맨 뒤에 추가 (기존 직렬화 값 유지)
 }
 
 public class PlayerInventory : MonoBehaviour
@@ -69,6 +70,7 @@ public class PlayerInventory : MonoBehaviour
     readonly SlotData[] slots = NewSlots();
     readonly Image[] slotImages = new Image[SlotCount];
     readonly TMP_Text[] slotTexts = new TMP_Text[SlotCount];
+    readonly Image[] slotIcons = new Image[SlotCount];
     readonly TMP_Text[] slotIndexTexts = new TMP_Text[SlotCount];
     readonly bool[] lockedSlots = new bool[SlotCount];
     readonly GameObject[] lockOverlays = new GameObject[SlotCount];
@@ -168,6 +170,8 @@ public class PlayerInventory : MonoBehaviour
         if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame) ToggleSlot(1);
         if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame) ToggleSlot(2);
 
+        if (kb.gKey.wasPressedThisFrame) TryDropSelected();
+
         if (kb.digit0Key.wasPressedThisFrame || kb.numpad0Key.wasPressedThisFrame)
         {
             bool had = selectedSlot >= 0;
@@ -199,6 +203,7 @@ public class PlayerInventory : MonoBehaviour
         if (holdPoint == null)
             return false;
 
+        pickupWorldRot[worldObject] = worldObject.transform.rotation;   // 버릴 때 원래 눕힌 자세로 복원하기 위해 저장
         PrepareForInventory(worldObject, type);
         slots[empty].type = type;
         slots[empty].worldObject = worldObject;
@@ -300,6 +305,7 @@ public class PlayerInventory : MonoBehaviour
         selectedSlot = index;
         RefreshHeldVisuals();
         RefreshUI();
+        HeldItemOutline.Flash(slots[index].worldObject);   // 꺼낸 아이템에 외곽선 → 2초에 걸쳐 사라짐
         OnSlotToggled?.Invoke(true);
     }
 
@@ -345,6 +351,15 @@ public class PlayerInventory : MonoBehaviour
             item.transform.localRotation = Quaternion.Euler(MedkitHoldTilt, 180f, 0f) * Quaternion.Euler(90f, 0f, 0f);
             item.transform.localScale = savedScale * 0.3f;
         }
+        else if (type == InventoryItemType.Syringe)
+        {
+            // 주사기: 화면 오른쪽 아래에 눕혀서, 손에 든 동안만 키워서 든다 (자세/배율은 SyringePickup 에서 조정)
+            SyringePickup sp = item.GetComponent<SyringePickup>();
+            if (sp != null) sp.CaptureScale();
+            item.transform.localPosition = sp != null ? sp.holdLocalPosition : new Vector3(0.07f, -0.09f, 0.2f);
+            item.transform.localRotation = Quaternion.Euler(sp != null ? sp.holdLocalEuler : new Vector3(75f, 0f, 0f));
+            item.transform.localScale = sp != null ? sp.worldScale * sp.holdScale : savedScale;
+        }
         else if (type == InventoryItemType.Key)
         {
             // 기존 KeyHoldPoint가 키에 맞춰져 있으므로 그대로 사용.
@@ -378,6 +393,9 @@ public class PlayerInventory : MonoBehaviour
 
         MedkitPickup medkit = item.GetComponent<MedkitPickup>();
         if (medkit != null) medkit.enabled = false;
+
+        SyringePickup syringe = item.GetComponent<SyringePickup>();
+        if (syringe != null) syringe.enabled = false;
     }
 
     void RestorePickupComponents(GameObject item, InventoryItemType type)
@@ -403,6 +421,13 @@ public class PlayerInventory : MonoBehaviour
             if (medkit == null) medkit = item.AddComponent<MedkitPickup>();
             medkit.enabled = true;
             item.transform.localScale = medkit.worldScale;
+        }
+        else if (type == InventoryItemType.Syringe)
+        {
+            SyringePickup syringe = item.GetComponent<SyringePickup>();
+            if (syringe == null) syringe = item.AddComponent<SyringePickup>();
+            syringe.enabled = true;
+            item.transform.localScale = syringe.worldScale;
         }
         else if (type == InventoryItemType.Flashlight)
         {
@@ -481,8 +506,54 @@ public class PlayerInventory : MonoBehaviour
 
             Transform index = slot.Find("Index");
             slotIndexTexts[i] = index != null ? index.GetComponent<TMP_Text>() : null;
+
+            slotIcons[i] = i == BatterySlot ? null : EnsureIcon((RectTransform)slot);
         }
     }
+
+    /// <summary>슬롯 가운데 아이템 아이콘 (마름모 안쪽 정사각형 크기, 회전 없음). 아이콘은 RecoveredItemLog 의 기록 아이콘과 같은 것.</summary>
+    static Image EnsureIcon(RectTransform slot)
+    {
+        Transform existing = slot.Find("ItemIcon");
+        Image image;
+        if (existing == null)
+        {
+            var go = new GameObject("ItemIcon", typeof(RectTransform), typeof(Image));
+            go.layer = slot.gameObject.layer;
+            go.transform.SetParent(slot, false);
+            Transform gem = slot.Find("Gem");
+            go.transform.SetSiblingIndex(gem != null ? gem.GetSiblingIndex() + 1 : 0);   // 틀 위, 번호/라벨 아래
+            image = go.GetComponent<Image>();
+        }
+        else
+        {
+            image = existing.GetComponent<Image>();
+            if (image == null) image = existing.gameObject.AddComponent<Image>();
+        }
+
+        var rt = image.rectTransform;
+        float size = GemSize * 0.66f;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(size, size);
+        rt.anchoredPosition = Vector2.zero;
+        rt.localRotation = Quaternion.identity;
+        rt.localScale = Vector3.one;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+        image.enabled = false;
+        return image;
+    }
+
+    /// <summary>슬롯 아이콘 (기록 아이콘 재사용). 아이콘이 없는 종류(Key)는 null → 글자 라벨로 표시.</summary>
+    static Sprite IconFor(InventoryItemType type) => type switch
+    {
+        InventoryItemType.Battery => RecoveredItemLog.ItemGlyph(0),     // 비콘 배터리
+        InventoryItemType.Medkit => RecoveredItemLog.ItemGlyph(1),      // 구급상자
+        InventoryItemType.Syringe => RecoveredItemLog.ItemGlyph(2),     // 주사기
+        InventoryItemType.Flashlight => RecoveredItemLog.ItemGlyph(3),  // 손전등
+        _ => null
+    };
 
     /// <summary>
     /// 칸을 45도 돌려 마름모로 붙인다.
@@ -693,10 +764,21 @@ public class PlayerInventory : MonoBehaviour
             bool selected = i == selectedSlot;
             int aaCount = aaStock != null ? aaStock.Count : 0;
 
+            Sprite icon = aaSlot ? null : IconFor(slots[i].type);
+            if (slotIcons[i] != null)
+            {
+                slotIcons[i].sprite = icon;
+                slotIcons[i].enabled = icon != null;
+                slotIcons[i].color = lockedSlots[i] ? new Color(0.45f, 0.42f, 0.38f, 0.55f)
+                                   : selected ? FrameSelected : TextIdle;
+            }
+
             if (slotTexts[i] != null)
             {
                 if (aaSlot)
                     slotTexts[i].text = "x" + aaCount;
+                else if (icon != null && slotIcons[i] != null)
+                    slotTexts[i].text = "";   // 아이콘이 있으면 글자 라벨은 숨긴다
                 else
                 {
                     slotTexts[i].text = slots[i].type switch
@@ -705,6 +787,7 @@ public class PlayerInventory : MonoBehaviour
                         InventoryItemType.Key => "KEY",
                         InventoryItemType.Flashlight => "LIGHT",
                         InventoryItemType.Medkit => "MED",
+                        InventoryItemType.Syringe => "SYR",
                         _ => ""
                     };
                 }
@@ -791,6 +874,134 @@ public class PlayerInventory : MonoBehaviour
 
         RefreshHeldVisuals();
         RefreshUI();
+    }
+
+
+    // ───────────────────────── G: 선택한 아이템 버리기 ─────────────────────────
+
+    readonly System.Collections.Generic.Dictionary<GameObject, Quaternion> pickupWorldRot = new System.Collections.Generic.Dictionary<GameObject, Quaternion>();
+
+    static bool IsDroppableType(InventoryItemType t) => t == InventoryItemType.Battery || t == InventoryItemType.Medkit || t == InventoryItemType.Syringe;
+
+    /// <summary>지금 손에 든 아이템이 버릴 수 있는 종류인가 (손전등/AA 슬롯은 불가). 상태(QTE/컷씬 등)는 따지지 않는다 — 안내 표시용.</summary>
+    public bool CanDropSelected => selectedSlot >= 0 && selectedSlot != BatterySlot && selectedSlot < SlotCount
+                                   && IsDroppableType(slots[selectedSlot].type) && slots[selectedSlot].worldObject != null;
+
+    bool DropBlockedNow()
+    {
+        if (interaction == null || !interaction.InteractionEnabled) return true;
+        if (interaction.IsUsingMedkit || interaction.IsUsingSyringe) return true;
+        var fpc = GetComponent<FirstPersonController>();
+        if (fpc != null && !fpc.ControlsEnabled) return true;                       // QTE / 숨기 / 메뉴 / 컷씬 / 잡힘 등
+        if (SkillCheckManager.Instance != null && SkillCheckManager.Instance.IsActive) return true;
+        if (BeaconPipeQte.IsOpen) return true;
+        if (PlayerCaughtSequence.IsRunning || PlayerHide.IsPlayerHiding) return true;
+        if (GameProgress.IsEnded || GameMenuManager.MenuOpen) return true;
+        if (ExitCutsceneController.IsPlaying || Monster2ReleaseSequence.IsPlaying) return true;
+        return false;
+    }
+
+    /// <summary>
+    /// 선택한 아이템(비콘 배터리/구급상자/주사기)을 삭제하지 않고 플레이어 앞 안전한 바닥에 내려놓는다. F 로 다시 주울 수 있다.
+    /// 안전한 자리(바닥 + NavMesh 위 + 시야가 막히지 않음 + 다른 Collider 와 겹치지 않음)가 없으면 취소하고 손에 그대로 둔다.
+    /// </summary>
+    public bool TryDropSelected()
+    {
+        if (!CanDropSelected || DropBlockedNow()) return false;
+        int idx = selectedSlot;
+        GameObject item = slots[idx].worldObject;
+        InventoryItemType type = slots[idx].type;
+        ResolveHoldPoint();
+        if (holdPoint == null) return false;
+
+        Camera cam = interaction.playerCamera != null ? interaction.playerCamera : Camera.main;
+        Vector3 eye = cam.transform.position;
+        Vector3 fwd = cam.transform.forward; fwd.y = 0f;
+        if (fwd.sqrMagnitude < 0.001f) fwd = transform.forward;
+        fwd.Normalize();
+        Vector3 right = Vector3.Cross(Vector3.up, fwd);
+        float feetY = transform.position.y;
+
+        // 원래 크기 / 자세로 되돌린 뒤 잠깐 활성화해 실제 외형(bounds)으로 자리를 검사한다.
+        Quaternion baseRot = pickupWorldRot.TryGetValue(item, out var r0) ? r0 : Quaternion.identity;
+        float yaw = Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg;
+        item.transform.SetParent(null, true);
+        item.transform.localScale = WorldScaleOf(item, type);
+        item.transform.rotation = Quaternion.Euler(0f, yaw, 0f) * baseRot;
+        item.SetActive(true);
+
+        Vector2[] tries = { new Vector2(0.95f, 0f), new Vector2(0.95f, 0.45f), new Vector2(0.95f, -0.45f), new Vector2(1.25f, 0f), new Vector2(1.25f, 0.5f), new Vector2(1.25f, -0.5f), new Vector2(0.7f, 0.35f), new Vector2(0.7f, -0.35f), new Vector2(1.55f, 0f),
+            // 앞쪽이 가구/벽으로 막혀 있으면 옆, 뒤쪽 바닥도 시도한다 (모두 실패하면 취소)
+            new Vector2(0.4f, 0.9f), new Vector2(0.4f, -0.9f), new Vector2(0f, 0.9f), new Vector2(0f, -0.9f), new Vector2(-0.7f, 0.5f), new Vector2(-0.7f, -0.5f), new Vector2(-0.9f, 0f) };
+        bool placed = false;
+        foreach (var t in tries)
+        {
+            Vector3 p = transform.position + fwd * t.x + right * t.y;
+            if (!Physics.Raycast(new Vector3(p.x, feetY + 1.2f, p.z), Vector3.down, out RaycastHit fh, 2.2f, ~0, QueryTriggerInteraction.Ignore)) continue;
+            if (fh.normal.y < 0.85f || Mathf.Abs(fh.point.y - feetY) > 0.3f) continue;                       // 바닥만 (가구 위/계단 제외)
+            if (fh.collider.transform.IsChildOf(transform)) continue;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(fh.point, out _, 0.35f, UnityEngine.AI.NavMesh.AllAreas)) continue;   // 맵 밖/가구 속 제외
+            if (Physics.Linecast(eye, fh.point + Vector3.up * 0.2f, out RaycastHit lh, ~0, QueryTriggerInteraction.Ignore) && !lh.collider.transform.IsChildOf(transform) && !lh.collider.transform.IsChildOf(item.transform)) continue;   // 벽/가구 너머 제외
+
+            item.transform.position = new Vector3(fh.point.x, fh.point.y + 0.3f, fh.point.z);
+            Physics.SyncTransforms();
+            Bounds b = ItemBounds(item);
+            item.transform.position += Vector3.up * (fh.point.y + 0.004f - b.min.y);
+            b = ItemBounds(item);
+            Vector3 half = b.extents * 0.98f; half.y = Mathf.Max(0.02f, half.y - 0.03f);
+            var hits = Physics.OverlapBox(b.center + Vector3.up * 0.03f, half, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
+            bool blocked = false;
+            foreach (var h in hits)
+            {
+                if (h.transform.IsChildOf(transform) || h.transform.IsChildOf(item.transform)) continue;
+                blocked = true; break;
+            }
+            if (blocked) continue;
+            placed = true; break;
+        }
+
+        if (!placed)
+        {
+            // 취소: 손에 든 상태로 정확히 되돌린다 (PrepareForInventory 가 부모/자세/크기/Collider 상태를 다시 만든다)
+            item.SetActive(false);
+            PrepareForInventory(item, type);
+            item.SetActive(true);
+            if (interaction != null) interaction.Notify("NO SPACE TO DROP", 1.2f);
+            RefreshHeldVisuals();
+            return false;
+        }
+
+        // 확정: 슬롯 비우고, 모델/Collider/획득 컴포넌트 복원, 이전 수납장 게이트에서 분리
+        slots[idx].type = InventoryItemType.None;
+        slots[idx].worldObject = null;
+        selectedSlot = -1;
+        pickupWorldRot.Remove(item);
+        RestorePickupComponents(item, type);
+        foreach (var comp in item.GetComponentsInChildren<MonoBehaviour>(true)) LootQteGate.Unregister(comp);
+        var rb = item.GetComponent<Rigidbody>();
+        if (rb != null) { rb.isKinematic = true; rb.useGravity = false; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; rb.detectCollisions = true; }
+        item.SetActive(true);
+        RefreshHeldVisuals();
+        RefreshUI();
+        OnSlotToggled?.Invoke(false);
+        if (interaction != null) interaction.Notify("DROPPED", 0.9f);
+        return true;
+    }
+
+    static Vector3 WorldScaleOf(GameObject item, InventoryItemType type)
+    {
+        if (type == InventoryItemType.Medkit) { var m = item.GetComponent<MedkitPickup>(); if (m != null) return m.worldScale; }
+        if (type == InventoryItemType.Syringe) { var sy = item.GetComponent<SyringePickup>(); if (sy != null) return sy.worldScale; }
+        return item.transform.localScale;   // 비콘 배터리는 들 때 크기를 바꾸지 않는다
+    }
+
+    static Bounds ItemBounds(GameObject item)
+    {
+        var rs = item.GetComponentsInChildren<Renderer>(false);
+        if (rs.Length == 0) return new Bounds(item.transform.position, Vector3.one * 0.1f);
+        Bounds b = rs[0].bounds;
+        for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
+        return b;
     }
 
     void EjectSlotItemToWorld(int index)

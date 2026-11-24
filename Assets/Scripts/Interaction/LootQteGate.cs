@@ -40,6 +40,14 @@ public class LootQteGate : MonoBehaviour
     void OnEnable() { if (!all.Contains(this)) all.Add(this); }
     void OnDestroy() { all.Remove(this); }
 
+    /// <summary>플레이어가 버린 아이템처럼 더 이상 그 상자 안에 있지 않은 pickup 을 게이트에서 뺀다 (닫힌 상자 때문에 못 줍는 일 방지).</summary>
+    public static void Unregister(Component pickup)
+    {
+        if (pickup == null) return;
+        if (map.TryGetValue(pickup, out var gate) && gate != null) gate.contents.Remove(pickup);
+        map.Remove(pickup);
+    }
+
     public static void Register(LootQteGate gate, Component pickup)
     {
         if (gate == null || pickup == null) return;

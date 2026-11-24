@@ -46,6 +46,8 @@ public class FirstPersonController : MonoBehaviour
     {
         var heart = HeartRateController.Instance;
         if (heart == null) return;
+        // 주사기 효과 중: 심박수와 상관없이 달릴 수 있다 (끝나는 순간 아래 판정으로 BPM 이 높으면 바로 다시 잠김)
+        if (heart.IsSprintUnlocked) { heartSprintLocked = false; return; }
         float bpm = heart.CurrentBpm;
         if (!heartSprintLocked && bpm >= sprintLockBpm) heartSprintLocked = true;
         else if (heartSprintLocked && bpm <= sprintReleaseBpm) heartSprintLocked = false;
