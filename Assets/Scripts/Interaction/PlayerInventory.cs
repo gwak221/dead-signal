@@ -9,7 +9,8 @@ public enum InventoryItemType
     Battery,
     Key,
     Flashlight, // 기존 값 순서 유지를 위해 맨 뒤에 추가
-    Medkit
+    Medkit,
+    Syringe     // 맨 뒤에 추가 (기존 직렬화 값 유지)
 }
 
 public class PlayerInventory : MonoBehaviour
@@ -69,6 +70,7 @@ public class PlayerInventory : MonoBehaviour
     readonly SlotData[] slots = NewSlots();
     readonly Image[] slotImages = new Image[SlotCount];
     readonly TMP_Text[] slotTexts = new TMP_Text[SlotCount];
+    readonly Image[] slotIcons = new Image[SlotCount];
     readonly TMP_Text[] slotIndexTexts = new TMP_Text[SlotCount];
     readonly bool[] lockedSlots = new bool[SlotCount];
     readonly GameObject[] lockOverlays = new GameObject[SlotCount];
@@ -300,6 +302,7 @@ public class PlayerInventory : MonoBehaviour
         selectedSlot = index;
         RefreshHeldVisuals();
         RefreshUI();
+        HeldItemOutline.Flash(slots[index].worldObject);   // 꺼낸 아이템에 외곽선 → 2초에 걸쳐 사라짐
         OnSlotToggled?.Invoke(true);
     }
 
@@ -337,6 +340,15 @@ public class PlayerInventory : MonoBehaviour
             item.transform.localRotation = Quaternion.identity;
             item.transform.localScale = savedScale * 0.5f;
         }
+        else if (type == InventoryItemType.Syringe)
+        {
+            // 주사기: 화면 오른쪽 아래에 눕혀서, 손에 든 동안만 키워서 든다 (자세/배율은 SyringePickup 에서 조정)
+            SyringePickup sp = item.GetComponent<SyringePickup>();
+            if (sp != null) sp.CaptureScale();
+            item.transform.localPosition = sp != null ? sp.holdLocalPosition : new Vector3(0.07f, -0.09f, 0.2f);
+            item.transform.localRotation = Quaternion.Euler(sp != null ? sp.holdLocalEuler : new Vector3(75f, 0f, 0f));
+            item.transform.localScale = sp != null ? sp.worldScale * sp.holdScale : savedScale;
+        }
         else if (type == InventoryItemType.Key)
         {
             // 기존 KeyHoldPoint가 키에 맞춰져 있으므로 그대로 사용.
@@ -370,6 +382,9 @@ public class PlayerInventory : MonoBehaviour
 
         MedkitPickup medkit = item.GetComponent<MedkitPickup>();
         if (medkit != null) medkit.enabled = false;
+
+        SyringePickup syringe = item.GetComponent<SyringePickup>();
+        if (syringe != null) syringe.enabled = false;
     }
 
     void RestorePickupComponents(GameObject item, InventoryItemType type)
@@ -395,6 +410,13 @@ public class PlayerInventory : MonoBehaviour
             if (medkit == null) medkit = item.AddComponent<MedkitPickup>();
             medkit.enabled = true;
             item.transform.localScale = medkit.worldScale;
+        }
+        else if (type == InventoryItemType.Syringe)
+        {
+            SyringePickup syringe = item.GetComponent<SyringePickup>();
+            if (syringe == null) syringe = item.AddComponent<SyringePickup>();
+            syringe.enabled = true;
+            item.transform.localScale = syringe.worldScale;
         }
         else if (type == InventoryItemType.Flashlight)
         {
@@ -473,8 +495,54 @@ public class PlayerInventory : MonoBehaviour
 
             Transform index = slot.Find("Index");
             slotIndexTexts[i] = index != null ? index.GetComponent<TMP_Text>() : null;
+
+            slotIcons[i] = i == BatterySlot ? null : EnsureIcon((RectTransform)slot);
         }
     }
+
+    /// <summary>슬롯 가운데 아이템 아이콘 (마름모 안쪽 정사각형 크기, 회전 없음). 아이콘은 RecoveredItemLog 의 기록 아이콘과 같은 것.</summary>
+    static Image EnsureIcon(RectTransform slot)
+    {
+        Transform existing = slot.Find("ItemIcon");
+        Image image;
+        if (existing == null)
+        {
+            var go = new GameObject("ItemIcon", typeof(RectTransform), typeof(Image));
+            go.layer = slot.gameObject.layer;
+            go.transform.SetParent(slot, false);
+            Transform gem = slot.Find("Gem");
+            go.transform.SetSiblingIndex(gem != null ? gem.GetSiblingIndex() + 1 : 0);   // 틀 위, 번호/라벨 아래
+            image = go.GetComponent<Image>();
+        }
+        else
+        {
+            image = existing.GetComponent<Image>();
+            if (image == null) image = existing.gameObject.AddComponent<Image>();
+        }
+
+        var rt = image.rectTransform;
+        float size = GemSize * 0.66f;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(size, size);
+        rt.anchoredPosition = Vector2.zero;
+        rt.localRotation = Quaternion.identity;
+        rt.localScale = Vector3.one;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+        image.enabled = false;
+        return image;
+    }
+
+    /// <summary>슬롯 아이콘 (기록 아이콘 재사용). 아이콘이 없는 종류(Key)는 null → 글자 라벨로 표시.</summary>
+    static Sprite IconFor(InventoryItemType type) => type switch
+    {
+        InventoryItemType.Battery => RecoveredItemLog.ItemGlyph(0),     // 비콘 배터리
+        InventoryItemType.Medkit => RecoveredItemLog.ItemGlyph(1),      // 구급상자
+        InventoryItemType.Syringe => RecoveredItemLog.ItemGlyph(2),     // 주사기
+        InventoryItemType.Flashlight => RecoveredItemLog.ItemGlyph(3),  // 손전등
+        _ => null
+    };
 
     /// <summary>
     /// 칸을 45도 돌려 마름모로 붙인다.
@@ -685,10 +753,21 @@ public class PlayerInventory : MonoBehaviour
             bool selected = i == selectedSlot;
             int aaCount = aaStock != null ? aaStock.Count : 0;
 
+            Sprite icon = aaSlot ? null : IconFor(slots[i].type);
+            if (slotIcons[i] != null)
+            {
+                slotIcons[i].sprite = icon;
+                slotIcons[i].enabled = icon != null;
+                slotIcons[i].color = lockedSlots[i] ? new Color(0.45f, 0.42f, 0.38f, 0.55f)
+                                   : selected ? FrameSelected : TextIdle;
+            }
+
             if (slotTexts[i] != null)
             {
                 if (aaSlot)
                     slotTexts[i].text = "x" + aaCount;
+                else if (icon != null && slotIcons[i] != null)
+                    slotTexts[i].text = "";   // 아이콘이 있으면 글자 라벨은 숨긴다
                 else
                 {
                     slotTexts[i].text = slots[i].type switch
@@ -697,6 +776,7 @@ public class PlayerInventory : MonoBehaviour
                         InventoryItemType.Key => "KEY",
                         InventoryItemType.Flashlight => "LIGHT",
                         InventoryItemType.Medkit => "MED",
+                        InventoryItemType.Syringe => "SYR",
                         _ => ""
                     };
                 }
