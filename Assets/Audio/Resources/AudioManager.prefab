@@ -461,3 +461,69 @@ MonoBehaviour:
     loop: 0
     ignorePause: 0
     note: "\uC7A1\uD798 \uC5F0\uCD9C \u2014 \uBB3C\uB9AC\uB294 \uC21C\uAC04"
+  - name: fl_on
+    clips:
+    - {fileID: 8300000, guid: 362c5553b45e7f042a269e75bfcfbfa7, type: 3}
+    avoidRepeat: 1
+    volume: 0.7
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC190\uC804\uB4F1 \uCF24 \uB54C (FlashlightController.OnLightToggled
+      true, PlayerSounds)"
+  - name: fl_off
+    clips:
+    - {fileID: 8300000, guid: cb7330b078508624691610aa749b2c01, type: 3}
+    avoidRepeat: 1
+    volume: 0.7
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC190\uC804\uB4F1 \uB04C \uB54C (OnLightToggled false, PlayerSounds)"
+  - name: fl_charge
+    clips:
+    - {fileID: 8300000, guid: df8bababa62d92445891bce670dfab2e, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC12C\uAD11 \uCDA9\uC804 \uC2DC\uC791 (OnChargeStarted, PlayerSounds)"
+  - name: fl_flash
+    clips:
+    - {fileID: 8300000, guid: 87c75a033c8889c4aa361152c64cf2d4, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.03
+    group: {fileID: 4606296299293863645, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uC12C\uAD11 \uBC1C\uC0AC\uB85C \uC801 \uAE30\uC808 (OnMonsterStunned,
+      PlayerSounds)"

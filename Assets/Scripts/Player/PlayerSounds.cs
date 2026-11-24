@@ -12,6 +12,8 @@ using UnityEngine;
 ///   인벤토리 : 슬롯 선택/해제, 아이템 줍기 (종류별 소리가 없으면 item_pickup). 일시정지 중 지급은 무음.
 ///   숨기     : PlayerHide.OnHidingChanged
 ///   잡힘     : PlayerCaughtSequence.onBiteImpact
+///   손전등   : FlashlightController 켜기/끄기, 섬광 충전 시작, 섬광 발사(적 기절)
+///              충전 소리(1.66초)는 충전(0.6초)보다 길어서, 발사하거나 충전이 풀리면 짧게 페이드로 끊는다.
 /// 숨소리는 PlayerBreathing이 따로 맡는다.
 /// </summary>
 [DisallowMultipleComponent]
@@ -43,6 +45,13 @@ public class PlayerSounds : MonoBehaviour
     public string hideExitSound = "plr_hide_exit";
     public string caughtBiteSound = "plr_caught_bite";
 
+    [Header("손전등")]
+    public string flashlightOnSound = "fl_on";
+    public string flashlightOffSound = "fl_off";
+    public string flashChargeSound = "fl_charge";
+    public string flashSound = "fl_flash";
+    [Tooltip("충전 소리를 끊을 때 페이드 시간(초)")] public float chargeStopFade = 0.08f;
+
     FirstPersonController controller;
     CharacterController cc;
     PlayerInteraction interaction;
@@ -50,9 +59,11 @@ public class PlayerSounds : MonoBehaviour
     PlayerHide hide;
     PlayerCaughtSequence caught;
     HeartRateController heart;
+    FlashlightController flashlight;
 
     Vector3 lastPos;
     float stepPhase; // 0~1, 1이 되면 한 걸음
+    SoundHandle chargeHandle = SoundHandle.None;
     int pickupFrame = -1;
     int interactFrame = -1;
     float nextLateHook;
@@ -88,15 +99,22 @@ public class PlayerSounds : MonoBehaviour
         if (hide != null) hide.OnHidingChanged -= HandleHiding;
         if (caught != null && caught.onBiteImpact != null) caught.onBiteImpact.RemoveListener(HandleBite);
         if (heart != null) heart.OnBeat -= HandleBeat;
+        if (flashlight != null)
+        {
+            flashlight.OnLightToggled -= HandleLight;
+            flashlight.OnChargeStarted -= HandleCharge;
+            flashlight.OnMonsterStunned -= HandleFlash;
+        }
+        flashlight = null;
         hide = null;
         caught = null;
         heart = null;
     }
 
-    // PlayerHide / PlayerCaughtSequence / HeartRateController는 늦게 생길 수 있어 주기적으로 연결을 시도한다
+    // PlayerHide / PlayerCaughtSequence / HeartRateController / FlashlightController는 늦게 생길 수 있어 주기적으로 연결을 시도한다
     void TryHookLate()
     {
-        if (hide != null && caught != null && heart != null) return;
+        if (hide != null && caught != null && heart != null && flashlight != null) return;
         if (Time.unscaledTime < nextLateHook) return;
         nextLateHook = Time.unscaledTime + 0.5f;
 
@@ -119,6 +137,16 @@ public class PlayerSounds : MonoBehaviour
             heart = HeartRateController.Instance;
             heart.OnBeat += HandleBeat;
         }
+        if (flashlight == null)
+        {
+            flashlight = GetComponentInChildren<FlashlightController>();
+            if (flashlight != null)
+            {
+                flashlight.OnLightToggled += HandleLight;
+                flashlight.OnChargeStarted += HandleCharge;
+                flashlight.OnMonsterStunned += HandleFlash;
+            }
+        }
     }
 
     Vector3 FootPosition => cc != null ? cc.transform.position : transform.position;
@@ -127,6 +155,7 @@ public class PlayerSounds : MonoBehaviour
     void Update()
     {
         TryHookLate();
+        UpdateCharge();
         UpdateFootsteps();
     }
 
@@ -195,4 +224,25 @@ public class PlayerSounds : MonoBehaviour
     void HandleHiding(bool hidden) => AudioManager.Play(hidden ? hideEnterSound : hideExitSound);
 
     void HandleBite() => AudioManager.Play(caughtBiteSound);
+
+    void HandleLight(bool on) => AudioManager.Play(on ? flashlightOnSound : flashlightOffSound);
+
+    void HandleCharge()
+    {
+        chargeHandle.Stop(chargeStopFade); // 이전 충전 소리가 남아 있으면 겹치지 않게
+        chargeHandle = AudioManager.Play(flashChargeSound);
+    }
+
+    // 충전 게이지가 0으로 돌아가면(조준 이탈·버튼 뗌·재사용 대기) 충전 소리를 끊는다
+    void UpdateCharge()
+    {
+        if (flashlight != null && flashlight.Exposure01 <= 0f && chargeHandle.IsPlaying)
+            chargeHandle.Stop(chargeStopFade);
+    }
+
+    void HandleFlash(MonsterStun _)
+    {
+        chargeHandle.Stop(chargeStopFade);
+        AudioManager.Play(flashSound);
+    }
 }

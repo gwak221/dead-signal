@@ -12,11 +12,13 @@
   - 발소리 이벤트 `OnFootstep`: Monster_Walk 0.70s / 1.45s, Monster_Run 0.10s / 0.80s (발 뼈 높이 샘플링으로 정함)
   - 가구: `OpenableSound`가 `box_open` / `box_close`를 이름으로 호출
 - **2장 플레이어 (14개)**: `plr_step_walk`, `plr_step_run`, `plr_breath_idle`, `plr_breath_tense`, `plr_heartbeat`, `plr_interact`, `plr_slot_select`, `plr_slot_deselect`, `item_pickup_battery`, `item_pickup`, `item_docu`, `plr_hide_enter`, `plr_hide_exit`, `plr_caught_bite`
-  - 호출: `Assets/Scripts/Player/PlayerSounds.cs`, 숨소리 `Assets/Scripts/Player/PlayerBreathing.cs` (씬의 `Player`에 부착)
+  - 호출: `Assets/Scripts/Player/PlayerSounds.cs`, 숨소리 `Assets/Scripts/Player/PlayerBreathing.cs` (`PlayerAudioAutoAttach`가 실행 시 `FirstPersonController` 오브젝트에 자동 부착 — 씬 수정 불필요)
   - 열쇠 줍기는 `item_pickup_key`가 등록될 때까지 `item_pickup`으로 대체 재생
   - 타이틀/일시정지 중 인벤토리 지급(게임 시작 시 손전등)은 무음 — 기존엔 배터리·열쇠만 소리를 냈으므로 생기지 않던 문제
   - `item_docu`는 등록만 됨. 문서 아이템이 생기면 `PlayerSounds.HandleItemAdded`에 종류를 추가
-- **나머지 항목 (3~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
+- **3장 손전등 (4개)**: `fl_on`, `fl_off`, `fl_charge`, `fl_flash` — `PlayerSounds`가 `FlashlightController` 이벤트를 받아 재생
+  - 충전 소리(1.66초)가 충전 시간(0.6초)보다 길어서, 섬광 발사 또는 충전 게이지가 0으로 돌아가면 0.08초 페이드로 끊는다
+- **나머지 항목 (4~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
 
 ## 출처
 - **클립**: `Assets/Audio/find_cilp/` (오디오 담당이 고른 개선 클립 112개). 아래 "클립" 열은 이 폴더의 파일 이름이다.
@@ -121,7 +123,7 @@
 |---|---|---|---|---|---|---|---|---|
 | `fl_on` | fl_on_01 | 동일 | 손전등 켤 때 | | 2D | Player | `FlashlightController` 켜기 | O |
 | `fl_off` | fl_off_01 (0.09초) | 새 | 손전등 끌 때 | | 2D | Player | `FlashlightController` 끄기 | O |
-| `fl_charge` | fl_charge_01 | 동일 | 섬광(눈뽕) **충전 시작** | | 2D | Player | 섬광 충전 | O |
+| `fl_charge` | fl_charge_01 | 동일 | 섬광(눈뽕) **충전 시작**. 발사하거나 충전이 풀리면 짧게 페이드로 끊음 | | 2D | Player | 섬광 충전 | O |
 | `fl_flash` | fl_flash_01 | 동일 | 섬광 **발사**로 적이 기절할 때 | | 2D | Player | 섬광 발사 | O |
 
 ## 4. 문 · 가구 · 퍼즐
