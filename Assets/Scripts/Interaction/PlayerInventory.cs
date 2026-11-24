@@ -315,6 +315,10 @@ public class PlayerInventory : MonoBehaviour
             holdPoint = interaction.keyHoldPoint;
     }
 
+    /// <summary>손에 든 구급상자의 카메라 기준 위치 / 기울기(도). PlayerInteraction 의 사용 동작도 이 자세에서 출발한다.</summary>
+    public static readonly Vector3 MedkitHoldCamPos = new Vector3(0.20f, -0.20f, 0.50f);
+    public const float MedkitHoldTilt = 25f;
+
     void PrepareForInventory(GameObject item, InventoryItemType type)
     {
         Vector3 savedScale = item.transform.localScale;
@@ -332,10 +336,14 @@ public class PlayerInventory : MonoBehaviour
         }
         else if (type == InventoryItemType.Medkit)
         {
-            // 의료상자: 손에 든 모습이 화면을 가리지 않도록 약간 아래/앞에, 크기를 줄여서.
-            item.transform.localPosition = new Vector3(0.02f, -0.14f, 0.16f);
-            item.transform.localRotation = Quaternion.identity;
-            item.transform.localScale = savedScale * 0.5f;
+            // 의료상자: KeyHoldPoint 는 열쇠용(카메라 앞 1.2m)이라 구급상자가 허공에 떠 보였다.
+            // 카메라 기준 '오른손 아래쪽, 팔 길이 안'으로 가져오고(손잡이가 위로 보이게 눕혀서) 크기를 줄인다. 화면 중앙은 가리지 않는다.
+            Transform camT = holdPoint != null ? holdPoint.parent : null;
+            item.transform.localPosition = camT != null
+                ? holdPoint.InverseTransformPoint(camT.TransformPoint(MedkitHoldCamPos))
+                : new Vector3(0.02f, -0.14f, 0.16f);
+            item.transform.localRotation = Quaternion.Euler(MedkitHoldTilt, 180f, 0f) * Quaternion.Euler(90f, 0f, 0f);
+            item.transform.localScale = savedScale * 0.3f;
         }
         else if (type == InventoryItemType.Key)
         {

@@ -352,8 +352,15 @@ public class PlayerInteraction : MonoBehaviour
         return fpc == null || fpc.ControlsEnabled;
     }
 
+    // 사용 동작용: 손에 든 구급상자의 출발 자세 (취소 시 복원)
+    Transform mkItem;
+    Vector3 mkPos, mkScale;
+    Quaternion mkRot;
+
     void BeginMedkitUse()
     {
+        mkItem = inventory != null && inventory.SelectedWorldObject != null ? inventory.SelectedWorldObject.transform : null;
+        if (mkItem != null) { mkPos = mkItem.localPosition; mkRot = mkItem.localRotation; mkScale = mkItem.localScale; }
         usingMedkit = true;
         medkitUseEnd = Time.time + Mathf.Max(0.1f, medkitUseSeconds);
         ShowMessage("USING MEDKIT... " + medkitUseSeconds.ToString("0.0") + "s");
@@ -364,8 +371,33 @@ public class PlayerInteraction : MonoBehaviour
     public void CancelMedkitUse()
     {
         if (!usingMedkit) return;
+        RestoreMedkitPose();
         usingMedkit = false;
         HideInteractionText();
+    }
+
+    void RestoreMedkitPose()
+    {
+        if (mkItem == null) return;
+        mkItem.localPosition = mkPos; mkItem.localRotation = mkRot; mkItem.localScale = mkScale;
+        mkItem = null;
+    }
+
+    /// <summary>
+    /// 치료 동작: 들어 올림(0~25%) → 열어서 치료(25~80%, 미세한 흔들림) → 아래로 내려가며 작아짐(80~100%).
+    /// 소모는 기존대로 끝난 뒤 한 번만 일어나므로, 갑자기 사라지지 않고 손 아래로 내려가며 사라진다. 시간/이동 제한은 그대로.
+    /// </summary>
+    void AnimateMedkit(float u)
+    {
+        if (mkItem == null) return;
+        float raise = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(u / 0.25f));
+        float lower = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((u - 0.8f) / 0.2f));
+        float k = raise * (1f - lower);
+        float sway = (u > 0.25f && u < 0.8f) ? Mathf.Sin(u * 38f) * 0.004f : 0f;
+        Vector3 off = new Vector3(-0.15f, 0.11f, -0.05f) * k + new Vector3(0f, sway, 0f) + new Vector3(0f, -0.22f, 0.02f) * lower;
+        mkItem.localPosition = mkPos + off;
+        mkItem.localRotation = Quaternion.Euler(-38f * k, 0f, 12f * k * 0.5f) * mkRot;
+        mkItem.localScale = mkScale * (1f - 0.4f * lower);
     }
 
     void UpdateMedkitUse()
@@ -377,8 +409,14 @@ public class PlayerInteraction : MonoBehaviour
             CancelMedkitUse();
             return;
         }
-        if (Time.time < medkitUseEnd) return;
+        float dur = Mathf.Max(0.1f, medkitUseSeconds);
+        if (Time.time < medkitUseEnd)
+        {
+            AnimateMedkit(1f - (medkitUseEnd - Time.time) / dur);
+            return;
+        }
         usingMedkit = false;
+        RestoreMedkitPose();   // 소비되지 않는 경우(그 사이 건강해짐)를 위해 원래 자세 복원
         MedkitPickup.TryUseSelected(this);   // 치료 + 소비 (그 사이 건강해졌다면 소비 없이 HEALTH FULL)
     }
 
