@@ -105,8 +105,17 @@ public class PlayerCaughtSequence : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics() => instance = null;
 
+    // AfterSceneLoad 는 프로세스 시작 시 한 번만 실행된다. Restart / Quit to Title 로 씬을 다시 불러와도
+    // 새 Player 에 다시 붙도록 sceneLoaded 로 재부착한다 (안 그러면 재시작 후 잡힘 연출/부상이 통째로 빠진다).
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    static void Bootstrap() => Ensure();
+    static void Bootstrap()
+    {
+        Ensure();
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    static void OnSceneLoaded(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode m) => Ensure();
 
     static PlayerCaughtSequence Ensure()
     {
