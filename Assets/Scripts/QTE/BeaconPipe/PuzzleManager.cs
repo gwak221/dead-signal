@@ -20,7 +20,9 @@ public class PuzzleManager : MonoBehaviour
     public GameObject endOn;
     public Vector2Int startCell = new Vector2Int(0, 0);
     public Vector2Int endCell = new Vector2Int(4, 4);
-    public int startFeedDirection = 1;
+    [Tooltip("시작점에서 전력이 나가는 방향들(0=위,1=오른쪽,2=아래,3=왼쪽). 기본: 오른쪽 + 아래쪽. 어느 쪽 경로로든 끝점에 닿으면 성공.")]
+    public int[] startFeedDirections = { 1, 2 };
+    int pathFeedDirection = 1;   // 이번 판의 해결 경로가 출발하는 방향 (판마다 무작위로 하나)
 
     [Header("Difficulty")]
     public int blockedCellCount = 3;
@@ -126,15 +128,15 @@ public class PuzzleManager : MonoBehaviour
         blocked[startCell.x, startCell.y] = true;
         blocked[endCell.x, endCell.y] = true;
 
-        var entry = startCell + Deltas[startFeedDirection];
+        pathFeedDirection = startFeedDirections[Random.Range(0, startFeedDirections.Length)];
         var candidates = new List<Vector2Int>();
         for (int y = 0; y < Size; y++)
         {
             for (int x = 0; x < Size; x++)
             {
                 var cell = new Vector2Int(x, y);
-                if (cell == startCell || cell == endCell || cell == entry)
-                    continue;
+                if (cell == startCell || cell == endCell || IsStartEntry(cell))
+                    continue;   // 두 출력 방향 입구는 막지 않는다
                 candidates.Add(cell);
             }
         }
@@ -240,7 +242,7 @@ public class PuzzleManager : MonoBehaviour
     {
         var path = new List<Vector2Int>();
         var visited = new bool[Size, Size];
-        Vector2Int entry = startCell + Deltas[startFeedDirection];
+        Vector2Int entry = startCell + Deltas[pathFeedDirection];
         if (!Walk(entry, path, visited))
             return false;
 
@@ -286,6 +288,13 @@ public class PuzzleManager : MonoBehaviour
 
         path.RemoveAt(path.Count - 1);
         visited[current.x, current.y] = false;
+        return false;
+    }
+
+    bool IsStartEntry(Vector2Int cell)
+    {
+        foreach (int feed in startFeedDirections)
+            if (startCell + Deltas[feed] == cell) return true;
         return false;
     }
 
@@ -452,9 +461,12 @@ public class PuzzleManager : MonoBehaviour
 
         var queue = new Queue<PipeTile>();
         bool reachedEnd = false;
-        Vector2Int entry = startCell + Deltas[startFeedDirection];
-        if (map.TryGetValue(entry, out PipeTile first) && first.HasOpening(PipeTile.Opposite(startFeedDirection)))
-            queue.Enqueue(first);
+        foreach (int feed in startFeedDirections)   // 오른쪽/아래쪽 등 모든 출력 방향에서 동시에 전력 공급
+        {
+            Vector2Int entry = startCell + Deltas[feed];
+            if (map.TryGetValue(entry, out PipeTile first) && first.HasOpening(PipeTile.Opposite(feed)))
+                queue.Enqueue(first);
+        }
 
         while (queue.Count > 0)
         {

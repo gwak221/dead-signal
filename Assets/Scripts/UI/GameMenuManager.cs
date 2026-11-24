@@ -59,6 +59,7 @@ public class GameMenuManager : MonoBehaviour
         { "R-MOUSE",   "Flashlight" },
         { "R",         "Reload" },
         { "1 / 2 / 3", "Inventory Slot" },
+        { "G",         "Drop Item" },
         { "SPACE",     "QTE / Skill Check" },
         { "ESC",       "Pause / Controls" },
     };
@@ -266,11 +267,7 @@ public class GameMenuManager : MonoBehaviour
     void QuitToTitle()
     {
         // 씬 재로드 → 새 GameMenuManager.Awake 가 다시 Title 상태로 시작한다.
-        Time.timeScale = 1f;
-        AudioListener.pause = false;
-        int idx = SceneManager.GetActiveScene().buildIndex;
-        if (idx >= 0) SceneManager.LoadScene(idx);
-        else SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        GameProgress.ReloadScene();   // R 재시작과 같은 경로
     }
 
     void QuitApp()

@@ -669,7 +669,7 @@ public class PlayerInteraction : MonoBehaviour
     {
         bool direct = Physics.Raycast(ray, out RaycastHit directHit, interactionDistance, interactionMask);
 
-        if (direct && GetInteractOwner(directHit.collider) != null)
+        if (direct && GetInteractOwner(directHit.collider) != null && FrontOk(GetInteractOwner(directHit.collider), ray.origin, directHit.point))
         {
             lastAssistTarget = GetInteractOwner(directHit.collider);
             result = directHit;
@@ -693,6 +693,8 @@ public class PlayerInteraction : MonoBehaviour
                 Component owner = GetInteractOwner(col);
                 if (owner == null)
                     continue;
+                if (!FrontOk(owner, ray.origin, assistHits[i].distance > 0f ? assistHits[i].point : col.bounds.center))
+                    continue;   // 서랍/문은 개폐부 정면 쪽(옆은 허용)에서만
 
                 // 시작 지점에서 이미 겹친 경우 point가 0이므로 Collider 중심 사용
                 Vector3 target = assistHits[i].distance > 0f ? assistHits[i].point : col.bounds.center;
@@ -737,6 +739,52 @@ public class PlayerInteraction : MonoBehaviour
         return direct;
     }
 
+    /// <summary>
+    /// 서랍/문 Collider 는 가구 몸통(MeshCollider) 안쪽에 일부 묻혀 있어, 정지 상태에서는 십자선이 몸통 앞면에 먼저 맞고 서랍 후보가 '가려짐'으로 제외됐다
+    /// (움직일 때만 카메라 흔들림으로 서랍 Collider 에 직접 맞아 열렸다). 같은 가구(OpenableFurniture)의 몸통 면이고
+    /// 대상 표면이 그 면에서 1.2m 이내(서랍 Collider 가 몸통 안쪽으로 들어간 깊이)이고 시점이 개폐부 정면 쪽일 때만 가려지지 않은 것으로 본다. 뒤/옆에서 몸통을 뚫고 여는 경우는 거리가 더 멀어 그대로 막힌다.
+    /// </summary>
+    static bool IsOwnFurnitureFace(RaycastHit block, Vector3 origin, Vector3 target, Component owner)
+    {
+        var part = owner as OpenablePart;
+        if (part == null) return false;
+        var furn = part.GetComponentInParent<OpenableFurniture>();
+        if (furn == null || !block.collider.transform.IsChildOf(furn.transform)) return false;
+        if (GetInteractOwner(block.collider) != null) return false;          // 다른 개폐부/상호작용 대상이면 가림으로 본다
+        if (Vector3.Distance(block.point, target) >= 1.2f) return false;
+        return FrontOk(part, origin, target);
+    }
+
+    /// <summary>
+    /// 서랍/문(OpenablePart)은 개폐부가 향한 쪽에서만 열린다. 서랍 = 열리는 방향, 문 = 가구 몸통 중심 → 문 방향.
+    /// 시점이 정면 반공간(약간 비스듬/옆 포함) 안이면 통과, 뒤쪽이면 거부. 방향을 알 수 없으면 통과.
+    /// (가림 허용 깊이와 별개: 뒤에서 몸통/서랍 Collider 에 직접 닿는 경우도 막는다.)
+    /// </summary>
+    static bool FrontOk(Component owner, Vector3 origin, Vector3 point)
+    {
+        var part = owner as OpenablePart;
+        if (part == null) return true;
+        Vector3 front;
+        if (part.kind == OpenableKind.Slide && part.transform.parent != null)
+            front = part.transform.parent.TransformDirection(part.openLocalPosition - part.closedLocalPosition);
+        else
+        {
+            var furn = part.GetComponentInParent<OpenableFurniture>();
+            if (furn == null) return true;
+            bool any = false; Bounds body = default;
+            foreach (var c in furn.GetComponentsInChildren<Collider>())
+            {
+                if (c.GetComponentInParent<OpenablePart>() != null) continue;   // 몸통 Collider 만
+                if (!any) { body = c.bounds; any = true; } else body.Encapsulate(c.bounds);
+            }
+            if (!any) return true;
+            front = part.GetComponentInChildren<Collider>() != null ? part.GetComponentInChildren<Collider>().bounds.center - body.center : Vector3.zero;
+        }
+        front.y = 0f;
+        if (front.sqrMagnitude < 0.0016f) return true;
+        return Vector3.Dot(origin - point, front.normalized) > -0.05f;
+    }
+
     bool HasClearLine(Vector3 origin, Vector3 target, Component owner)
     {
         Vector3 dir = target - origin;
@@ -750,7 +798,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             if (block.collider.transform.IsChildOf(transform))
                 return true; // 자기 자신(드물게 시작점 겹침)은 무시
-            bool visible = GetInteractOwner(block.collider) == owner;
+            bool visible = GetInteractOwner(block.collider) == owner || IsOwnFurnitureFace(block, origin, target, owner);
             if (drawInteractionDebug && !visible)
                 Debug.DrawLine(origin, block.point, Color.red);
             return visible;

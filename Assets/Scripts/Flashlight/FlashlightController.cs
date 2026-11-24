@@ -410,7 +410,7 @@ public class FlashlightController : MonoBehaviour
         if (!reloading)
         {
             var kb = Keyboard.current;
-            if (kb != null && kb.rKey.wasPressedThisFrame && CanStartReload())
+            if (kb != null && kb.rKey.wasPressedThisFrame && !GameProgress.IsEnded && CanStartReload())
             {
                 // 안전한 쪽: 시작 순간 1개 소비(예약). reloading 플래그로 재진입이 막혀 R 연타해도 정확히 1개.
                 if (batteryStock.TryConsume(1))
