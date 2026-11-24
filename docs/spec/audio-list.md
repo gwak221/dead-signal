@@ -29,7 +29,13 @@
   - 비콘마다 작동음 루프 하나: `IsActivated`를 보고 off/on을 고른다. 바뀔 때 0.6초 페이드아웃 + 1.5초 페이드인 (기존 동작과 같음). 비콘 오브젝트가 꺼지면 소리도 끈다
   - 소리 위치: 비콘 피벗이 바닥이라 모델 중심(약 1.47m)에 실행 중에만 쓰는 점(`[AudioPoint]`)을 만든다. 예전 "Audio" 자식이 있으면 그걸 쓴다
   - 작동음 클립 2개는 Load Type = Streaming으로 바꿈 (62초·81초)
-- **나머지 항목 (6~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
+- **6장 음악·진행 (5개)**: `bgm_menu`, `bgm_chase`, `sfx_chase_escaped`, `bgm_gameover`, `bgm_escape` — 호출: `Assets/Scripts/Game/MusicSounds.cs` (게임 시작 때 스스로 생김, 씬 배치 불필요)
+  - 메뉴: 타이틀에 있는 동안 루프(`ignorePause`), 1.5초 페이드인 / 게임 시작 시 1.2초 페이드아웃
+  - 추격: `MonsterChase.IsChasing` + `MonsterHoundAI.IsChasingPlayer` 수를 센다. 0.6초 페이드인, 쫓는 적이 0이 되고 1초 뒤 2.5초 페이드아웃 + 따돌림 소리. 잡히거나 게임이 끝나면 따돌림 없이 0.15초에 끈다 (기존 동작과 같음). `MusicSounds.IsChaseMusicOn`으로 상태를 볼 수 있다 (7장 드론 줄이기용)
+  - 결말: `GameProgress.IsEnded`가 되면 1회, 탈출이면 `bgm_escape`, 아니면 `bgm_gameover`
+  - BGM 클립 4개 Load Type = Streaming
+  - 코어 수정: 스트리밍 클립을 읽는 중이거나 에디터 일시정지 중에는 `isPlaying`이 false여도 재생이 끝난 것으로 보지 않는다 (`AudioVoice.IsStarting`). 고치기 전에는 루프 BGM이 시작하자마자 정리될 수 있었다
+- **나머지 항목 (7~8장)**: 아직 미등록 → 기존 시스템 삭제로 현재 소리가 나지 않는다.
 
 ## 출처
 - **클립**: `Assets/Audio/find_cilp/` (오디오 담당이 고른 개선 클립 112개). 아래 "클립" 열은 이 폴더의 파일 이름이다.

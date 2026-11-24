@@ -104,8 +104,21 @@ namespace DeadSignal.Audio
             ApplyVolume();
 
             bool paused = AudioListener.pause && !entry.ignorePause;
-            if (!paused && !source.isPlaying) return false;
+            if (!paused && !source.isPlaying && !IsStarting()) return false;
             return true;
+        }
+
+        // isPlaying이 false여도 아직 끝난 게 아닌 경우:
+        //  - 스트리밍 클립(긴 BGM·루프)을 아직 읽는 중
+        //  - 에디터 일시정지(Pause/Step) 중 — 오디오가 멈춰 isPlaying이 false로 보인다
+        bool IsStarting()
+        {
+            var c = source.clip;
+            if (c != null && c.loadState == AudioDataLoadState.Loading) return true;
+#if UNITY_EDITOR
+            if (UnityEditor.EditorApplication.isPaused) return true;
+#endif
+            return false;
         }
 
         public void Release()

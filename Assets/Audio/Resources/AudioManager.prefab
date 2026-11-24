@@ -698,3 +698,86 @@ MonoBehaviour:
     ignorePause: 0
     note: "\uC544\uC774\uD15C \uC0C1\uC790 QTE \uC2E4\uD328 (SkillCheckManager.OnFail,
       WorldSounds). \uC7A1\uD600\uC11C \uCDE8\uC18C\uB420 \uB54C\uB294 \uC548 \uB0A8"
+  - name: bgm_menu
+    clips:
+    - {fileID: 8300000, guid: 07cae281110ef07409d7d943522f583d, type: 3}
+    avoidRepeat: 1
+    volume: 0.7
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: 4307311995519315327, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 1
+    ignorePause: 1
+    note: "\uD0C0\uC774\uD2C0 \uD654\uBA74\uC5D0 \uC788\uB294 \uB3D9\uC548 (\uB8E8\uD504,
+      \uC77C\uC2DC\uC815\uC9C0 \uC911\uC5D0\uB3C4 \uC7AC\uC0DD, MusicSounds)"
+  - name: bgm_chase
+    clips:
+    - {fileID: 8300000, guid: 347edd0558f899944ad27953159904f1, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: 4307311995519315327, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 1
+    ignorePause: 0
+    note: "\uCAD3\uB294 \uC801\uC774 1\uB9C8\uB9AC \uC774\uC0C1\uC778 \uB3D9\uC548
+      (\uB8E8\uD504, \uD558\uB098\uB9CC, MusicSounds)"
+  - name: sfx_chase_escaped
+    clips:
+    - {fileID: 8300000, guid: 6365473395b957d40a1c194f365164d8, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: 4307311995519315327, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uCD94\uACA9\uC774 \uB05D\uB0AC\uB294\uB370 \uC7A1\uD788\uC9C0 \uC54A\uC558\uC744
+      \uB54C (\uB530\uB3CC\uB9BC, MusicSounds)"
+  - name: bgm_gameover
+    clips:
+    - {fileID: 8300000, guid: 3dd76d7eed8f657469f25aa872c2b921, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: 4307311995519315327, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uAC8C\uC784 \uC624\uBC84 1\uD68C (GameProgress.IsEnded, MusicSounds)"
+  - name: bgm_escape
+    clips:
+    - {fileID: 8300000, guid: 6ee4f0a27286dbd48a7f7657b38bc4ee, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0
+    group: {fileID: 4307311995519315327, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "\uD0C8\uCD9C \uC131\uACF5 1\uD68C (GameProgress.HasEscaped, MusicSounds)"
