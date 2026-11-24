@@ -54,6 +54,16 @@ public class Monster2ReleaseSequence : MonoBehaviour
     [Tooltip("Hound 가 달려 나가는 직선 통로 반폭. 이 통로로 떨어질 침대는 방향을 틀고, 통로에 정착한 침대는 NavMeshObstacle 을 만들지 않는다.")]
     public float laneHalfWidth = 1.6f;
 
+    [Header("원장실 접근 보장 (침대가 영구적으로 막지 않는 구역)")]
+    [Tooltip("Hound 의 출발점(방 안)에서 출구(houndExitPoint) 방향으로 이어지는 '방 내부 + 입구 + 출구 앞 복도' 띠의 반폭. 방 폭 전체를 덮어야 한다.")]
+    public float reservedHalfWidth = 2.6f;
+    [Tooltip("Hound 출발점 뒤쪽(방 안쪽 끝)으로 확보할 길이.")]
+    public float reservedBehind = 5.5f;
+    [Tooltip("출구 지점 너머 복도로 확보할 길이.")]
+    public float reservedBeyondExit = 3.5f;
+    [Tooltip("침대 가장자리와 확보 구역 사이에 두는 최소 여유(플레이어 캡슐이 지나갈 폭).")]
+    public float reservedClearance = 0.45f;
+
     [Header("몇 번째 비콘에서 (정확히 이 개수)")]
     public int releaseAtBeaconCount = 2;
 
@@ -416,6 +426,8 @@ public class Monster2ReleaseSequence : MonoBehaviour
         }
         SetDebrisPairCollisions(debris, false);
 
+        ClearReservedZone(debris);   // 원장실 내부/입구/출구 앞 복도에 정착한 침대는 같은 연출 안에서 주변 빈 바닥으로 옮긴다
+
         Vector3 laneDir = houndExitPoint != null ? houndExitPoint.position - laneOrigin : Vector3.left;
         laneDir.y = 0f;
         laneDir = laneDir.sqrMagnitude > 0.01f ? laneDir.normalized : Vector3.left;
@@ -450,7 +462,98 @@ public class Monster2ReleaseSequence : MonoBehaviour
         }
     }
 
-    /// <summary>carve 가 반영된 뒤에도 Hound 가 플레이어 쪽으로 갈 수 있는지 확인. 막히면 침대 장애물을 모두 해제한다.</summary>
+
+    // ───────────────────────── 원장실 접근 보장 ─────────────────────────
+
+    /// <summary>
+    /// 침대는 무작위로 날아가 아무 데나 정착하므로, 입구를 막거나 방 안에 남는 경우가 생긴다.
+    /// 폭발/비산 연출은 그대로 두고, 정착이 끝난 뒤(암전 중) 확보 구역(방 내부 + 입구 + 출구 앞 복도)에 걸친 침대만
+    /// 구역 밖의 가장 가까운 빈 바닥으로 옮긴다. 침대는 삭제/비활성화하지 않고 Collider 도 그대로 유지한다.
+    /// </summary>
+    void ClearReservedZone(List<Debris> debris)
+    {
+        if (debris == null || debris.Count == 0) return;
+        Vector3 dir = houndExitPoint != null ? houndExitPoint.position - laneOrigin : Vector3.left;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.01f) dir = Vector3.left;
+        dir.Normalize();
+        Vector3 side = Vector3.Cross(Vector3.up, dir);
+        float laneLen = houndExitPoint != null
+            ? Vector3.Distance(new Vector3(houndExitPoint.position.x, 0f, houndExitPoint.position.z), new Vector3(laneOrigin.x, 0f, laneOrigin.z))
+            : 8f;
+        int moved = 0, failed = 0;
+
+        foreach (var d in debris)
+        {
+            if (d.t == null || d.cols == null || d.cols.Length == 0) continue;
+            Bounds bb = BoundsOf(d);
+            if (!IntersectsZone(bb, laneOrigin, dir, side, laneLen)) continue;
+
+            // 자기 Collider 는 후보 검사에서 잠시 뺀다
+            foreach (var c in d.cols) if (c != null) c.enabled = false;
+            bool found = false;
+            Vector3 best = bb.center;
+            for (float r = 0.5f; r <= 16f && !found; r += 0.5f)
+            {
+                int steps = Mathf.Max(8, Mathf.RoundToInt(r * 8f));
+                for (int k = 0; k < steps; k++)
+                {
+                    float a = (k + 0.5f) / steps * Mathf.PI * 2f;
+                    Vector3 cand = new Vector3(bb.center.x + Mathf.Cos(a) * r, bb.center.y, bb.center.z + Mathf.Sin(a) * r);
+                    var cb = new Bounds(cand, bb.size);
+                    if (IntersectsZone(cb, laneOrigin, dir, side, laneLen)) continue;
+                    if (!NavMesh.SamplePosition(new Vector3(cand.x, 0.05f, cand.z), out NavMeshHit nh, 1.0f, NavMesh.AllAreas)) continue;
+                    // 다른 침대 위에 얹혀 있던 경우도 있으므로, 옮길 때는 바닥에 내려놓는다 (AABB 바닥 = 바닥면)
+                    cand.y = nh.position.y + bb.extents.y + 0.02f;
+                    // 바닥과 겹치지 않도록 상하를 조금 줄여서 벽/가구/다른 침대와의 겹침만 검사
+                    Vector3 half = bb.extents * 0.98f;
+                    Vector3 ctr = cand + Vector3.up * 0.1f;
+                    half.y = Mathf.Max(0.05f, half.y - 0.1f);
+                    if (Physics.CheckBox(ctr, half, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore)) continue;
+                    best = cand; found = true; break;
+                }
+            }
+            foreach (var c in d.cols) if (c != null) c.enabled = true;
+
+            if (!found) { failed++; Debug.LogWarning("[Monster2] 확보 구역 밖에 침대 자리를 찾지 못했습니다: " + d.t.name); continue; }
+            d.t.position += best - bb.center;
+            moved++;
+        }
+        Physics.SyncTransforms();
+        Debug.Log("[Monster2] 원장실 확보 구역 정리: 이동 " + moved + "개, 실패 " + failed + "개 / 침대 " + debris.Count + "개");
+    }
+
+    static Bounds BoundsOf(Debris d)
+    {
+        Bounds b = default; bool any = false;
+        foreach (var c in d.cols)
+        {
+            if (c == null) continue;
+            if (!any) { b = c.bounds; any = true; } else b.Encapsulate(c.bounds);
+        }
+        return b;
+    }
+
+    bool IntersectsZone(Bounds b, Vector3 origin, Vector3 dir, Vector3 side, float laneLen)
+    {
+        float aMin = float.MaxValue, aMax = float.MinValue, sMin = float.MaxValue, sMax = float.MinValue;
+        for (int i = 0; i < 4; i++)
+        {
+            Vector3 p = new Vector3(i < 2 ? b.min.x : b.max.x, 0f, (i % 2 == 0) ? b.min.z : b.max.z) - new Vector3(origin.x, 0f, origin.z);
+            float a = Vector3.Dot(p, dir), s = Vector3.Dot(p, side);
+            aMin = Mathf.Min(aMin, a); aMax = Mathf.Max(aMax, a);
+            sMin = Mathf.Min(sMin, s); sMax = Mathf.Max(sMax, s);
+        }
+        float c = reservedClearance;
+        return aMax > -reservedBehind - c && aMin < laneLen + reservedBeyondExit + c
+            && sMax > -reservedHalfWidth - c && sMin < reservedHalfWidth + c;
+    }
+
+    /// <summary>
+    /// carve 가 반영된 뒤에도 Hound 가 플레이어 쪽으로 갈 수 있는지 확인한다.
+    /// 경로가 Partial 이어도 원인이 침대라고 단정하지 않는다: 플레이어가 잠긴 문(튜토리얼 문 등) 너머에 있으면 침대와 무관하게 Partial 이다.
+    /// 그래서 침대 장애물을 잠시 끄고 다시 계산해 '정말 침대 때문일 때만' 해제하고, 아니면 장애물을 그대로 둔다.
+    /// </summary>
     IEnumerator VerifyHoundPath()
     {
         yield return new WaitForSeconds(0.6f);
@@ -458,16 +561,26 @@ public class Monster2ReleaseSequence : MonoBehaviour
         var agent = hound.GetComponent<NavMeshAgent>();
         var player = FindFirstObjectByType<FirstPersonController>();
         if (agent == null || !agent.enabled || !agent.isOnNavMesh || player == null) yield break;
-        var path = new NavMeshPath();
         Vector3 target = player.transform.position;
         if (NavMesh.SamplePosition(target, out NavMeshHit hit, 6f, NavMesh.AllAreas)) target = hit.position;
+
+        var path = new NavMeshPath();
         bool ok = agent.CalculatePath(target, path) && path.status == NavMeshPathStatus.PathComplete;
         Debug.Log("[Monster2] bed obstacles=" + bedObstacles.Count + " hound->player path " + path.status);
-        if (!ok)
+        if (ok) yield break;
+
+        // 원인 분리: 침대 장애물을 끄고 다시 계산
+        foreach (var ob in bedObstacles) if (ob != null) ob.enabled = false;
+        yield return new WaitForSeconds(0.4f);
+        var path2 = new NavMeshPath();
+        bool okWithout = agent.isOnNavMesh && agent.CalculatePath(target, path2) && path2.status == NavMeshPathStatus.PathComplete;
+        if (okWithout)
         {
-            foreach (var ob in bedObstacles) if (ob != null) ob.enabled = false;
             Debug.LogWarning("[Monster2] 침대 NavMeshObstacle 이 Hound 경로를 막아 모두 해제했습니다.");
+            yield break;
         }
+        foreach (var ob in bedObstacles) if (ob != null) ob.enabled = true;
+        Debug.Log("[Monster2] 침대와 무관한 이유로 플레이어까지 경로가 끊겨 있습니다(잠긴 문 등). 침대 장애물은 유지합니다.");
     }
 
     // ───────────────────────── 카메라 ─────────────────────────

@@ -121,10 +121,26 @@ public class GameProgress : MonoBehaviour
 
     void Update()
     {
-        if ((escaped || gameOver) && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex >= 0
-                ? SceneManager.GetActiveScene().buildIndex : 0);
+        // 결말 화면에서만 재시작. 한 번만(길게 눌러도/중복 입력해도 씬을 두 번 불러오지 않음).
+        if ((escaped || gameOver) && !restarting && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            restarting = true;
+            ReloadScene();
+        }
     }
+
+    /// <summary>R 재시작과 메뉴(Quit to Title) 가 함께 쓰는 단일 재시작 경로. 시간/오디오 일시정지를 풀고 현재 씬을 다시 불러온다
+    /// (오디오 정지, 부트스트랩 재생성 등 나머지 초기화는 sceneLoaded 핸들러들이 담당).</summary>
+    public static void ReloadScene()
+    {
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+        var scene = SceneManager.GetActiveScene();
+        if (scene.buildIndex >= 0) SceneManager.LoadScene(scene.buildIndex);
+        else SceneManager.LoadScene(scene.name);
+    }
+
+    bool restarting;   // 인스턴스 필드: 씬을 다시 불러오면 새 인스턴스라 자동으로 초기화된다
 
     void LateUpdate()
     {
@@ -156,6 +172,7 @@ public class GameProgress : MonoBehaviour
         var scaler = canvasGo.GetComponent<UnityEngine.UI.CanvasScaler>();
         scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand;
 
         clearPanel = new GameObject("ClearPanel", typeof(RectTransform), typeof(UnityEngine.UI.Image));
         clearPanel.transform.SetParent(canvasGo.transform, false);

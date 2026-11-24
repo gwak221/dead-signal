@@ -3,7 +3,12 @@ guid: f56f5af2a0ffa69448d9c5dd511ccc58
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wp_red_led
+    second: {fileID: 2100000, guid: 72927e27b24257e4188fa4dc765cd6c2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,12 @@ guid: ebdb24fb3e502fd4f890c84a60d7827d
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wp_led_warm.001
+    second: {fileID: 2100000, guid: 0a3135e2ea96b7d488561495d4f17c53, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -63,7 +63,7 @@ public static class PosterOverlayUI
         var scaler = root.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;   // 어떤 화면 비율에서도 전체가 보이게
         group = root.AddComponent<CanvasGroup>();
         group.interactable = false;
         group.blocksRaycasts = false;

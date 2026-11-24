@@ -22,7 +22,18 @@ public class HeartRateEcgView : MonoBehaviour
     Color32[] pixels;
     float phase;
 
+    // AfterSceneLoad 는 프로세스 시작 시 한 번만 실행된다. Restart / Quit to Title 로 씬을 다시 불러와도
+    // ECG UI 가 다시 붙도록 sceneLoaded 로 재부착한다 (안 그러면 구버전 심박 UI 가 그대로 남는다).
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Bootstrap()
+    {
+        Boot();
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    static void OnSceneLoaded(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode m) => Boot();
+
     static void Boot()
     {
         var ui = GameObject.Find("HeartRateUI");

@@ -50,7 +50,7 @@ public class SyringePickup : MonoBehaviour, IInteractable, IPickupable
         CaptureScale();
         if (Animation != null) Animation.SetProgress(0f);   // 바닥에 버렸다가 다시 줍는 경우 대비
         if (!player.Inventory.TryAddWorldItem(InventoryItemType.Syringe, gameObject))
-            player.Notify("INVENTORY FULL");
+            player.Notify("INVENTORY FULL - SELECT AN ITEM, PRESS [G] TO DROP", 1.6f);
     }
 
     /// <summary>현재 손에 든 주사기 (없으면 null).</summary>

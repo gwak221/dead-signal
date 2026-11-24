@@ -53,8 +53,8 @@ public class FlashlightController : MonoBehaviour
     public float exposureDecayRate = 4f;
 
     [Header("Battery % (0~100)")]
-    [Tooltip("켜져 있는 동안 초당 감소량(%). 0.3333 = 3초 점등당 약 1%.")]
-    public float drainPercentPerSecond = 1f / 3f;
+    [Tooltip("켜져 있는 동안 초당 감소량(%). 0.6667 = 1.5초 점등당 약 1% (연속 약 150초).")]
+    public float drainPercentPerSecond = 2f / 3f;   // 초당 배터리 % 소모 (1.5초당 1% → 연속 사용 약 150초). 밸런스는 이 값만 조정
     [Tooltip("몬스터 스턴이 실제로 성공했을 때 즉시 소모되는 배터리(%). 남은 양이 이보다 적으면 0%까지 소모.")]
     public float stunBatteryCost = 35f;
     public float maxBattery = 100f;
@@ -410,7 +410,7 @@ public class FlashlightController : MonoBehaviour
         if (!reloading)
         {
             var kb = Keyboard.current;
-            if (kb != null && kb.rKey.wasPressedThisFrame && CanStartReload())
+            if (kb != null && kb.rKey.wasPressedThisFrame && !GameProgress.IsEnded && CanStartReload())
             {
                 // 안전한 쪽: 시작 순간 1개 소비(예약). reloading 플래그로 재진입이 막혀 R 연타해도 정확히 1개.
                 if (batteryStock.TryConsume(1))

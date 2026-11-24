@@ -25,8 +25,9 @@ public class HorrorLightingPreset : ScriptableObject
     }
 #endif
 
-    [Tooltip("켜두면 씬에 HorrorLightingApplier 가 없어도 플레이 시작/씬 로드 때 자동 적용 (씬 파일 수정 불필요)")]
-    public bool autoApplyOnPlay = true;
+    [Tooltip("켜면 씬에 HorrorLightingApplier 가 없어도 플레이 시작/씬 로드 때 이 프리셋이 씬의 Fog/Ambient/Volume 을 덮어쓴다.\n" +
+             "기본은 꺼짐: 메인 씬의 저장된 조명 분위기를 보존한다. 비교/조정은 Dead Signal/Lighting/Preview 메뉴(Play Mode)를 쓴다.")]
+    public bool autoApplyOnPlay = false;
 
     [Header("Fog (시야 차단)")]
     public bool fog = true;

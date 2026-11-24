@@ -90,6 +90,15 @@ namespace DeadSignal.Audio
             instance = this;
             DontDestroyOnLoad(gameObject);
             EnsureReady();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoadedStopAll;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoadedStopAll;
+        }
+
+        // 매니저는 DontDestroyOnLoad 라 씬을 다시 불러도(R 재시작 / 타이틀로) 재생 중이던 소리(사망 BGM, 추격 음악, 반복 환경음)가 그대로 남았다.
+        // 새 씬(Single)이 로드되면 전부 즉시 끈다. 환경음/음악 스크립트는 IsPlaying 을 보고 필요한 소리를 다시 시작하므로 정상 소리는 곧 복구된다.
+        static void OnSceneLoadedStopAll(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode m)
+        {
+            if (m == UnityEngine.SceneManagement.LoadSceneMode.Single) StopAll(0f);
         }
 
         // 플레이 중 스크립트가 다시 컴파일되면(도메인 리로드) 정적 변수와 직렬화되지 않는 필드가 비워진다.
@@ -111,6 +120,7 @@ namespace DeadSignal.Audio
 
         void OnDestroy()
         {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoadedStopAll;
             if (instance == this) instance = null;
         }
 

@@ -181,6 +181,7 @@ public class PlayerHide : MonoBehaviour
         var scaler = canvasGo.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
         var go = new GameObject("ExitHint", typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(canvasGo.transform, false);

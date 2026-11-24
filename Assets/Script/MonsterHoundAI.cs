@@ -59,7 +59,7 @@ public class MonsterHoundAI : MonoBehaviour
     [Tooltip("물체에 부딪혀 멈춘 뒤 재판정까지 정지하는 시간(초)")]
     public float recoveryDuration = 1.0f;
     [Tooltip("추격 중 시야가 벽에 가려졌을 때 순찰 복귀 전 짧은 유예(초)")]
-    public float chaseLoseSightGrace = 1.2f;
+    public float chaseLoseSightGrace = 8f;   // 시야를 잃은 뒤 추격 유지 시간(초). Monster 1(loseTargetTime=5)보다 길게. 이전 1.2
     [Tooltip("돌진 준비 중 플레이어 방향 조준 회전 속도 (도/초)")]
     public float prepTurnSpeed = 420f;
     [Tooltip("돌진 중 닫힌 문을 강제로 열어젖히는 시간(초)")]
@@ -76,7 +76,7 @@ public class MonsterHoundAI : MonoBehaviour
     [Tooltip("unlimitedViewDistance가 꺼져 있을 때만 사용되는 시야 거리(m)")]
     public float fallbackViewRadius = 35f;
     [Range(0f, 360f)]
-    public float viewAngle = 75f;
+    public float viewAngle = 100f;   // 이전 75
     [Tooltip("바닥 시야 부채꼴(LineRenderer) 표시 최대 거리(m)")]
     public float visualFovDistance = 30f;
 
@@ -574,8 +574,13 @@ public class MonsterHoundAI : MonoBehaviour
             chaseLoseSightTimer += Time.deltaTime;
         }
 
-        Vector3 chaseDest = GetChaseNavDestination();
+        // 시야에서 벗어난 동안에는 플레이어의 실시간 위치(벽 너머 추적)가 아니라 '마지막으로 본 위치'로 간다.
+        Vector3 chaseDest = (!inSight && hasLastKnownPos) ? lastKnownTargetPos : GetChaseNavDestination();
         agent.SetDestination(chaseDest);
+
+        // 마지막 발견 위치에 도착했는데도 안 보이면 제자리에서 둘러본다 (유예 시간이 끝날 때까지)
+        if (!inSight && hasLastKnownPos && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.8f)
+            transform.Rotate(0f, 110f * Time.deltaTime, 0f);
 
         if (CanReachAndAttackPlayer(attackRange))
         {
@@ -622,7 +627,9 @@ public class MonsterHoundAI : MonoBehaviour
         if (stateTimer <= 0f)
         {
             // 1초 멈춤 후에도 원래 부채꼴 시야(거리 무제한, 벽에 막힘) 안에 있으면 저속 추격, 아니면 순찰 복귀
-            if (!recoveryFromAttack && IsPlayerInSight(allowHiddenIfAlerted: hasSpottedPlayer))
+            // 시야에 없어도 방금까지 추격 중이었고(숨지 않았다면) 마지막 발견 위치로 계속 추적한다 (바로 순찰로 돌아가지 않음)
+            if (!recoveryFromAttack && (IsPlayerInSight(allowHiddenIfAlerted: hasSpottedPlayer)
+                || (hasSpottedPlayer && hasLastKnownPos && !PlayerHide.IsPlayerHiding)))
             {
                 EnterAcceleratedChase();
             }

@@ -23,6 +23,9 @@ public class LootQteGate : MonoBehaviour
     static readonly List<LootQteGate> all = new List<LootQteGate>();
     bool qteRunning;
 
+    /// <summary>같이 열리고 닫히는 개폐부(linked 묶음)의 게이트들. 한 번의 QTE 성공으로 묶음 전체가 풀린다.</summary>
+    [NonSerialized] public List<LootQteGate> group;
+
     /// <summary>(상자, 성공 여부) — 사운드/로그용.</summary>
     public static event Action<LootQteGate, bool> AnyResult;
 
@@ -31,8 +34,19 @@ public class LootQteGate : MonoBehaviour
 
     public static IReadOnlyList<LootQteGate> All => all;
 
+    /// <summary>씬이 내려갈 때 파괴된 pickup 키가 남지 않도록 비운다.</summary>
+    internal static void ClearRegistry() { map.Clear(); all.Clear(); }
+
     void OnEnable() { if (!all.Contains(this)) all.Add(this); }
     void OnDestroy() { all.Remove(this); }
+
+    /// <summary>플레이어가 버린 아이템처럼 더 이상 그 상자 안에 있지 않은 pickup 을 게이트에서 뺀다 (닫힌 상자 때문에 못 줍는 일 방지).</summary>
+    public static void Unregister(Component pickup)
+    {
+        if (pickup == null) return;
+        if (map.TryGetValue(pickup, out var gate) && gate != null) gate.contents.Remove(pickup);
+        map.Remove(pickup);
+    }
 
     public static void Register(LootQteGate gate, Component pickup)
     {
@@ -66,7 +80,7 @@ public class LootQteGate : MonoBehaviour
     public bool Intercept(Action onSuccess)
     {
         if (!locked) return false;
-        if (qteRunning) return true;
+        if (qteRunning || GroupRunning()) return true;
 
         var sk = SkillCheckManager.Instance != null ? SkillCheckManager.Instance : FindFirstObjectByType<SkillCheckManager>();
         if (sk == null)
@@ -77,16 +91,44 @@ public class LootQteGate : MonoBehaviour
         }
 
         qteRunning = sk.TriggerSkillCheck(
-            () => { qteRunning = false; locked = false; AnyResult?.Invoke(this, true); onSuccess?.Invoke(); },
+            () => { qteRunning = false; UnlockGroup(); AnyResult?.Invoke(this, true); onSuccess?.Invoke(); },
             () => { qteRunning = false; AnyResult?.Invoke(this, false); });   // 실패/취소: 닫힌 채 유지, 다시 E 가능
         return true;
+    }
+
+    bool GroupRunning()
+    {
+        if (group == null) return false;
+        foreach (var g in group) if (g != null && g.qteRunning) return true;
+        return false;
+    }
+
+    void UnlockGroup()
+    {
+        locked = false;
+        if (group == null) return;
+        foreach (var g in group) if (g != null) g.locked = false;
     }
 }
 
 /// <summary>씬 시작 직후 실제 pickup 을 검사해 '아이템이 든 상자'에만 LootQteGate 를 붙인다.</summary>
 public class LootQteBootstrap : MonoBehaviour
 {
+    // AfterSceneLoad 는 프로세스 시작 시 한 번만 실행된다. Restart / Quit to Title 은 씬을 다시 불러오므로
+    // sceneLoaded 로 매번 다시 만든다 (안 그러면 재시작한 세션에는 아이템 상자 QTE 가 통째로 빠진다).
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Bootstrap()
+    {
+        Create();
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        UnityEngine.SceneManagement.SceneManager.sceneUnloaded += OnSceneUnloaded;
+    }
+
+    static void OnSceneLoaded(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode m) => Create();
+    static void OnSceneUnloaded(UnityEngine.SceneManagement.Scene s) => LootQteGate.ClearRegistry();
+
     static void Create()
     {
         if (FindFirstObjectByType<LootQteBootstrap>() != null) return;
@@ -118,11 +160,75 @@ public class LootQteBootstrap : MonoBehaviour
             Transform root = FindContainer(mb, containers);
             if (root == null) continue;
 
-            var gate = root.GetComponent<LootQteGate>();
-            if (gate == null) { gate = root.gameObject.AddComponent<LootQteGate>(); gated++; }
+            // 여러 칸(상단/하단 찬장, 서랍 등)이 있는 가구는 '이 아이템을 실제로 가리는 개폐부'에만 게이트를 붙인다.
+            // 가구 루트에 하나만 붙이면 빈 칸을 먼저 열어도 QTE 가 발생하고 아이템 칸은 QTE 없이 열린다.
+            var gate = GateFor(root, mb, ref gated);
             LootQteGate.Register(gate, mb);
         }
         Debug.Log("[LootQteGate] pickups=" + pickups + " gatedContainers=" + gated);
+    }
+
+
+    /// <summary>pickup 이 들어 있는 개폐부의 게이트. 개폐부를 특정할 수 없으면(약장 DoorPair 등) 상자 루트의 게이트.</summary>
+    static LootQteGate GateFor(Transform root, Component pickup, ref int gated)
+    {
+        var parts = new List<OpenablePart>();
+        foreach (var p in root.GetComponentsInChildren<OpenablePart>(true))
+            if (p.interactable && !DecorativeOpenable.IsDecorative(p)) parts.Add(p);
+
+        OpenablePart hit = null;
+        if (parts.Count > 0)
+        {
+            // 1) pickup 이 개폐부의 자식이면 그 개폐부
+            for (Transform t = pickup.transform; t != null && t != root.parent && hit == null; t = t.parent)
+                foreach (var p in parts) if (p.transform == t) { hit = p; break; }
+
+            // 2) 아니면 닫힌 상태의 개폐부 외형(Renderer bounds)에서 가장 가까운 개폐부
+            if (hit == null)
+            {
+                Vector3 pos = pickup.transform.position;
+                var col = pickup.GetComponentInChildren<Collider>();
+                if (col != null) pos = col.bounds.center;
+                float best = float.MaxValue;
+                foreach (var p in parts)
+                {
+                    Bounds b = default; bool any = false;
+                    foreach (var r in p.GetComponentsInChildren<Renderer>(true))
+                    {
+                        if (r is ParticleSystemRenderer || r is LineRenderer) continue;
+                        if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+                    }
+                    if (!any) continue;
+                    float d = b.SqrDistance(pos);
+                    if (d < best) { best = d; hit = p; }
+                }
+            }
+        }
+
+        if (hit == null)
+        {
+            var g = root.GetComponent<LootQteGate>();
+            if (g == null) { g = root.gameObject.AddComponent<LootQteGate>(); gated++; }
+            return g;
+        }
+
+        // 같이 열리고 닫히는(linked) 개폐부 묶음 전체가 한 게이트 묶음이 된다.
+        var set = new List<OpenablePart> { hit };
+        for (int i = 0; i < set.Count; i++)
+        {
+            if (set[i].linked != null) foreach (var l in set[i].linked) if (l != null && !set.Contains(l)) set.Add(l);
+            foreach (var p in parts)
+                if (p.linked != null && Array.IndexOf(p.linked, set[i]) >= 0 && !set.Contains(p)) set.Add(p);
+        }
+        var gates = new List<LootQteGate>();
+        foreach (var p in set)
+        {
+            var g = p.GetComponent<LootQteGate>();
+            if (g == null) { g = p.gameObject.AddComponent<LootQteGate>(); gated++; }
+            gates.Add(g);
+        }
+        foreach (var g in gates) g.group = gates;
+        return hit.GetComponent<LootQteGate>();
     }
 
     static void AddContainer(List<Container> list, Transform root)

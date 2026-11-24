@@ -291,8 +291,12 @@ public class PlayerInteraction : MonoBehaviour
         ResetHold();
         if (TryMedkitUse(Keyboard.current)) return;
         if (TrySyringeUse(Keyboard.current)) return;
+        if (inventory != null && inventory.CanDropSelected) { ShowMessage("[G] DROP"); return; }   // 비콘 배터리 등 E 안내가 없는 아이템
         HideInteractionText();
     }
+
+    /// <summary>손에 든 아이템을 G 로 버릴 수 있으면 프롬프트 뒤에 붙는 안내.</summary>
+    string DropHint() => inventory != null && inventory.CanDropSelected ? "     [G] DROP" : "";
 
     // ───────────────────────── 조준 하이라이트 (AimOutline) ─────────────────────────
 
@@ -351,7 +355,7 @@ public class PlayerInteraction : MonoBehaviour
         if (inventory == null || !inventory.IsSelected(InventoryItemType.Medkit)) return false;
         var body = GetComponent<PlayerBodyStatus>();
         bool injured = body != null && body.DamagedCount > 0;
-        ShowMessage(injured ? "[E] USE MEDKIT" : "HEALTH FULL");
+        ShowMessage((injured ? "[E] USE MEDKIT" : "HEALTH FULL") + DropHint());
         if (injured && kb != null && kb.eKey.wasPressedThisFrame && CanUseMedkitNow())
             BeginMedkitUse();
         return true;
@@ -369,8 +373,15 @@ public class PlayerInteraction : MonoBehaviour
         return fpc == null || fpc.ControlsEnabled;
     }
 
+    // 사용 동작용: 손에 든 구급상자의 출발 자세 (취소 시 복원)
+    Transform mkItem;
+    Vector3 mkPos, mkScale;
+    Quaternion mkRot;
+
     void BeginMedkitUse()
     {
+        mkItem = inventory != null && inventory.SelectedWorldObject != null ? inventory.SelectedWorldObject.transform : null;
+        if (mkItem != null) { mkPos = mkItem.localPosition; mkRot = mkItem.localRotation; mkScale = mkItem.localScale; }
         usingMedkit = true;
         medkitUseEnd = Time.time + Mathf.Max(0.1f, medkitUseSeconds);
         ShowMessage("USING MEDKIT... " + medkitUseSeconds.ToString("0.0") + "s");
@@ -381,8 +392,33 @@ public class PlayerInteraction : MonoBehaviour
     public void CancelMedkitUse()
     {
         if (!usingMedkit) return;
+        RestoreMedkitPose();
         usingMedkit = false;
         HideInteractionText();
+    }
+
+    void RestoreMedkitPose()
+    {
+        if (mkItem == null) return;
+        mkItem.localPosition = mkPos; mkItem.localRotation = mkRot; mkItem.localScale = mkScale;
+        mkItem = null;
+    }
+
+    /// <summary>
+    /// 치료 동작: 들어 올림(0~25%) → 열어서 치료(25~80%, 미세한 흔들림) → 아래로 내려가며 작아짐(80~100%).
+    /// 소모는 기존대로 끝난 뒤 한 번만 일어나므로, 갑자기 사라지지 않고 손 아래로 내려가며 사라진다. 시간/이동 제한은 그대로.
+    /// </summary>
+    void AnimateMedkit(float u)
+    {
+        if (mkItem == null) return;
+        float raise = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(u / 0.25f));
+        float lower = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((u - 0.8f) / 0.2f));
+        float k = raise * (1f - lower);
+        float sway = (u > 0.25f && u < 0.8f) ? Mathf.Sin(u * 38f) * 0.004f : 0f;
+        Vector3 off = new Vector3(-0.15f, 0.11f, -0.05f) * k + new Vector3(0f, sway, 0f) + new Vector3(0f, -0.22f, 0.02f) * lower;
+        mkItem.localPosition = mkPos + off;
+        mkItem.localRotation = Quaternion.Euler(-38f * k, 0f, 12f * k * 0.5f) * mkRot;
+        mkItem.localScale = mkScale * (1f - 0.4f * lower);
     }
 
     void UpdateMedkitUse()
@@ -394,8 +430,14 @@ public class PlayerInteraction : MonoBehaviour
             CancelMedkitUse();
             return;
         }
-        if (Time.time < medkitUseEnd) return;
+        float dur = Mathf.Max(0.1f, medkitUseSeconds);
+        if (Time.time < medkitUseEnd)
+        {
+            AnimateMedkit(1f - (medkitUseEnd - Time.time) / dur);
+            return;
+        }
         usingMedkit = false;
+        RestoreMedkitPose();   // 소비되지 않는 경우(그 사이 건강해짐)를 위해 원래 자세 복원
         MedkitPickup.TryUseSelected(this);   // 치료 + 소비 (그 사이 건강해졌다면 소비 없이 HEALTH FULL)
     }
 
@@ -409,7 +451,7 @@ public class PlayerInteraction : MonoBehaviour
         string prompt = hr != null && hr.IsSprintUnlocked
             ? "[E] USE SYRINGE (ACTIVE " + hr.SprintUnlockRemaining.ToString("0") + "s)"
             : "[E] USE SYRINGE";
-        ShowMessage(prompt);
+        ShowMessage(prompt + DropHint());
         if (kb != null && kb.eKey.wasPressedThisFrame && !usingSyringe && !usingMedkit && StateAllowsMedkit())
             BeginSyringeUse();
         return true;
@@ -567,9 +609,21 @@ public class PlayerInteraction : MonoBehaviour
             if (c.transform.IsChildOf(owner.transform)) continue;       // 대상 자신
             if (GetPickupOwner(c) != null) continue;                    // 다른 줍기 아이템은 시야를 막지 않음
             if (IsOpenCabinetOpening(c, blockHits[i].point)) continue;   // 열린 약장의 출입구(앞면)로 들어가는 광선
+            if (IsOwnOpenContainer(c, owner)) continue;                 // 아이템이 들어 있는 '열린 서랍/문' 자신의 박스 Collider (속이 찬 박스라 안쪽 아이템을 가림)
             return false;                                                // 벽/바닥/가구/닫힌 문 등 실제 구조물
         }
         return true;
+    }
+
+    /// <summary>
+    /// 줍기 아이템이 자식으로 들어 있는 OpenablePart(filing 서랍 등)가 열려 있으면, 그 서랍 자신의 Collider 는 시야를 막지 않는다.
+    /// 서랍 Collider 는 속이 찬 박스라 서랍을 열어도 안쪽 아이템이 항상 가려졌다. 가구 몸통/벽/닫힌 서랍 등 다른 Collider 는 그대로 막는다
+    /// (몸통 반대편에서는 몸통 Collider 가 먼저 막으므로 벽/가구를 뚫고 줍는 일은 생기지 않는다).
+    /// </summary>
+    static bool IsOwnOpenContainer(Collider c, Component owner)
+    {
+        var part = c.GetComponentInParent<OpenablePart>();
+        return part != null && part.IsOpen && owner.transform.IsChildOf(part.transform);
     }
 
     /// <summary>
@@ -594,7 +648,7 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (owner is BatteryPickup battery)
         {
-            if (!battery.Collect(this)) Notify("INVENTORY FULL");
+            if (!battery.Collect(this)) Notify("INVENTORY FULL - SELECT AN ITEM, PRESS [G] TO DROP", 1.6f);
             else OnInteracted?.Invoke();
             return;
         }
@@ -615,7 +669,7 @@ public class PlayerInteraction : MonoBehaviour
     {
         bool direct = Physics.Raycast(ray, out RaycastHit directHit, interactionDistance, interactionMask);
 
-        if (direct && GetInteractOwner(directHit.collider) != null)
+        if (direct && GetInteractOwner(directHit.collider) != null && FrontOk(GetInteractOwner(directHit.collider), ray.origin, directHit.point))
         {
             lastAssistTarget = GetInteractOwner(directHit.collider);
             result = directHit;
@@ -639,6 +693,8 @@ public class PlayerInteraction : MonoBehaviour
                 Component owner = GetInteractOwner(col);
                 if (owner == null)
                     continue;
+                if (!FrontOk(owner, ray.origin, assistHits[i].distance > 0f ? assistHits[i].point : col.bounds.center))
+                    continue;   // 서랍/문은 개폐부 정면 쪽(옆은 허용)에서만
 
                 // 시작 지점에서 이미 겹친 경우 point가 0이므로 Collider 중심 사용
                 Vector3 target = assistHits[i].distance > 0f ? assistHits[i].point : col.bounds.center;
@@ -683,6 +739,52 @@ public class PlayerInteraction : MonoBehaviour
         return direct;
     }
 
+    /// <summary>
+    /// 서랍/문 Collider 는 가구 몸통(MeshCollider) 안쪽에 일부 묻혀 있어, 정지 상태에서는 십자선이 몸통 앞면에 먼저 맞고 서랍 후보가 '가려짐'으로 제외됐다
+    /// (움직일 때만 카메라 흔들림으로 서랍 Collider 에 직접 맞아 열렸다). 같은 가구(OpenableFurniture)의 몸통 면이고
+    /// 대상 표면이 그 면에서 1.2m 이내(서랍 Collider 가 몸통 안쪽으로 들어간 깊이)이고 시점이 개폐부 정면 쪽일 때만 가려지지 않은 것으로 본다. 뒤/옆에서 몸통을 뚫고 여는 경우는 거리가 더 멀어 그대로 막힌다.
+    /// </summary>
+    static bool IsOwnFurnitureFace(RaycastHit block, Vector3 origin, Vector3 target, Component owner)
+    {
+        var part = owner as OpenablePart;
+        if (part == null) return false;
+        var furn = part.GetComponentInParent<OpenableFurniture>();
+        if (furn == null || !block.collider.transform.IsChildOf(furn.transform)) return false;
+        if (GetInteractOwner(block.collider) != null) return false;          // 다른 개폐부/상호작용 대상이면 가림으로 본다
+        if (Vector3.Distance(block.point, target) >= 1.2f) return false;
+        return FrontOk(part, origin, target);
+    }
+
+    /// <summary>
+    /// 서랍/문(OpenablePart)은 개폐부가 향한 쪽에서만 열린다. 서랍 = 열리는 방향, 문 = 가구 몸통 중심 → 문 방향.
+    /// 시점이 정면 반공간(약간 비스듬/옆 포함) 안이면 통과, 뒤쪽이면 거부. 방향을 알 수 없으면 통과.
+    /// (가림 허용 깊이와 별개: 뒤에서 몸통/서랍 Collider 에 직접 닿는 경우도 막는다.)
+    /// </summary>
+    static bool FrontOk(Component owner, Vector3 origin, Vector3 point)
+    {
+        var part = owner as OpenablePart;
+        if (part == null) return true;
+        Vector3 front;
+        if (part.kind == OpenableKind.Slide && part.transform.parent != null)
+            front = part.transform.parent.TransformDirection(part.openLocalPosition - part.closedLocalPosition);
+        else
+        {
+            var furn = part.GetComponentInParent<OpenableFurniture>();
+            if (furn == null) return true;
+            bool any = false; Bounds body = default;
+            foreach (var c in furn.GetComponentsInChildren<Collider>())
+            {
+                if (c.GetComponentInParent<OpenablePart>() != null) continue;   // 몸통 Collider 만
+                if (!any) { body = c.bounds; any = true; } else body.Encapsulate(c.bounds);
+            }
+            if (!any) return true;
+            front = part.GetComponentInChildren<Collider>() != null ? part.GetComponentInChildren<Collider>().bounds.center - body.center : Vector3.zero;
+        }
+        front.y = 0f;
+        if (front.sqrMagnitude < 0.0016f) return true;
+        return Vector3.Dot(origin - point, front.normalized) > -0.05f;
+    }
+
     bool HasClearLine(Vector3 origin, Vector3 target, Component owner)
     {
         Vector3 dir = target - origin;
@@ -696,7 +798,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             if (block.collider.transform.IsChildOf(transform))
                 return true; // 자기 자신(드물게 시작점 겹침)은 무시
-            bool visible = GetInteractOwner(block.collider) == owner;
+            bool visible = GetInteractOwner(block.collider) == owner || IsOwnFurnitureFace(block, origin, target, owner);
             if (drawInteractionDebug && !visible)
                 Debug.DrawLine(origin, block.point, Color.red);
             return visible;

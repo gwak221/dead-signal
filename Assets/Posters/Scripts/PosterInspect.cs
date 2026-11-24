@@ -155,6 +155,7 @@ public class PosterInspect : MonoBehaviour, IInteractable
 
             case Phase.Overlay:
                 HoldZoomIfAny();
+                PosterOverlayUI.SetAlpha(GameMenuManager.MenuOpen ? 0f : 1f);   // 일시정지 메뉴와 겹쳐 글씨가 안 읽히는 것 방지 (재개하면 다시 표시)
                 break;
 
             case Phase.OverlayOut:
@@ -247,8 +248,18 @@ public class PosterInspect : MonoBehaviour, IInteractable
         if (cam != null) cam.fieldOfView = savedFov;
         if (!PlayerCaughtSequence.IsRunning)   // 잡힘 연출이 조작을 쥐고 있으면 건드리지 않는다
         {
-            if (controller != null) controller.SetControlsEnabled(savedControls);
-            if (interaction != null) interaction.SetInteractionEnabled(savedInteraction);
+            var ms = Mouse.current;
+            if (controller != null && ms != null && ms.rightButton.isPressed && controller.isActiveAndEnabled)
+            {
+                // 우클릭으로 닫은 뒤 버튼을 계속 누르고 있으면, 조작이 돌아오는 순간 손전등이 켜지고(= 몬스터 노출/Stun 배터리 소모) 의도치 않게 동작한다.
+                // 닫는 데 쓴 우클릭은 버튼을 뗄 때까지 소비된 것으로 보고, 그때 조작을 돌려준다.
+                controller.StartCoroutine(RestoreAfterRmbReleased(controller, interaction, savedControls, savedInteraction));
+            }
+            else
+            {
+                if (controller != null) controller.SetControlsEnabled(savedControls);
+                if (interaction != null) interaction.SetInteractionEnabled(savedInteraction);
+            }
         }
 
         phase = Phase.Idle;
@@ -257,6 +268,16 @@ public class PosterInspect : MonoBehaviour, IInteractable
         interaction = null;
         cam = null;
         camT = null;
+    }
+
+    static System.Collections.IEnumerator RestoreAfterRmbReleased(FirstPersonController c, PlayerInteraction pi, bool controls, bool inter)
+    {
+        var ms = Mouse.current;
+        while (ms != null && ms.rightButton.isPressed) yield return null;
+        // 기다리는 사이 다른 연출(잡힘)이나 새 포스터 조사가 조작을 쥐었다면 건드리지 않는다
+        if (PlayerCaughtSequence.IsRunning || IsInspecting || c == null) yield break;
+        c.SetControlsEnabled(controls);
+        if (pi != null) pi.SetInteractionEnabled(inter);
     }
 
     void OnDisable() => Finish();

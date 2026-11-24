@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f733af234106222d61129b2f54349ecd, type: 3}
   m_Name: HorrorLightingPreset
   m_EditorClassIdentifier: 
-  autoApplyOnPlay: 1
+  autoApplyOnPlay: 0
   fog: 1
   fogMode: 3
   fogColor: {r: 0.018, g: 0.024, b: 0.026, a: 1}
