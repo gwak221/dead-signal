@@ -857,3 +857,39 @@ MonoBehaviour:
     ignorePause: 0
     note: "Emergency \uC870\uBA85 \uC704\uCE58 \uB8E8\uD504. 6m \uAC04\uACA9\uC73C\uB85C
       \uACE0\uB974\uACE0 \uAC00\uAE4C\uC6B4 \uAC83\uB9CC \uC7AC\uC0DD (AmbienceSounds)"
+  - name: ui_hover
+    clips:
+    - {fileID: 8300000, guid: dce406b3b998d73498e2f3bde182a24e, type: 3}
+    avoidRepeat: 1
+    volume: 0.5
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0.03
+    group: {fileID: -237546405140584250, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 1
+    note: "\uBC84\uD2BC\uC5D0 \uB9C8\uC6B0\uC2A4 \uC62C\uB9BC. \uBE44\uD65C\uC131
+      \uBC84\uD2BC \uC81C\uC678, \uC77C\uC2DC\uC815\uC9C0 \uC911\uC5D0\uB3C4 \uC7AC\uC0DD
+      (UIButtonSound)"
+  - name: ui_click
+    clips:
+    - {fileID: 8300000, guid: ac6de5964d09b7141aff2b57330bb160, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0
+    pitch: 1
+    pitchJitter: 0.03
+    group: {fileID: -237546405140584250, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 0
+    minDistance: 1
+    maxDistance: 20
+    rolloff: 1
+    loop: 0
+    ignorePause: 1
+    note: "\uBC84\uD2BC \uD074\uB9AD / ESC\uB85C \uC77C\uC2DC\uC815\uC9C0 \uBA54\uB274\uAC00
+      \uC5F4\uB9B4 \uB54C. \uC77C\uC2DC\uC815\uC9C0 \uC911\uC5D0\uB3C4 \uC7AC\uC0DD
+      (UIButtonSound, UISounds)"
