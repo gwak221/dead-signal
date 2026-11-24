@@ -621,6 +621,7 @@ public class PlayerCaughtSequence : MonoBehaviour
         var scaler = cutoutCanvas.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
         var go = new GameObject("BlackCutout", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(cutoutCanvas.transform, false);

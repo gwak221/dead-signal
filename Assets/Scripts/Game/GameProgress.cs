@@ -172,6 +172,7 @@ public class GameProgress : MonoBehaviour
         var scaler = canvasGo.GetComponent<UnityEngine.UI.CanvasScaler>();
         scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand;
 
         clearPanel = new GameObject("ClearPanel", typeof(RectTransform), typeof(UnityEngine.UI.Image));
         clearPanel.transform.SetParent(canvasGo.transform, false);

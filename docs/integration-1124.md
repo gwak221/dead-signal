@@ -142,3 +142,37 @@
 2. **뒤쪽 개폐 차단**: `PlayerInteraction.FrontOk` — 서랍(Slide)은 열리는 방향, 문(Hinge)은 '가구 몸통 Collider 중심 → 문 중심' 방향을 앞으로 보고, 시점이 그 앞쪽 반공간(옆/약간 비스듬 포함)일 때만 대상이 된다. 직접 조준(direct)과 보조 SphereCast 모두에 적용(이전엔 몸통에 가려질 때만 검사). 가림 허용 깊이(1.2m)는 늘리지 않음. 측정: 정면 접근 정지 상태 실패 0, 뒤쪽 접근 개폐 2/19(이전 대부분 열림). 정면 측정의 일부 '실패'는 쌓인 서랍에서 위/아래 이웃 서랍이 조준되는 측정 방식 문제.
 3. **Syringe_room07**: 기존 위치(58.4, 0.94, 22.6)는 벽(WallFill_022)에 가려져 접근 가능한 바닥에서 집을 수 없었음. 같은 방에 수납장이 없어(가장 가까운 것 20m 밖) 같은 발판(stair2 (2)) 북쪽 가장자리 (58.33, 0.94, 21.96) 로 이동 — 북쪽 바닥(58.2, 19.8)에서 거리 2.3m, F 줍기 판정 성공 확인. 고정 아이템 유지.
 4. 수량/비율 무변경: 비콘5 / AA14 / 구급7 / 주사기5, 고정 11 / 랜덤 20.
+
+---
+
+## 추가 수정 5 (미커밋, 148891c 이후)
+
+1. **cardboard / 소화전함 개폐 복구**: 이전에 내가 일괄 부여했던 `DecorativeOpenable` 15개 제거(원래 장식이던 cardboard_box_002 / cardboard_box_006 (1) 2개는 유지). 상호작용 안내/조준 외곽선 복구, 내용물이 없어 QTE 없이 열림. 스폰 후보에서는 계속 제외. electrical 패널 22개, anesthesia_002 (8), anesthesia_002 (51,40) 장식 처리는 그대로.
+2. **가구 루트당 아이템 1개**(`RandomItemSpawner`): 가구 루트(OpenableFurniture / 약장 DoorPair) 단위로 최대 1개, 고정 아이템이 든 가구(시작방 포함)에는 랜덤 아이템을 넣지 않음. 후보가 없으면 가구당 상한을 무시하지 않고 원래 자리에 둔다(예전의 'home 지점으로 폴백' 제거). 시작방 tea_niche_002 (1) 의 고정 구급상자+주사기 2개는 예외(시작방). 구역당 2개는 후보가 부족한 마지막 몇 개에서 3개까지 허용될 수 있음(검증 시 최대 3).
+3. **구급상자 7 → 4**: 삭제 medkit_003/007/010. 남음: medkit_008(시작방 tea_niche 고정), medkit_006(약품실 고정), medkit_002/009(랜덤 2). 수량을 강제로 맞추는 코드는 없음(랜덤 대상은 씬의 리스트 `randomMedkits` 에 있는 것만). 총 28개 = 비콘 5 + AA 14 + 구급 4 + 주사기 5, 고정 11(비콘5+AA1+구급2+주사기3) / 랜덤 17(AA 13, 구급 2, 주사기 2). *(이전 문서의 '랜덤 20'은 구급상자 감소로 17 이 됨)*
+4. **스폰 후보 정밀 검사**(`AgentScripts/Aud.cs`, 커밋 대상 아님): 아이템 OBB 와 가구 메시 삼각형 SAT 검사 + 윗면 높이 재산출. 결과: 서랍/선반 바닥보다 아래로 1~2cm 파묻히던 후보 44개 재배치, 종류별 겹침 후보 허용 종류 축소(43개), 모든 종류가 불가한 후보 7개 삭제. 최종 후보 66개(고정 6 제외 60). 허용 종류: AA 60 / 구급상자 5 / 주사기 4. 약장 AA 4개는 선반 위 약 3.4cm 떠 있던 것을 선반 윗면으로 내림. '앞쪽에서 잘 보이는가' 검사는 신뢰도가 낮아(고정 위치까지 전부 실패) 결과에 반영하지 않음.
+5. **비콘 배터리 원본 비교**(씬 YAML): battery_002/003/004/004 (1)은 a09b319(main), 7113868, 현재 모두 동일(위치/회전/부모/활성/컴포넌트). battery_004 (2)만 main 과 다름: main (12.064, -12.961, 0.012) → 현재 (11.105, -14.061, -0.79). 이 값은 팀원 최신 맵 `origin/mapwork-taema` 와 정확히 같고(맵 이식 때 채택), 7113868 이후 변경 없음. 5개 모두 수납장 밖 고정(부모 battery/Objects), RandomItemSpawner 대상(AA/구급상자/주사기 리스트)에 없음. 수정하지 않음 — 확인 후 결정 필요.
+6. **맵/가구 겹침 목록**: `docs/map-placement-issues.md` (수정 없음, 사용자 확인용).
+
+
+---
+
+## 추가 수정 6 (미커밋)
+
+1. **랜덤 스폰 배정 단순화**(`RandomItemSpawner`): 백트래킹/최대 흐름 폐기(백트래킹이 에디터를 멈췄음). 구급상자 -> 주사기 -> AA 순으로, 각자 유효한 후보 중 무작위 선택. 유효 조건: 허용 종류, 지점 중복 금지, 가구 루트당 1개, 고정 아이템 가구/제외 가구 금지, 같은 서랍/문 1개, 구역당 2개(시도가 절반 넘게 실패하면 3개까지), 수납장 밖 3개(후반 시도에서 6개까지). 실패하면 처음부터 다시, 최대 `maxAttempts`(40)회로 고정 -> 무한 탐색 없음. 끝내 실패하면 사전 검증된 `safeItems/safePoints`(컨텍스트 메뉴 `Bake Safe Plan` 으로 저장, 현재 17개 저장됨)를 사용한다. 기존 위치에 방치하는 폴백 없음.
+2. **발견했던 버그**: 부모 Transform 이 같으면 같은 서랍으로 취급해(가구 없이 `ItemSpawnPoints` 루트에 매달린 열린 면 후보가 전부 하나로 묶임) 계획이 불가능해졌음 -> 부모가 실제 `OpenablePart` 일 때만 서랍 단위 제한(`PartOf`).
+3. **시작방 약장 제외**: `med_cabinet_004 (1)`(-4.6,0,1.8, 시작방 `cab4` 옆) 은 원래 아이템이 없었고, 이 약장의 후보 지점 2개가 AA 를 받을 수 있었음 -> 후보 삭제 + `excludedRoots` 에 등록(영구 제외). 개폐/외곽선/안내 유지, 내용물 없어 QTE 없음. 튜토리얼 AA(cab4, med_cabinet_004)는 유지. cardboard/소화전함은 이름 규칙으로 항상 제외(개폐 가능, 항상 빈 상태).
+4. **확인**: 시작 + 재시작 2회 -> 수량 비콘5/AA14/구급4/주사기5 = 28, 고정 6(+비콘5), 랜덤 17, 구역당 최대 2, 가구 루트 중복 없음, 지점 중복 없음, 시도 1~9회 안에 성공, `med_cabinet_004 (1)` 안 아이템 0, 콘솔 오류 0. 후보 지점 64개(고정 6 제외 58).
+5. **오늘 추가/수정 요소 확인(스크린샷 `Temp/Verification/MapIssues/`)**: AA_cab4_med_cabinet_004, AA_cabinet004_4/005/006, Syringe_cabinet004_5, medkit_006_pharmacy, Syringe_room07_platform. medkit_006 은 상자 더미 위에 정상 안착(F 안내 표시), Syringe_room07 은 플랫폼 위에서 F 로 집을 수 있음. 약장 내부 샷은 약장 안이 매우 어두워 AA/주사기 모양만 보이고 메시 겹침은 육안 판정이 어렵다(정밀 검사에서는 AA 4개 선반 위 3.4cm 떠 있던 것을 내렸고, Syringe_cabinet004_5 는 겹침 경고가 있었으므로 직접 확인 필요).
+6. **맵 검토 범위**: 기존 팀원 맵 배치(의도적 차단/겹침)는 조사·수정 대상 아님. `docs/map-placement-issues.md` A/B/D/E 는 참고용.
+
+
+---
+
+## 알파 빌드 (v0.1.0-alpha, 미커밋)
+
+1. **약장 AA 시인성**: 약장(DoorPair) AA/후보 지점 20개를 문 쪽으로 5cm 이동(문 중심면 기준 깊이 0.19 -> 0.14m). 정면 방향은 '몸통 중심 -> 문 중심'(`GetDoorCenter`)으로 약장마다 계산, 모든 약장에서 같은 기준(좌우 중앙, 선반 윗면 +4mm). 고정 AA 4개와 후보 지점(안전 배치는 지점 참조라 자동 반영) 모두 적용. `med_cabinet_004 (1)` 제외 유지.
+2. **디버그 코드 점검**: F6~F8(PlayerBodyStatus), F9(ExitCutsceneController), F10/F12(PlayerCaughtSequence), F11(Monster2ReleaseSequence), T(SkillCheckManager) 는 모두 `#if UNITY_EDITOR || DEVELOPMENT_BUILD` 안 -> Release 빌드에는 코드가 없음(추가 변경 불필요). `Beacon.DebugComplete` 는 위 조건부 코드에서만 호출됨. 그 외 치트/디버그 UI(OnGUI) 없음.
+3. **화면 설정**: PlayerSettings - 제품명 `DEAD SIGNAL`, 버전 `0.1.0-alpha`, 기본 1920x1080, Fullscreen Window, Resizable Window 켬, Unity 기본 Alt+Enter 끔(자체 `WindowModeToggle` 이 Alt+Enter 로 전체화면/창 모드 전환), runInBackground 끔. Canvas Scaler: 모든 ScaleWithScreenSize 캔버스를 Expand 로(QTECanvas, BeaconPipePuzzle 프리팹, GameProgress/PlayerHide/PlayerCaught/Blood/Poster 오버레이) - 16:9 외 비율에서도 UI 전체가 보임. 메뉴 캔버스는 기존의 비율별 match 전환 유지.
+4. **빌드**: Windows x86-64, Development/Script Debugging/Autoconnect Profiler 모두 OFF, 씬 `DeadSignal_Main` 1개. 결과 Succeeded(오류 0, 경고 251, 246MB, 2분 3초). 경로 `C:/Users/haeah/Downloads/DEAD_SIGNAL_Alpha_v0.1/DEAD_SIGNAL.exe` (저장소 밖). `*_BurstDebugInformation_DoNotShip` 폴더는 배포에서 제외. ZIP: `C:/Users/haeah/Downloads/DEAD_SIGNAL_Alpha_v0.1.zip`(README.txt 포함). 빌드가 URP 설정 에셋(`PC_RPAsset`, `UniversalRenderPipelineGlobalSettings`, `DefaultVolumeProfile`)의 셰이더 prefilter 값과 `UnityConnectSettings` 를 자동 갱신함(빌드 부산물, 의도한 변경 아님 - 커밋 시 검토/되돌릴지 결정).
+5. **EXE 확인**: 실행 후 응답 유지, `Player.log` 에 오류/예외/Missing 0건, 창 크기 = 바탕화면 해상도(전체화면 창). 창 포커스를 얻지 못해 입력으로 게임 진행/Alt+Enter 를 시험하지 못함 -> 수동 확인 필요.
