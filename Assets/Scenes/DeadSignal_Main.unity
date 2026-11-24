@@ -159052,6 +159052,64 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 878422454}
   m_SourcePrefab: {fileID: 100100000, guid: e2999960540f15f479f77235bdb23af9, type: 3}
+--- !u!1 &1824892685
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1824892687}
+  - component: {fileID: 1824892686}
+  m_Layer: 0
+  m_Name: ItemUseScreenEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1824892686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824892685}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5955f76e31ba3c4bb116925d1d0df9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemUseScreenEffect
+  innerEdge: 0.93
+  outerEdge: 1.5
+  cornerShape: 12
+  pulsePeak: 0.55
+  pulseFadeIn: 0.5
+  pulseFadeOut: 1.2
+  sustainPeak: 0.5
+  sustainLevel: 0.28
+  sustainFadeIn: 0.5
+  sustainSettle: 1
+  sustainFadeOut: 1.5
+  sustainBreath: 0.15
+  previewColor: {r: 0.25, g: 0.95, b: 0.85, a: 1}
+  previewSeconds: 5
+--- !u!4 &1824892687
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824892685}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.1011, y: -0, z: 4.79801}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1827985990 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6340b7ff6ff6a7743bba3441211efed4, type: 3}
@@ -186874,6 +186932,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4caeb4fc688f52547a8ee192bd8f1e7b, type: 3}
   m_PrefabInstance: {fileID: 2145389023}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2146158232
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.4717
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.6895
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.8418
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.6742055
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.73854387
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 95.215
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355884920018954991, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8550193387118123767, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
+      propertyPath: m_Name
+      value: Syringe
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 474b93dd421256344b10dbdceff8800c, type: 3}
 --- !u!23 &304886830854611
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -418767,3 +418882,5 @@ SceneRoots:
   - {fileID: 746178333}
   - {fileID: 1316458470}
   - {fileID: 488545444}
+  - {fileID: 1824892687}
+  - {fileID: 2146158232}

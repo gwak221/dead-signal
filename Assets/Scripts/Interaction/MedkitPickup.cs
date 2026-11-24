@@ -47,6 +47,7 @@ public class MedkitPickup : MonoBehaviour, IInteractable, IPickupable
 
         player.Inventory.TryConsumeSelected(InventoryItemType.Medkit);
         body.ClearAllPenalties();   // Eye / Arm / Leg 패널티 해제 → 하트 ♥♥, Sprint/슬롯 잠금 복구
+        ItemUseScreenEffect.Pulse(ItemUseScreenEffect.MedkitColor);
         player.Notify("MEDKIT USED - HEALTH RESTORED", 1.4f);
         return true;
     }

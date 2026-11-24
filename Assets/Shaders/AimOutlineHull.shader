@@ -19,6 +19,7 @@ Shader "DeadSignal/AimOutlineHull"
             Cull Back      // 카메라를 향한 면만 바깥으로 부풀려 그린다 → 가려진 부분은 깊이 검사로 사라지고, 인접 파츠와 같은 면 높이여도 링이 보인다
             ZWrite Off
             ZTest LEqual
+            Blend SrcAlpha OneMinusSrcAlpha   // 조준 외곽선은 알파 1(기존과 동일), 손에 든 아이템 외곽선은 알파로 서서히 사라진다
             Stencil { Ref 21 Comp NotEqual }
 
             HLSLPROGRAM

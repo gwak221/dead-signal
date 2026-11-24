@@ -265,6 +265,15 @@ public static class RecoveredItemLog
         }
     }
 
+    static readonly System.Collections.Generic.Dictionary<int, Sprite> glyphCache = new System.Collections.Generic.Dictionary<int, Sprite>();
+
+    /// <summary>기록 아이콘 (0 비콘 배터리, 1 구급상자, 2 주사기, 3 손전등, 4 손전등 배터리). 인벤토리 슬롯이 같은 아이콘을 쓴다. 캐시됨.</summary>
+    public static Sprite ItemGlyph(int kind)
+    {
+        if (glyphCache.TryGetValue(kind, out var s) && s != null) return s;
+        return glyphCache[kind] = Glyph(kind);
+    }
+
     static Sprite Glyph(int kind)
     {
         const int n = 64;
