@@ -23,23 +23,29 @@ public class PlayerCaughtSequence : MonoBehaviour
     /// <summary>연출 진행 중 (게임오버로 끝난 경우 계속 true).</summary>
     public static bool IsRunning => instance != null && instance.running;
 
-    [Header("Fall")]
-    public float fallDuration = 0.85f;
-    public float fallDrop = 0.9f;          // 카메라 Y 하강량(m)
-    public float fallPitch = 28f;          // 바닥 쪽으로 기울어지는 각도
-    public float fallRoll = 4f;            // 아주 작게
+    [Header("Fall & Killcam")]
+    public float fallDuration = 0.75f;
+    public float fallDrop = 0.88f;          // 카메라 Y 하강량(m) — 바닥/무릎 높이에서 올려다보는 쓰러짐
+    [Tooltip("쓰러지며 뒤로 물러나는 거리(m, 벽 충돌 시 자동 축소). 몬스터 상체/머리가 화면 안에 다 들어오게 한다.")]
+    public float fallBack = 0.45f;
+    [Tooltip("쓰러지며 몬스터를 올려다보는 기본 상향 각도(음수 = 위로 올려다봄, 타겟 부재 시 폴백).")]
+    public float fallPitch = -16f;
+    [Tooltip("고개가 옆으로 꺾이는 기울기(도).")]
+    public float fallRoll = 18f;
+    public float killcamHoldFirstHit = 0.35f; // 쓰러져 몬스터/피를 바라보는 짧은 여운 (1차)
+    public float killcamHoldFatal = 0.55f;    // 쓰러져 몬스터/피를 바라보는 여운 (2차 사망)
 
-    [Header("Eyelids")]
-    public float closeDuration = 0.6f;
-    public float closeDelay = 0.25f;       // 쓰러지기 시작 후 눈 감기 시작까지
-    public float blackHold = 0.7f;         // 완전 암전 유지(파손/리스폰 처리 포함)
-    public float openDuration = 0.8f;
+    [Header("Cutout Blackout (급암전)")]
+    [Tooltip("몬스터 응시 직후 전체 화면이 툭 끊기듯 암전되는 시간(초).")]
+    public float cutoutDuration = 0.15f;
+    public float blackHold = 0.55f;           // 완전 암전 유지(파손/리스폰 처리 포함)
+    public float openDuration = 0.65f;        // 1차 피격 부활 시 전체 시야 복귀 시간
 
     [Header("Get Up")]
     public float getUpDuration = 1.0f;
 
     [Header("Debug")]
-    [Tooltip("F10 = 강제로 잡힘 (에디터/개발 빌드 전용). F9 는 탈출구 컷씬 테스트(ExitCutsceneController)에 사용.")]
+    [Tooltip("F10 = Monster 1에게 강제로 잡힘, F12 = Monster 2(Hound)에게 강제로 잡힘 (에디터/개발 빌드 전용). F9 는 탈출구 컷씬, F11 은 Monster 2 등장 컷씬에 사용.")]
     public bool debugKey = true;
 
     FirstPersonController controller;
@@ -48,7 +54,13 @@ public class PlayerCaughtSequence : MonoBehaviour
     CharacterController cc;
 
     bool running;
+    bool currentFirstHit;
     Transform caughtBy;
+    bool savedAgentEnabled;
+    bool caughtDisabledHound;
+    Vector3 savedHoundPos;
+    Quaternion savedHoundRot;
+    PlayerBloodDeathEffect bloodEffect;
 
     [Header("Face Monster")]
     public float faceDuration = 0.3f;
@@ -60,7 +72,7 @@ public class PlayerCaughtSequence : MonoBehaviour
     [Header("Lunge (덮침)")]
     [Tooltip("덮침 시간(초).")] public float lungeDuration = 0.2f;
     [Tooltip("덮친 뒤 카메라 ↔ Head 본 수평 거리(m). 메시 최근접 정점은 이보다 약 0.37m 가깝다.")]
-    public float lungeHeadDistance = 0.8f;
+    public float lungeHeadDistance = 1.0f;
 
     [Header("Impact Camera (확!)")]
     public float impactDuration = 0.12f;
@@ -80,11 +92,15 @@ public class PlayerCaughtSequence : MonoBehaviour
     // 카메라 연출 상태 (0 = 정상, 1 = 완전히 쓰러짐)
     float camAmount;
     bool camActive;
+    float fallStartPitch;
+    float fallTargetPitch = -16f;
+    float effectiveFallBack = 0.45f;
+    float fallRollSign = 1f;
     Vector3 impactPos;   // 공격 충격 카메라 오프셋 (로컬)
     Vector3 impactEuler;
 
-    RectTransform lidTop, lidBottom;
-    GameObject lidCanvas;
+    Image cutoutImage;
+    GameObject cutoutCanvas;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics() => instance = null;
@@ -127,15 +143,51 @@ public class PlayerCaughtSequence : MonoBehaviour
         if (s == null || s.running) return;
         if (PlayerHide.IsPlayerHiding) return;
         s.caughtBy = attacker != null ? attacker : (FindFirstObjectByType<MonsterChase>() != null ? FindFirstObjectByType<MonsterChase>().transform : null);
+        s.CaptureHoundSnapshot();
         s.StartCoroutine(s.Run());
+    }
+
+    /// <summary>Monster 2 (E-07 Hound) 잡힘/공격 시퀀스 실행 (F12 디버그 등).</summary>
+    public static void TriggerCaughtHound()
+    {
+        var hound = FindFirstObjectByType<MonsterHoundAI>(FindObjectsInactive.Include);
+        if (hound == null)
+        {
+            Debug.LogWarning("[PlayerCaughtSequence] F12: 씬에서 MonsterHoundAI(Monster 2)를 찾지 못했습니다.");
+            return;
+        }
+        TriggerCaught(hound.transform);
+    }
+
+    void CaptureHoundSnapshot()
+    {
+        var hound = caughtBy != null ? caughtBy.GetComponent<MonsterHoundAI>() : null;
+        caughtDisabledHound = hound != null && !hound.enabled;
+        if (caughtDisabledHound)
+        {
+            savedHoundPos = hound.transform.position;
+            savedHoundRot = hound.transform.rotation;
+        }
     }
 
     void Update()
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        if (debugKey && Keyboard.current != null && Keyboard.current.f10Key.wasPressedThisFrame)
-            TriggerCaught();
+        if (debugKey && Keyboard.current != null)
+        {
+            if (Keyboard.current.f10Key.wasPressedThisFrame)
+                TriggerCaught();
+            else if (Keyboard.current.f12Key.wasPressedThisFrame)
+                TriggerCaughtHound();
+        }
 #endif
+    }
+
+    PlayerBloodDeathEffect EnsureBloodEffect()
+    {
+        if (bloodEffect == null) bloodEffect = GetComponent<PlayerBloodDeathEffect>();
+        if (bloodEffect == null) bloodEffect = gameObject.AddComponent<PlayerBloodDeathEffect>();
+        return bloodEffect;
     }
 
     IEnumerator Run()
@@ -143,6 +195,8 @@ public class PlayerCaughtSequence : MonoBehaviour
         running = true;
         if (body == null) body = GetComponent<PlayerBodyStatus>();
         bool firstHit = body == null || body.DamagedCount == 0;
+        currentFirstHit = firstHit;
+        EnsureBloodEffect().ResetImmediate();
         Debug.Log("[PlayerCaughtSequence] Caught! firstHit=" + firstHit);
 
         // 진행 중인 QTE가 있으면 (이벤트 없이) 닫는다.
@@ -153,33 +207,58 @@ public class PlayerCaughtSequence : MonoBehaviour
         if (controller != null) controller.SetControlsEnabled(false);
         if (interaction != null) interaction.SetInteractionEnabled(false);
 
-        EnsureEyelids();
+        EnsureBlackCutout();
+        fallRollSign = Random.value < 0.5f ? -1f : 1f;
+        // 호출자(MonsterChase.AttackPlayer 등)가 같은 프레임에 agent.isStopped/ResetPath 를 마칠 수 있도록 1프레임 양보
+        yield return null;
         // 잡은 몬스터 쪽으로 시선을 부드럽게 돌리고 잠깐 바라본다 (등 돌린 상태에서도 몬스터가 보이도록)
         PrepareCapture();
         yield return FaceMonster();
+        fallStartPitch = controller != null ? controller.LookPitch : 0f;
         camActive = true;               // 덮침/충격 카메라 오프셋 적용 시작 (camAmount=0 이라 정상 위치)
         yield return Lunge();
+        effectiveFallBack = ComputeSafeFallBack();
+        fallTargetPitch = ComputeFallTargetPitch();
         yield return Impact();
 
         camActive = true;
 
-        // 쓰러짐 + 눈 감김 (눈은 약간 늦게 시작)
+        // 쓰러짐 (고개가 옆으로 꺾이며 바닥에서 몬스터를 올려다봄 — 검은 막/조임 없음)
         float t = 0f;
-        float total = Mathf.Max(fallDuration, closeDelay + closeDuration);
-        while (t < total)
+        float fallTotal = Mathf.Max(0.05f, fallDuration);
+        while (t < fallTotal)
         {
             t += Time.deltaTime;
-            camAmount = Ease(Mathf.Clamp01(t / fallDuration), true);
-            SetLids(Mathf.Clamp01((t - closeDelay) / closeDuration));
+            camAmount = Ease(Mathf.Clamp01(t / fallTotal), true);
+            if (bloodEffect != null) bloodEffect.SetFallProgress(camAmount, 0f);
             yield return null;
         }
         camAmount = 1f;
-        SetLids(1f);
+        if (bloodEffect != null) bloodEffect.SetFallProgress(1f, 0f);
+
+        // 쓰러진 채 몬스터와 피 물든 시야를 잠시 응시
+        float linger = firstHit ? killcamHoldFirstHit : killcamHoldFatal;
+        if (linger > 0f) yield return new WaitForSeconds(linger);
+
+        // 마지막 순간 전체 화면 급암전 (컷아웃)
+        float ct = 0f;
+        float cutDur = Mathf.Max(0.02f, cutoutDuration);
+        while (ct < cutDur)
+        {
+            ct += Time.deltaTime;
+            float k = Mathf.Clamp01(ct / cutDur);
+            SetBlackFade(k * k);
+            if (bloodEffect != null) bloodEffect.SetFallProgress(1f, k * k);
+            yield return null;
+        }
+        SetBlackFade(1f);
+        if (bloodEffect != null) bloodEffect.SetFallProgress(1f, 1f);
 
         if (!firstHit)
         {
-            // 두 번째 피격: Respawn/신규 파손 없이 기존 Game Over
-            yield return new WaitForSeconds(0.3f);
+            // 두 번째 피격: 붉은 화면·피 흘림 상태에서 급암전 후 기존 Game Over 호출
+            if (bloodEffect != null) bloodEffect.LockFatal();
+            yield return new WaitForSeconds(0.12f);
             GameProgress.TriggerGameOver();
             yield break; // running 유지: 게임 오버 후 연출 재진입 없음
         }
@@ -188,26 +267,29 @@ public class PlayerCaughtSequence : MonoBehaviour
         yield return new WaitForSeconds(blackHold * 0.4f);
         ApplyRandomDamage();
         Respawn();
+        fallStartPitch = 0f;
         if (controller != null) controller.SetLookPitch(0f); // 부활 시선은 수평
+        RestoreAgentAfterCutscene();
         RelocateMonster();
         if (HeartRateController.Instance != null) HeartRateController.Instance.SetBpm(resumeBpm); // 암전 동안 어느 정도 회복된 상태로 재개
         yield return new WaitForSeconds(blackHold * 0.6f);
+        if (bloodEffect != null) bloodEffect.BeginRecovery(Mathf.Max(getUpDuration, openDuration) + 1.4f);
 
-        // 일어남 + 눈 뜸
+        // 일어남 + 전체 시야 복귀
         t = 0f;
-        total = Mathf.Max(getUpDuration, openDuration);
-        while (t < total)
+        float recoverTotal = Mathf.Max(getUpDuration, openDuration);
+        while (t < recoverTotal)
         {
             t += Time.deltaTime;
             camAmount = 1f - Ease(Mathf.Clamp01(t / getUpDuration), false);
-            SetLids(1f - Mathf.Clamp01(t / openDuration));
+            SetBlackFade(1f - Mathf.Clamp01(t / openDuration));
             yield return null;
         }
         camAmount = 0f;
-        SetLids(0f);
+        SetBlackFade(0f);
         camActive = false;
         ApplyCamera(0f); // 정상 위치 복귀 (이후는 PlayerLimpCamera 등 기존 로직)
-        if (lidCanvas != null) lidCanvas.SetActive(false);
+        if (cutoutCanvas != null) cutoutCanvas.SetActive(false);
 
         // 조작 복구 (파손 패널티는 PlayerBodyStatus가 유지)
         if (controller != null) controller.SetControlsEnabled(true);
@@ -244,17 +326,32 @@ public class PlayerCaughtSequence : MonoBehaviour
         }
         transform.rotation = Quaternion.Euler(0f, startYaw + yawDelta, 0f);
         controller.SetLookPitch(endPitch);
+        TriggerAttackerAttack();
         yield return new WaitForSeconds(faceHold);
     }
 
+    void TriggerAttackerAttack()
+    {
+        if (caughtBy == null) return;
+        var movementAnim = caughtBy.GetComponent<MonsterMovementAnimator>();
+        if (movementAnim != null)
+        {
+            movementAnim.TriggerAttack();
+            return;
+        }
+        var hound = caughtBy.GetComponent<MonsterHoundAI>();
+        if (hound != null)
+            hound.ForceCaughtAttackState();
+    }
+
     /// <summary>
-    /// 덮침: 몬스터 전체를 짧고 빠르게(가속) 카메라 쪽으로 보간. NavMeshAgent는 연출 동안만 끄고 끝나면 켜서 Warp(상태 복구).
+    /// 덮침: 몬스터 전체를 짧고 빠르게(가속) 카메라 쪽으로 보간. NavMeshAgent는 연출 동안 비활성화 상태를 유지해
+    /// Killcam 응시 중 옆 침대/벽 NavMesh로 순간이동하지 않도록 막는다.
     /// 최종 거리는 Head 본 기준 lungeHeadDistance 로 제한 (메시 관통 방지). 이미 더 가까우면 움직이지 않는다.
     /// </summary>
     IEnumerator Lunge()
     {
         if (caughtBy == null) yield break;
-        var agent = caughtBy.GetComponent<UnityEngine.AI.NavMeshAgent>();
         var head = FindDeep(caughtBy, "Head");
 
         Vector3 p = transform.position;
@@ -265,15 +362,12 @@ public class PlayerCaughtSequence : MonoBehaviour
 
         Vector3 headOff = head != null ? head.position - start : -away * 0.8f;
         headOff.y = 0f;
-        Vector3 headNow = p + (start + headOff - p);                       // 현재 Head (수평)
+        Vector3 headNow = start + headOff;                                 // 현재 Head (수평)
         float curDist = new Vector3(headNow.x - p.x, 0f, headNow.z - p.z).magnitude;
         Vector3 end = start;
         if (curDist > lungeHeadDistance)
             end = p + away * lungeHeadDistance - headOff;                  // Head 가 lungeHeadDistance 에 오도록
         end.y = start.y;
-
-        bool agentWas = agent != null && agent.enabled;
-        if (agentWas) agent.enabled = false;
 
         float t = 0f;
         while (t < lungeDuration)
@@ -284,14 +378,6 @@ public class PlayerCaughtSequence : MonoBehaviour
             yield return null;
         }
         caughtBy.position = end;
-
-        if (agentWas)
-        {
-            agent.enabled = true;
-            if (UnityEngine.AI.NavMesh.SamplePosition(end, out var hit, 1.5f, UnityEngine.AI.NavMesh.AllAreas))
-                agent.Warp(hit.position);
-            if (agent.isOnNavMesh) { agent.ResetPath(); agent.velocity = Vector3.zero; agent.isStopped = true; }
-        }
     }
 
     /// <summary>공격이 닿는 순간 카메라에 짧은 충격 (뒤로 밀림 + Pitch 젖힘 + 아주 작은 X/Y/Roll). 바로 Fall 로 이어진다.</summary>
@@ -299,6 +385,7 @@ public class PlayerCaughtSequence : MonoBehaviour
     {
         onBiteImpact?.Invoke();
         if (biteAudio != null && biteClip != null) biteAudio.PlayOneShot(biteClip); // 소리 없으면 아무것도 안 함
+        if (bloodEffect != null) bloodEffect.TriggerHit(currentFirstHit);
 
         float t = 0f;
         while (t < impactDuration)
@@ -343,6 +430,7 @@ public class PlayerCaughtSequence : MonoBehaviour
     {
         if (caughtBy == null) return;
         var agent = caughtBy.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        savedAgentEnabled = agent != null && agent.enabled;
         if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             agent.ResetPath();
@@ -362,27 +450,60 @@ public class PlayerCaughtSequence : MonoBehaviour
         Vector3 local = head != null ? caughtBy.InverseTransformPoint(head.position) : new Vector3(0f, 0f, 0.8f);
         Vector3 headOffset = rot * new Vector3(local.x, 0f, local.z);
 
+        float baseY = Mathf.Abs(caughtBy.position.y - p.y) > 0.35f ? p.y - 0.04f : caughtBy.position.y;
         Vector3 desiredHead = p + away * captureHeadDistance;
         Vector3 desired = desiredHead - headOffset;
-        desired.y = caughtBy.position.y;
+        desired.y = baseY;
 
-        // NavMesh 위로, 벽에 막히면 막히기 직전까지만
+        // 같은 바닥 높이(±0.35m)이면서 시선 축에서 크게 벗어나지 않을 때만 NavMesh 보정 적용 (침대 위/인접 NavMesh 섬 스냅 방지)
         Vector3 result = desired;
-        if (UnityEngine.AI.NavMesh.SamplePosition(p, out var from, 1.5f, UnityEngine.AI.NavMesh.AllAreas))
+        if (UnityEngine.AI.NavMesh.SamplePosition(p, out var from, 1.2f, UnityEngine.AI.NavMesh.AllAreas)
+            && Mathf.Abs(from.position.y - baseY) <= 0.35f)
         {
-            if (UnityEngine.AI.NavMesh.Raycast(from.position, desired, out var edge, UnityEngine.AI.NavMesh.AllAreas))
+            if (UnityEngine.AI.NavMesh.Raycast(from.position, desired, out var edge, UnityEngine.AI.NavMesh.AllAreas)
+                && Mathf.Abs(edge.position.y - baseY) <= 0.35f
+                && Vector2.Distance(new Vector2(edge.position.x, edge.position.z), new Vector2(desired.x, desired.z)) <= 0.45f)
+            {
                 result = edge.position;
-            else if (UnityEngine.AI.NavMesh.SamplePosition(desired, out var onMesh, 1.5f, UnityEngine.AI.NavMesh.AllAreas))
+            }
+            else if (UnityEngine.AI.NavMesh.SamplePosition(desired, out var onMesh, 0.5f, UnityEngine.AI.NavMesh.AllAreas)
+                && Mathf.Abs(onMesh.position.y - baseY) <= 0.35f
+                && Vector2.Distance(new Vector2(onMesh.position.x, onMesh.position.z), new Vector2(desired.x, desired.z)) <= 0.45f)
+            {
                 result = onMesh.position;
+            }
         }
 
-        if (agent != null && agent.enabled) agent.Warp(result);
-        else caughtBy.position = result;
+        // 연출 동안 NavMeshAgent를 꺼두어 비네비 바닥(침대 주변 등)에서 몬스터가 옆으로 튕겨나가지 않게 고정
+        if (agent != null) agent.enabled = false;
+        caughtBy.position = result;
         caughtBy.rotation = rot;
+    }
+
+    void RestoreAgentAfterCutscene()
+    {
+        if (caughtBy == null) return;
+        var agent = caughtBy.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null) agent.enabled = savedAgentEnabled;
+        savedAgentEnabled = false;
     }
 
     void RelocateMonster()
     {
+        var hound = caughtBy != null ? caughtBy.GetComponent<MonsterHoundAI>() : null;
+        if (hound != null)
+        {
+            if (caughtDisabledHound)
+            {
+                caughtDisabledHound = false;
+                hound.RestoreDebugPosition(savedHoundPos, savedHoundRot);
+                return;
+            }
+            var houndPoints = MonsterSpawnPoints.Instance != null ? MonsterSpawnPoints.Instance : FindFirstObjectByType<MonsterSpawnPoints>();
+            if (houndPoints != null) houndPoints.RelocateHound(hound, transform.position);
+            return;
+        }
+
         var chase = caughtBy != null ? caughtBy.GetComponent<MonsterChase>() : FindFirstObjectByType<MonsterChase>();
         var points = MonsterSpawnPoints.Instance != null ? MonsterSpawnPoints.Instance : FindFirstObjectByType<MonsterSpawnPoints>();
         if (chase != null && points != null) points.RelocateMonster(chase, transform.position);
@@ -418,58 +539,99 @@ public class PlayerCaughtSequence : MonoBehaviour
         if (camActive) ApplyCamera(camAmount);
     }
 
+    float ComputeSafeFallBack()
+    {
+        if (controller == null || controller.playerCamera == null || fallBack <= 0f)
+            return 0f;
+
+        Transform pivot = controller.playerCamera.transform.parent != null
+            ? controller.playerCamera.transform.parent
+            : controller.transform;
+        Vector3 backDir = -controller.transform.forward;
+        backDir.y = 0f;
+        if (backDir.sqrMagnitude < 0.0001f) return 0f;
+        backDir.Normalize();
+
+        float maxAllowed = fallBack;
+        float[] heights = { -fallDrop * 0.25f, -fallDrop };
+        for (int h = 0; h < heights.Length; h++)
+        {
+            Vector3 origin = pivot.TransformPoint(controller.firstPersonPosition + new Vector3(0f, heights[h], 0f));
+            var hits = Physics.SphereCastAll(origin, 0.16f, backDir, maxAllowed + 0.14f, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var col = hits[i].collider;
+                if (col == null || col.transform.IsChildOf(transform)) continue;
+                float clear = Mathf.Max(0f, hits[i].distance - 0.14f);
+                if (clear < maxAllowed) maxAllowed = clear;
+            }
+        }
+        return maxAllowed;
+    }
+
+    float ComputeFallTargetPitch()
+    {
+        if (caughtBy == null || controller == null || controller.playerCamera == null)
+            return fallPitch;
+
+        Transform pivot = controller.playerCamera.transform.parent != null
+            ? controller.playerCamera.transform.parent
+            : controller.transform;
+        Vector3 fallenCamPos = pivot.TransformPoint(
+            controller.firstPersonPosition + new Vector3(0f, -fallDrop, -effectiveFallBack));
+        Vector3 headTarget = TargetPoint();
+        Vector3 chestTarget = caughtBy.position + Vector3.up * 0.72f;
+        Vector3 aimPoint = Vector3.Lerp(chestTarget, headTarget, 0.88f);
+        Vector3 d = aimPoint - fallenCamPos;
+        float flat = new Vector2(d.x, d.z).magnitude;
+        if (flat < 0.05f) return fallPitch;
+        return Mathf.Clamp(-Mathf.Atan2(d.y, flat) * Mathf.Rad2Deg, -36f, -12f);
+    }
+
     void ApplyCamera(float a)
     {
         if (controller == null || controller.playerCamera == null) return;
         var cam = controller.playerCamera.transform;
-        cam.localPosition = controller.firstPersonPosition + new Vector3(0f, -fallDrop * a, 0f) + impactPos;
-        cam.localRotation = Quaternion.Euler(fallPitch * a + impactEuler.x, 0f, fallRoll * a + impactEuler.z);
+        controller.SetLookPitch(Mathf.Lerp(fallStartPitch, fallTargetPitch, a));
+        cam.localPosition = controller.firstPersonPosition
+            + new Vector3(0f, -fallDrop * a, -effectiveFallBack * a)
+            + impactPos;
+        cam.localRotation = Quaternion.Euler(impactEuler.x, 0f, fallRollSign * fallRoll * a + impactEuler.z);
     }
 
-    // ───────────────────────── 눈꺼풀 ─────────────────────────
+    // ───────────────────────── 전체 급암전 컷아웃 ─────────────────────────
 
-    void EnsureEyelids()
+    void EnsureBlackCutout()
     {
-        if (lidCanvas != null) { lidCanvas.SetActive(true); return; }
+        if (cutoutCanvas != null) { cutoutCanvas.SetActive(true); return; }
 
-        lidCanvas = new GameObject("EyelidCanvas", typeof(Canvas), typeof(CanvasScaler));
-        var canvas = lidCanvas.GetComponent<Canvas>();
+        cutoutCanvas = new GameObject("DeathCutoutCanvas", typeof(Canvas), typeof(CanvasScaler));
+        var canvas = cutoutCanvas.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 150; // GameProgress(200)의 Game Over 패널보다 아래
-        var scaler = lidCanvas.GetComponent<CanvasScaler>();
+        canvas.sortingOrder = 155; // 혈흔(147~149) 위, GameProgress(200) 아래
+        var scaler = cutoutCanvas.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
 
-        lidTop = MakeLid("EyelidTop", true);
-        lidBottom = MakeLid("EyelidBottom", false);
-        SetLids(0f);
+        var go = new GameObject("BlackCutout", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(cutoutCanvas.transform, false);
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+
+        cutoutImage = go.GetComponent<Image>();
+        cutoutImage.color = new Color(0f, 0f, 0f, 0f);
+        cutoutImage.raycastTarget = false;
+        cutoutImage.gameObject.SetActive(false);
     }
 
-    RectTransform MakeLid(string name, bool top)
+    /// <summary>alpha 0 = 완전 투명, 1 = 전체 화면 암전 (사방 조임 없이 균일 페이드).</summary>
+    void SetBlackFade(float alpha)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(lidCanvas.transform, false);
-        var img = go.GetComponent<Image>();
-        img.color = Color.black;
-        img.raycastTarget = false;
-        return (RectTransform)go.transform;
-    }
-
-    /// <summary>closed 0 = 완전히 열림, 1 = 화면 중앙에서 맞닿아 완전 암전.</summary>
-    void SetLids(float closed)
-    {
-        if (lidTop == null || lidBottom == null) return;
-        closed = Mathf.Clamp01(closed);
-        // 위 패널: 위쪽 기준 높이 = 화면 절반 * closed(+여유). 아래 패널은 대칭.
-        float h = 0.5f * closed;
-        float over = closed >= 1f ? 0.002f : 0f; // 완전 닫힘 시 틈 방지
-        lidTop.anchorMin = new Vector2(0f, 1f - h - over);
-        lidTop.anchorMax = new Vector2(1f, 1f);
-        lidBottom.anchorMin = new Vector2(0f, 0f);
-        lidBottom.anchorMax = new Vector2(1f, h + over);
-        lidTop.offsetMin = lidTop.offsetMax = Vector2.zero;
-        lidBottom.offsetMin = lidBottom.offsetMax = Vector2.zero;
-        lidTop.gameObject.SetActive(closed > 0f);
-        lidBottom.gameObject.SetActive(closed > 0f);
+        if (cutoutImage == null) return;
+        alpha = Mathf.Clamp01(alpha);
+        cutoutImage.color = new Color(0f, 0f, 0f, alpha);
+        cutoutImage.gameObject.SetActive(alpha > 0.001f);
     }
 }

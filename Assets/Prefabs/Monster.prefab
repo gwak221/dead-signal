@@ -956,6 +956,7 @@ MonoBehaviour:
   maxViewMultiplier: 1.1
   viewRadius: 8
   viewAngle: 90
+  limitToFov: 0
   loseTargetTime: 5
   chaseColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   colorChangeSpeed: 5
@@ -981,6 +982,8 @@ MonoBehaviour:
   speedDampTime: 0.1
   syncAnimSpeedWithAgent: 1
   baseMoveSpeed: 2.5
+  baseRunSpeed: 6.5
+  attackAnimDuration: 1.15
   minAnimSpeed: 0.8
   maxAnimSpeed: 2.2
 --- !u!114 &5760962221753098698
