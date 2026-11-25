@@ -90,6 +90,13 @@ public class MonsterChase : MonoBehaviour
         agent.acceleration = 16f;
         agent.autoBraking = true;
 
+        // 빌드(Player)에서는 NavMeshSurface 데이터가 에이전트 생성보다 늦게 올라와 'Failed to create agent because there is no valid NavMesh' 가 나고
+        // 에이전트가 NavMesh 밖에 남아(isOnNavMesh=false) 몬스터가 전혀 움직이지 않을 수 있다 (에디터에서는 발생하지 않음).
+        // Start 시점에는 NavMesh 가 로드돼 있으므로 가까운 NavMesh 위로 Warp 해 에이전트를 다시 만든다 (Hound 는 이미 같은 처리).
+        if (agent.enabled && !agent.isOnNavMesh && NavMesh.SamplePosition(transform.position, out NavMeshHit startHit, 20f, NavMesh.AllAreas))
+            agent.Warp(startHit.position);
+        Debug.Log($"[MonsterChase] {name} agent.isOnNavMesh={agent.isOnNavMesh} (Start)");
+
         if (target == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -170,7 +177,7 @@ public class MonsterChase : MonoBehaviour
             new Vector3(target.position.x, 0f, target.position.z)
         );
 
-        if (distToPlayer <= attackRange && !PlayerHide.IsPlayerHiding)
+        if (distToPlayer <= attackRange && !PlayerHide.IsPlayerHiding && HasClearContact())
         {
             AttackPlayer();
             return;
@@ -236,6 +243,25 @@ public class MonsterChase : MonoBehaviour
         }
         else transform.SetPositionAndRotation(pos, rot);
         RecordVisitedPoint(transform.position);
+    }
+
+    // 얇은 벽(0.2m) 너머에 붙어 있어도 수평 거리만으로 포획되던 문제 방지: 몬스터와 플레이어 사이에 벽/문 등 콜라이더가 있으면 접촉 포획 불가.
+    // (Monster 2 의 CanReachAndAttackPlayer 와 같은 규칙)
+    private bool HasClearContact()
+    {
+        Vector3 from = transform.position + Vector3.up * 1.0f;
+        Vector3 to = target.position + Vector3.up * 1.0f;
+        Vector3 d = to - from;
+        float dist = d.magnitude;
+        if (dist < 0.05f) return true;
+        var hits = Physics.RaycastAll(from, d / dist, dist, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Transform t = hits[i].collider.transform;
+            if (t.IsChildOf(transform) || t.IsChildOf(target) || target.IsChildOf(t)) continue;
+            return false;
+        }
+        return true;
     }
 
     private void AttackPlayer()

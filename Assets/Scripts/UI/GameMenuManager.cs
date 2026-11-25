@@ -57,7 +57,7 @@ public class GameMenuManager : MonoBehaviour
         { "E",         "Interact / Use" },
         { "F",         "Pick Up" },
         { "R-MOUSE",   "Flashlight" },
-        { "R",         "Reload" },
+        { "R",         "Reload Flashlight Battery (AA)" },
         { "1 / 2 / 3", "Inventory Slot" },
         { "G",         "Drop Item" },
         { "SPACE",     "QTE / Skill Check" },

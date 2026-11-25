@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +27,7 @@ public class FlashlightChargesUI : MonoBehaviour
     readonly Image[] cells = new Image[4];
     int shownBars = -2;
     bool shownEmpty;
+    public const string ReloadHintText = "[R] RELOAD BATTERY";
     public const string EmptyHintText = "BATTERY EMPTY - PRESS R TO RELOAD";
 
     const float BodyW = 96f;
@@ -53,7 +55,7 @@ public class FlashlightChargesUI : MonoBehaviour
 
     void OnChanged(float percent) => Refresh();
 
-    void OnEmptyHint() => HudToast.Show("FlashlightEmpty", EmptyHintText, fc != null ? fc.emptyHintSeconds : 1.6f);
+    void OnEmptyHint() => HudToast.Show("FlashlightEmpty", EmptyHintText, fc != null ? fc.emptyHintSeconds : 1.6f, 150f, 1);
 
     void LateUpdate()
     {
@@ -67,10 +69,14 @@ public class FlashlightChargesUI : MonoBehaviour
             return;
         }
 
+        // 0% + 여분 AA 보유 + 손전등 장착 상태에서만 재장전 안내 (AA 없거나 재장전 시작/완료 시 갱신이 멈춰 0.25초 내 사라짐).
+        if (fc.CanReloadNow) HudToast.Show("ReloadHint", ReloadHintText, 0.25f, 110f, 2);
+
         if (root == null && !Build()) return;
         if (!root.gameObject.activeSelf) root.gameObject.SetActive(true);
         PlaceUnderBody();
         Refresh();
+        UpdateCooldown();
 
         if (shell == null) return;
         Color frame = shownEmpty ? frameEmpty : frameColor;
@@ -103,6 +109,92 @@ public class FlashlightChargesUI : MonoBehaviour
             if (cells[i] == null) continue;
             cells[i].color = i < bars ? ink : emptyCell;
         }
+    }
+
+    // ───────────────── 눈뽕 재사용 대기시간 (배터리 게이지 바로 아래) ─────────────────
+    RectTransform cdRoot;
+    Image cdFill;
+    TextMeshProUGUI cdLabel;
+    bool cdWasCooling;
+    float cdReadyUntil;
+    static readonly Color CdBarColor = new Color(0.86f, 0.78f, 0.52f, 0.95f);
+    static readonly Color CdReadyColor = new Color(0.55f, 0.85f, 0.55f, 0.95f);
+
+    void BuildCooldown()
+    {
+        var go = new GameObject("FlashStunCooldown", typeof(RectTransform));
+        go.layer = root.gameObject.layer;
+        go.transform.SetParent(root, false);
+        cdRoot = (RectTransform)go.transform;
+        // 배터리 게이지(root)의 아래 가장자리에 붙여서 게이지가 이동/스케일되면 함께 움직인다 (같은 앵커 체계 → 해상도/비율 무관).
+        cdRoot.anchorMin = cdRoot.anchorMax = new Vector2(1f, 0f);
+        cdRoot.pivot = new Vector2(1f, 1f);
+        cdRoot.anchoredPosition = new Vector2(0f, -6f);
+        cdRoot.sizeDelta = new Vector2(BodyW + NubW, 34f);
+
+        var quad = WhiteQuad();
+        var bg = MakeImage(cdRoot, "BarBg", quad, new Color(0.05f, 0.045f, 0.04f, 0.94f), new Vector2(0f, 0f), new Vector2(BodyW + NubW, 9f), Image.Type.Simple);
+        cdFill = MakeImage(cdRoot, "BarFill", quad, CdBarColor, new Vector2(2f, 2f), new Vector2(BodyW + NubW - 4f, 5f), Image.Type.Simple);
+
+        var tgo = new GameObject("Text", typeof(RectTransform));
+        tgo.layer = root.gameObject.layer;
+        tgo.transform.SetParent(cdRoot, false);
+        cdLabel = tgo.AddComponent<TextMeshProUGUI>();
+        TMP_Text existing = root.parent != null ? root.parent.GetComponentInChildren<TMP_Text>(true) : null;
+        if (existing != null && existing != cdLabel && existing.font != null) cdLabel.font = existing.font;
+        cdLabel.fontSize = 19f;
+        cdLabel.fontStyle = FontStyles.Bold;
+        cdLabel.alignment = TextAlignmentOptions.Right;
+        cdLabel.textWrappingMode = TextWrappingModes.NoWrap;
+        cdLabel.raycastTarget = false;
+        cdLabel.outlineWidth = 0.2f;
+        cdLabel.outlineColor = new Color32(0, 0, 0, 255);
+        var rt = cdLabel.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot = new Vector2(1f, 0f);
+        rt.anchoredPosition = new Vector2(0f, 11f);
+        rt.sizeDelta = new Vector2(BodyW + NubW, 22f);
+        cdRoot.gameObject.SetActive(false);
+    }
+
+    void UpdateCooldown()
+    {
+        FlashlightItem item = null;
+        if (inventory != null)
+        {
+            int slot = inventory.FindSlotOf(InventoryItemType.Flashlight);
+            GameObject obj = slot >= 0 ? inventory.GetSlotWorldObject(slot) : null;
+            item = obj != null ? obj.GetComponent<FlashlightItem>() : null;
+        }
+
+        bool cooling = item != null && item.IsOnCooldown;
+        if (cooling)
+        {
+            if (cdRoot == null) BuildCooldown();
+            cdWasCooling = true;
+            cdRoot.gameObject.SetActive(true);
+            cdFill.color = CdBarColor;
+            cdFill.rectTransform.sizeDelta = new Vector2((BodyW + NubW - 4f) * (1f - item.CooldownNormalized), 5f);
+            cdLabel.color = CdBarColor;
+            cdLabel.text = "FLASH " + Mathf.Max(0.1f, Mathf.Ceil(item.CooldownRemaining * 10f) / 10f).ToString("0.0") + "s";
+            return;
+        }
+
+        if (cdWasCooling)
+        {
+            cdWasCooling = false;
+            cdReadyUntil = Time.unscaledTime + 1.2f;   // 끝났음을 잠깐 알려준 뒤 숨김
+        }
+        if (cdRoot == null) return;
+        if (Time.unscaledTime < cdReadyUntil)
+        {
+            cdRoot.gameObject.SetActive(true);
+            cdFill.color = CdReadyColor;
+            cdFill.rectTransform.sizeDelta = new Vector2(BodyW + NubW - 4f, 5f);
+            cdLabel.color = CdReadyColor;
+            cdLabel.text = "FLASH READY";
+        }
+        else if (cdRoot.gameObject.activeSelf) cdRoot.gameObject.SetActive(false);
     }
 
     bool Build()

@@ -103,13 +103,14 @@ public class RandomItemSpawner : MonoBehaviour
         planOk = false;
         jobs = new List<Job>();
         foreach (var m in randomMedkits) if (m != null) jobs.Add(new Job { item = m, kind = SpawnAllow.Medkit });
+        // 후보가 적은 주사기(4곳)를 먼저, AA(수납장 안 15개 가구 전용)는 남은 가구에서.
         foreach (var s in randomSyringes) if (s != null) jobs.Add(new Job { item = s, kind = SpawnAllow.Syringe });
         foreach (var b in randomBatteries) if (b != null) jobs.Add(new Job { item = b, kind = SpawnAllow.FlashlightBattery });
         plan = new ItemSpawnPoint[jobs.Count];
 
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            int zoneCap = attempt < maxAttempts / 2 ? Mathf.Max(1, maxPerZone) : Mathf.Max(1, maxPerZone) + 1;   // 2 우선, 필요하면 3
+            int zoneCap = Mathf.Max(1, maxPerZone) + (attempt * 3) / maxAttempts;   // 2 우선, 시도가 쌓이면 3, 4 (AA 가 수납장 안에만 들어가야 해서 후보가 적다)
             int openLimit = maxOpenSurface + (attempt >= maxAttempts / 2 ? 3 : 0);
             usedPoints.Clear(); usedParts.Clear(); zoneCount.Clear(); usedRoots.Clear(); openUsed = 0;
             foreach (var r in fixedRoots) usedRoots.Add(r);
@@ -120,7 +121,7 @@ public class RandomItemSpawner : MonoBehaviour
                 foreach (var p in eligible)
                 {
                     if (!p.Allows(jobs[i].kind) || usedPoints.Contains(p)) continue;
-                    if (p.openSurface && openUsed >= openLimit) continue;
+                    if (p.openSurface && (openUsed >= openLimit || jobs[i].kind == SpawnAllow.FlashlightBattery)) continue;   // AA 는 수납장 밖(open surface) 금지 - 완화 규칙도 적용 안 함
                     var par = PartOf(p); if (par != null && usedParts.Contains(par)) continue;
                     var r = RootOf(p); if (r != null && usedRoots.Contains(r)) continue;
                     if (ZoneCount(p) >= zoneCap) continue;

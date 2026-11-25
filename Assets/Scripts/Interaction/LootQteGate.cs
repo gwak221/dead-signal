@@ -165,6 +165,15 @@ public class LootQteBootstrap : MonoBehaviour
             var gate = GateFor(root, mb, ref gated);
             LootQteGate.Register(gate, mb);
         }
+        // 실제 스폰 결과 기준 정리: 묶음 전체에 아이템이 하나도 없는 게이트(후보 지점만 있고 비어 있는 상자)는 제거 → QTE 없이 바로 열린다.
+        foreach (var g in new List<LootQteGate>(LootQteGate.All))
+        {
+            if (g == null) continue;
+            int total = 0;
+            if (g.group != null) { foreach (var x in g.group) if (x != null) total += x.contents.Count; }
+            else total = g.contents.Count;
+            if (total == 0) { g.locked = false; Destroy(g); gated--; }
+        }
         Debug.Log("[LootQteGate] pickups=" + pickups + " gatedContainers=" + gated);
     }
 
