@@ -136,8 +136,8 @@ MonoBehaviour:
     pitchJitter: 0.1
     group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
     spatial: 1
-    minDistance: 2
-    maxDistance: 25
+    minDistance: 6
+    maxDistance: 50
     rolloff: 1
     loop: 0
     ignorePause: 0
@@ -158,8 +158,8 @@ MonoBehaviour:
     pitchJitter: 0.1
     group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
     spatial: 1
-    minDistance: 2
-    maxDistance: 30
+    minDistance: 6
+    maxDistance: 50
     rolloff: 1
     loop: 0
     ignorePause: 0
