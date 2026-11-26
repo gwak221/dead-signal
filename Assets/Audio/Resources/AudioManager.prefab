@@ -164,6 +164,97 @@ MonoBehaviour:
     loop: 0
     ignorePause: 0
     note: "Monster_Run \uC560\uB2C8\uBA54\uC774\uC158 \uC774\uBCA4\uD2B8 OnFootstep"
+  - name: en2_idle
+    clips:
+    - {fileID: 8300000, guid: 7bb180c9fe95dd6458dcc32f530a10ab, type: 3}
+    - {fileID: 8300000, guid: 70557fa5c9c786f4499368cae225d744, type: 3}
+    avoidRepeat: 1
+    volume: 0.9
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 4
+    maxDistance: 40
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy2 Patrol idle growl (HoundVoice)"
+  - name: en2_spot
+    clips:
+    - {fileID: 8300000, guid: 2d32c7d72b79586479b18b9b93db69ca, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 5
+    maxDistance: 60
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy2 spotted player, ChargePrep enter (HoundVoice)"
+  - name: en2_dash
+    clips:
+    - {fileID: 8300000, guid: b7652be7db69fc548acb5159497e8c32, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.05
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 5
+    maxDistance: 60
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy2 Charge start one-shot (HoundVoice)"
+  - name: en2_step_walk
+    clips:
+    - {fileID: 8300000, guid: d25bf25db9c765d458433d1f0cbe2d02, type: 3}
+    - {fileID: 8300000, guid: a4fbd1fc0773b6747abd356951e4477f, type: 3}
+    - {fileID: 8300000, guid: 3142133ae6dcd674498ed50c9f57b99c, type: 3}
+    - {fileID: 8300000, guid: 8937e8b7e0b09b34c9d811b69c6ba4d5, type: 3}
+    - {fileID: 8300000, guid: 0ecc01bc22b7b52498719695f8288356, type: 3}
+    - {fileID: 8300000, guid: 4ad52c3acf6310d49a9bbdf6444d7ac5, type: 3}
+    - {fileID: 8300000, guid: 1ca4b5ad2789957449c87f2b25de558c, type: 3}
+    - {fileID: 8300000, guid: 5e22e8ec6329fe44c91c5a7b1e811975, type: 3}
+    avoidRepeat: 1
+    volume: 0.8
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 6
+    maxDistance: 50
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy2 patrol footstep, distance based (HoundVoice)"
+  - name: en2_step_dash
+    clips:
+    - {fileID: 8300000, guid: 53436b13427cb7846883c7b0fe333b84, type: 3}
+    - {fileID: 8300000, guid: 9a21683cc452e5d4795cc8f79b491524, type: 3}
+    - {fileID: 8300000, guid: 4423de1b4aaeb644a8d9084ad016ab19, type: 3}
+    - {fileID: 8300000, guid: de07b6046042af34493781c5c108b5e4, type: 3}
+    avoidRepeat: 1
+    volume: 1
+    volumeJitter: 0.05
+    pitch: 1
+    pitchJitter: 0.1
+    group: {fileID: -3038616585460946589, guid: 320261d6c13e60540ad91e787ae42b4e, type: 2}
+    spatial: 1
+    minDistance: 6
+    maxDistance: 60
+    rolloff: 1
+    loop: 0
+    ignorePause: 0
+    note: "Enemy2 Charge/AcceleratedChase footstep, distance based (HoundVoice)"
   - name: box_open
     clips:
     - {fileID: 8300000, guid: 0a24df9608b198e41b159c4e80975c63, type: 3}
@@ -530,6 +621,7 @@ MonoBehaviour:
   - name: door_open
     clips:
     - {fileID: 8300000, guid: 51781bcc50877f74d855139c44565d39, type: 3}
+    - {fileID: 8300000, guid: ad4ef8bfb75a9364db85779c8dd10d03, type: 3}
     avoidRepeat: 1
     volume: 1
     volumeJitter: 0.05
@@ -548,6 +640,7 @@ MonoBehaviour:
   - name: door_close
     clips:
     - {fileID: 8300000, guid: 7f74dd1acff6c62429ea705d435d2ea5, type: 3}
+    - {fileID: 8300000, guid: f7f59eae22fc821488b2ca49188ef4b6, type: 3}
     avoidRepeat: 1
     volume: 1
     volumeJitter: 0.05
@@ -582,6 +675,7 @@ MonoBehaviour:
   - name: esc_door_open
     clips:
     - {fileID: 8300000, guid: 3f5a0281237c4d547af09fe7b1f3f89b, type: 3}
+    - {fileID: 8300000, guid: 5cc60493b8abcd84dbfc10b726f23b21, type: 3}
     avoidRepeat: 1
     volume: 1
     volumeJitter: 0.05
@@ -649,7 +743,7 @@ MonoBehaviour:
       WorldSounds)"
   - name: bcn_activate
     clips:
-    - {fileID: 8300000, guid: 7edcd34747af8cc4fbbd2540d6b13f93, type: 3}
+    - {fileID: 8300000, guid: b7da42d88fbbece4e8f64ba28d6289d2, type: 3}
     avoidRepeat: 1
     volume: 1
     volumeJitter: 0.05
@@ -667,6 +761,7 @@ MonoBehaviour:
   - name: qte_success
     clips:
     - {fileID: 8300000, guid: ef5d041e5d01502409f204f090e5f4ff, type: 3}
+    - {fileID: 8300000, guid: 2324e06d005d96b40bb15e2abf658054, type: 3}
     avoidRepeat: 1
     volume: 0.8
     volumeJitter: 0.05
@@ -684,6 +779,7 @@ MonoBehaviour:
   - name: qte_fail
     clips:
     - {fileID: 8300000, guid: f481bf3d255579444b1af1c27eaec4f8, type: 3}
+    - {fileID: 8300000, guid: 41b99d6661f1d924aa9994be1bd15e9e, type: 3}
     avoidRepeat: 1
     volume: 0.8
     volumeJitter: 0.05
@@ -718,6 +814,7 @@ MonoBehaviour:
   - name: bgm_chase
     clips:
     - {fileID: 8300000, guid: 347edd0558f899944ad27953159904f1, type: 3}
+    - {fileID: 8300000, guid: 857237f96df6985469bc658178fc7121, type: 3}
     avoidRepeat: 1
     volume: 0.8
     volumeJitter: 0
