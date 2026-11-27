@@ -143,6 +143,7 @@ public class GameMenuManager : MonoBehaviour
         if (BeaconPipeQte.IsOpen) return false;   // 파이프 퍼즐은 ESC 로 퍼즐만 취소한다 (일시정지 메뉴와 동시에 열지 않음)
         if (Monster2ReleaseSequence.IsPlaying) return false; // Monster 2 등장 컷씬 중 ESC 일시정지 금지
         if (PlayerCaughtSequence.IsRunning) return false;
+        if (PosterInspect.IsInspecting || DocumentInspect.IsInspecting) return false; // 포스터/서류 보는 중 ESC 는 닫기로만 쓴다
         if (ExitCutsceneController.IsPlaying) return false; // 탈출구 컷씬 중 ESC 일시정지 금지
         if (GameProgress.IsEnded) return false;
         return true;

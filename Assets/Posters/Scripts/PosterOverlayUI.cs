@@ -10,7 +10,7 @@ using UnityEngine.UI;
 public static class PosterOverlayUI
 {
     const int SortingOrder = 130;
-    const float DimAlpha = 0.5f;          // 뒷 배경을 50% 어둡게
+    const float DimAlpha = 0.85f;          // 뒷 배경을 85% 어둡게
     const float MaxWidthRatio = 0.82f;    // 화면 대비 이미지 최대 가로
     const float MaxHeightRatio = 0.78f;   // 화면 대비 이미지 최대 세로 (아래 문구 자리 남김)
 
@@ -37,8 +37,33 @@ public static class PosterOverlayUI
         bool hasCaption = !string.IsNullOrWhiteSpace(caption);
         captionText.text = hasCaption ? caption : "";
         captionText.gameObject.SetActive(hasCaption);
+        LayoutCaption(textOnly: tex == null);
 
         root.SetActive(true);
+    }
+
+    /// <summary>
+    /// 이미지가 있으면 이미지 아래 한 줄 설명 자리, 이미지가 없으면(서류 텍스트 모드) 화면 하단의 넓은 본문 자리.
+    /// 아래쪽 기준 정렬이라 줄이 늘어나면 위로 자란다.
+    /// </summary>
+    static void LayoutCaption(bool textOnly)
+    {
+        var rt = (RectTransform)captionText.transform;
+        if (textOnly)
+        {
+            rt.anchorMin = new Vector2(0.15f, 0.08f);
+            rt.anchorMax = new Vector2(0.85f, 0.55f);
+            captionText.alignment = TextAnchor.LowerCenter;
+            captionText.lineSpacing = 1.25f;
+        }
+        else
+        {
+            rt.anchorMin = new Vector2(0.1f, 0.07f);
+            rt.anchorMax = new Vector2(0.9f, 0.15f);
+            captionText.alignment = TextAnchor.MiddleCenter;
+            captionText.lineSpacing = 1f;
+        }
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
     public static void SetAlpha(float a)
@@ -99,6 +124,8 @@ public static class PosterOverlayUI
         captionText.alignment = TextAnchor.MiddleCenter;
         captionText.color = new Color(0.92f, 0.90f, 0.85f);
         captionText.raycastTarget = false;
+        captionText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        captionText.verticalOverflow = VerticalWrapMode.Overflow;   // 긴 일기/기록도 잘리지 않게
         cap.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.8f);
 
         // 닫기 안내
@@ -113,13 +140,13 @@ public static class PosterOverlayUI
         hintText.fontSize = 24;
         hintText.alignment = TextAnchor.MiddleCenter;
         hintText.color = new Color(1f, 1f, 1f, 0.55f);
-        hintText.text = "[E] / [RMB]  CLOSE";
+        hintText.text = "[E] / [ESC]  CLOSE";
         hintText.raycastTarget = false;
 
         root.SetActive(false);
     }
 
-    static Font LoadFont()
+    internal static Font LoadFont()
     {
         Font f = null;
         try { f = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 34); }
