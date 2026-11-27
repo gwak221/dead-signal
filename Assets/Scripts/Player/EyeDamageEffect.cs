@@ -63,6 +63,23 @@ public class EyeDamageEffect : MonoBehaviour
 
     public bool IsActive => active;
 
+    // ── 컷씬 동안 화면 효과만 잠시 끈다 (부상 상태 active 는 건드리지 않는다) ──
+    static readonly System.Collections.Generic.HashSet<Object> suppressors = new System.Collections.Generic.HashSet<Object>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => suppressors.Clear();
+
+    /// <summary>owner 가 Unsuppress 하거나 파괴/비활성되기 전까지 눈 손상 화면 효과를 숨긴다. 여러 owner 가 겹쳐도 안전.</summary>
+    public static void Suppress(Object owner) { if (owner != null) suppressors.Add(owner); }
+    public static void Unsuppress(Object owner) { if (owner != null) suppressors.Remove(owner); }
+
+    static bool IsSuppressed()
+    {
+        if (suppressors.Count == 0) return false;
+        suppressors.RemoveWhere(o => o == null);   // 파괴된 owner 는 자동 해제
+        return suppressors.Count > 0;
+    }
+
     public void SetActive(bool on)
     {
         active = on;
@@ -71,7 +88,8 @@ public class EyeDamageEffect : MonoBehaviour
 
     void Update()
     {
-        weight = Mathf.MoveTowards(weight, active ? 1f : 0f, fadeSpeed * Time.deltaTime);
+        if (IsSuppressed()) weight = 0f;   // 컷씬 중: 즉시 제거, 끝나면 active 상태에 맞게 fadeSpeed 로 복구
+        else weight = Mathf.MoveTowards(weight, active ? 1f : 0f, fadeSpeed * Time.deltaTime);
 
         if (!built) return;
 

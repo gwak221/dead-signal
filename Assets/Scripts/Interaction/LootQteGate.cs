@@ -145,6 +145,7 @@ public class LootQteBootstrap : MonoBehaviour
 
     void Scan()
     {
+        Physics.SyncTransforms();   // 방금 옮겨진 아이템(RandomItemSpawner)의 콜라이더 bounds 가 아직 옛 위치면 엉뚱한 개폐부에 게이트가 붙는다
         var containers = new List<Container>();
         foreach (var f in FindObjectsByType<OpenableFurniture>(FindObjectsSortMode.None))
             if (f.GetComponent<HideSpot>() == null && !DecorativeOpenable.IsDecorative(f)) AddContainer(containers, f.transform);

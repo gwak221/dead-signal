@@ -72,6 +72,7 @@ public class PlayerHide : MonoBehaviour
     public bool Enter(HideSpot spot)
     {
         if (IsHiding || spot == null || spot.hidePoint == null) return false;
+        if (PlayerCaughtSequence.IsRunning) return false;   // 포획 연출 중에는 숨지 않는다
 
         CurrentSpot = spot;
         if (characterController != null) characterController.enabled = false;
@@ -117,8 +118,8 @@ public class PlayerHide : MonoBehaviour
 
         if (spot != null && spot.exitPoint != null)
         {
-            // 캐비넷 앞(바깥쪽)을 보며 나온다.
-            transform.SetPositionAndRotation(spot.exitPoint.position, Quaternion.LookRotation(spot.FrontDirection, Vector3.up));
+            // 캐비넷 앞(바깥쪽)을 보며 나온다. 열린 문짝 범위와 주변 장애물을 피한 안전한 자리로.
+            transform.SetPositionAndRotation(spot.ResolveExitPosition(characterController), Quaternion.LookRotation(spot.FrontDirection, Vector3.up));
         }
 
         if (controller != null && controller.cameraPivot != null)
@@ -132,6 +133,22 @@ public class PlayerHide : MonoBehaviour
 
         ShowOverlay(false);
         OnHidingChanged?.Invoke(false);
+    }
+
+    /// <summary>
+    /// 포획 등으로 은신 상태를 위치 이동 없이 정리한다: 상태/참조/E : EXIT 안내를 초기화하고 충돌체/카메라를 복구한다.
+    /// 조작/상호작용 스위치는 호출한 쪽(PlayerCaughtSequence)이 관리하므로 건드리지 않는다.
+    /// </summary>
+    public void ForceReset()
+    {
+        bool was = IsHiding;
+        IsHiding = false;
+        CurrentSpot = null;
+        if (controller != null && controller.cameraPivot != null) controller.cameraPivot.localRotation = Quaternion.identity;
+        if (was && controller != null && controller.playerCamera != null) controller.playerCamera.nearClipPlane = savedNearClip;
+        if (characterController != null) characterController.enabled = true;
+        ShowOverlay(false);
+        if (was) OnHidingChanged?.Invoke(false);
     }
 
     void Update()
