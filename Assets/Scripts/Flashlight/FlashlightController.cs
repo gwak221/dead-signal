@@ -393,9 +393,6 @@ public class FlashlightController : MonoBehaviour
 
     // ───────────────────────── Reload (배터리 교체) ─────────────────────────
 
-    /// <summary>지금 R 을 누르면 실제로 재장전이 시작되는 상태 (HUD 안내용: 0% + 손전등 장착 + AA 보유, 종료/메뉴/조작 잠김 아님).</summary>
-    public bool CanReloadNow => CanStartReload();
-
     bool CanStartReload()
     {
         if (reloading) return false;

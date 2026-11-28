@@ -57,7 +57,6 @@ public class ExitCutsceneController : MonoBehaviour
     void OnDisable()
     {
         GameProgress.Changed -= OnProgress;
-        EyeDamageEffect.Unsuppress(this);
         ShowHud();
         IsPlaying = false;
     }
@@ -101,7 +100,6 @@ public class ExitCutsceneController : MonoBehaviour
         }
 
         IsPlaying = true;
-        EyeDamageEffect.Suppress(this);   // 컷씬 화면에는 플레이어 눈 손상 효과(UI/후처리)를 적용하지 않는다
         var fpc = FindFirstObjectByType<FirstPersonController>();
         var pi = FindFirstObjectByType<PlayerInteraction>();
         bool hadControls = fpc != null && fpc.ControlsEnabled;
@@ -156,7 +154,6 @@ public class ExitCutsceneController : MonoBehaviour
             if (ag != null && ag.enabled && ag.isOnNavMesh) ag.isStopped = false;
         }
         IsPlaying = false;
-        EyeDamageEffect.Unsuppress(this);
         yield return Fade(1f, 0f);
     }
 

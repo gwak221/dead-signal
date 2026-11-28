@@ -138,7 +138,7 @@ public class FirstPersonController : MonoBehaviour
         // 다리 부상(sprintAllowed) 또는 심박수 잠금 중 하나라도 걸려 있으면 달리기 불가.
         bool isRunning = sprintAllowed && !heartSprintLocked && shiftHeld && isMoving;
         if (heartSprintLocked && shiftHeld && isMoving)
-            HudToast.Show("TooExhausted", "TOO EXHAUSTED", 1.0f, 150f, 0);
+            HudToast.Show("TooExhausted", "TOO EXHAUSTED", 1.0f);
         IsSprinting = isRunning;
         float currentSpeed = (isRunning ? runSpeed : moveSpeed) * speedMultiplier;
 
