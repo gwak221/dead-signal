@@ -6,14 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Floor1.unity
-    guid: 9f8e7d6c5b4a39281706f5e4d3c2b1a0
-  - enabled: 1
-    path: Assets/Scenes/EscapePrototype.unity
-    guid: b65ae1af52af07c41ad037e2fc51a7c3
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/DeadSignal_Main.unity
+    guid: 3827ac68e8e7478c817be251bb21235e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

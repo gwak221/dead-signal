@@ -29,9 +29,9 @@ public class PasswordDoor : MonoBehaviour, IInteractable
             return "";
 
         if (!isUnlocked)
-            return "E : Enter Password";
+            return "[E] ENTER PASSWORD";
 
-        return isOpen ? "E : Close Door" : "E : Open Door";
+        return isOpen ? "[E] CLOSE" : "[E] OPEN";
     }
 
     public void Interact(PlayerInteraction player)
@@ -62,10 +62,18 @@ public class PasswordDoor : MonoBehaviour, IInteractable
         return true;
     }
 
+    /// <summary>문이 움직이기 시작할 때 (문, 여는 중인지). 사운드용.</summary>
+    public static event System.Action<PasswordDoor, bool> AnyMoved;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => AnyMoved = null;
+
     IEnumerator ToggleDoor()
     {
         if (doorPivot == null)
             yield break;
+
+        AnyMoved?.Invoke(this, !isOpen);
 
         isMoving = true;
         Quaternion startRotation = doorPivot.localRotation;

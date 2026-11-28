@@ -2,6 +2,11 @@ using UnityEngine;
 
 public class BatteryPickup : MonoBehaviour
 {
+    void Awake()
+    {
+        if (GetComponent<BatteryHighlight>() == null) gameObject.AddComponent<BatteryHighlight>(); // 줍는 아이템 강조
+    }
+
     public static BatteryPickup Create(Vector3 position)
     {
         var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);

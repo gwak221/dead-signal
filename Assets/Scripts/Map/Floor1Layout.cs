@@ -51,7 +51,7 @@ public class Floor1Layout : MonoBehaviour
                 DestroyImmediate(child);
         }
 
-        _wallMat = wallMaterial != null ? wallMaterial : MakeMat(new Color(0.12f, 0.055f, 0.17f));
+        _wallMat = wallMaterial != null ? wallMaterial : MakeMat(new Color(0.32f, 0.34f, 0.38f));
         _labelMat = MakeMat(Color.white);
 
         foreach (var room in Rooms())
@@ -62,13 +62,11 @@ public class Floor1Layout : MonoBehaviour
 
     static Room[] Rooms()
     {
-        // Saturated purple and magenta floors give the basement map the
-        // illustrated, color-coded look of the supplied reference.
-        var hall = new Color(0.39f, 0.12f, 0.62f);
-        var service = new Color(0.27f, 0.10f, 0.38f);
-        var living = new Color(0.58f, 0.16f, 0.62f);
-        var garage = new Color(0.31f, 0.12f, 0.48f);
-        var kitchen = new Color(0.72f, 0.20f, 0.62f);
+        var hall = new Color(0.18f, 0.28f, 0.36f);
+        var service = new Color(0.22f, 0.22f, 0.26f);
+        var living = new Color(0.16f, 0.24f, 0.34f);
+        var garage = new Color(0.20f, 0.20f, 0.22f);
+        var kitchen = new Color(0.24f, 0.22f, 0.20f);
 
         return new[]
         {
