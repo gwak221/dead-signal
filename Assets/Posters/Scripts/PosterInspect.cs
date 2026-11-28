@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 ///  - Zoom            : 카메라가 포스터 정면으로 부드럽게 다가간다(그 자리 조명 그대로).
 ///  - Overlay         : 화면을 어둡게 하고 포스터 이미지를 화면 중앙에 2D 로 띄운다(조명과 무관하게 항상 선명).
 ///  - ZoomThenOverlay : 짧게 줌인한 뒤 화면 UI 로 넘어간다. 닫으면 UI 가 사라지고 원래 시점으로 돌아온다.
-/// 닫기: E 또는 ESC (보는 동안에는 ESC 로 일시정지 메뉴가 열리지 않는다).
+/// 닫기: E 또는 마우스 오른쪽 버튼 (ESC 는 일시정지 메뉴가 쓰므로 사용하지 않는다).
 /// 보는 동안 FirstPersonController / PlayerInteraction 의 공개 스위치만 꺼서 이동·시선·다른 상호작용을 막는다(PlayerHide 와 같은 방식).
 /// UI 는 처음 쓸 때 PosterOverlayUI 가 자동 생성하므로 씬에 따로 둘 것이 없다(프리팹만으로 동작).
 /// 방향 규칙: 루트의 +Z(파란 화살표)가 벽 안쪽, 앞면은 -Z 를 본다.
@@ -81,7 +81,7 @@ public class PosterInspect : MonoBehaviour, IInteractable
 
     public void Interact(PlayerInteraction player)
     {
-        if (!isActiveAndEnabled || player == null || IsInspecting || DocumentInspect.IsInspecting || phase != Phase.Idle) return;
+        if (!isActiveAndEnabled || player == null || IsInspecting || phase != Phase.Idle) return;
         if (PlayerHide.IsPlayerHiding || GameMenuManager.MenuOpen) return;
 
         controller = player.GetComponent<FirstPersonController>();
@@ -228,11 +228,11 @@ public class PosterInspect : MonoBehaviour, IInteractable
         phase = Phase.ZoomOut;
     }
 
-    /// <summary>닫기: E 또는 ESC. (보는 중에는 GameMenuManager.CanPause 가 false 라 ESC 로 일시정지 메뉴가 같이 열리지 않는다)</summary>
-    internal static bool ExitPressed()
+    static bool ExitPressed()
     {
         var kb = Keyboard.current;
-        return kb != null && (kb.eKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame);
+        var ms = Mouse.current;
+        return (kb != null && kb.eKey.wasPressedThisFrame) || (ms != null && ms.rightButton.wasPressedThisFrame);
     }
 
     void Finish()

@@ -23,7 +23,7 @@ public class FlashlightSlotCooldownUI : MonoBehaviour
     public bool fillClockwise = true;
 
     [Header("Text")]
-    public bool showNumber = false; // 숫자는 배터리 게이지 아래(FlashlightChargesUI)에 크게 표시. 슬롯에는 어두운 채움만.
+    public bool showNumber = true;
     public float fontSize = 22f;
     public Color textColor = Color.white;
 

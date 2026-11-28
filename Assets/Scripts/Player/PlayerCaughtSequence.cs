@@ -202,9 +202,6 @@ public class PlayerCaughtSequence : MonoBehaviour
     IEnumerator Run()
     {
         running = true;
-        // 포획 확정: 진행 중인 은신 진입/퇴장 연출과 은신 상태, E : EXIT 안내를 모두 정리한다 (부활 후 이전 캐비닛으로 순간이동 방지)
-        HideSpot.CancelAllPending();
-        if (PlayerHide.Instance != null) PlayerHide.Instance.ForceReset();
         if (body == null) body = GetComponent<PlayerBodyStatus>();
         bool firstHit = body == null || body.DamagedCount == 0;
         currentFirstHit = firstHit;

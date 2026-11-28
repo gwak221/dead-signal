@@ -145,7 +145,6 @@ public class LootQteBootstrap : MonoBehaviour
 
     void Scan()
     {
-        Physics.SyncTransforms();   // 방금 옮겨진 아이템(RandomItemSpawner)의 콜라이더 bounds 가 아직 옛 위치면 엉뚱한 개폐부에 게이트가 붙는다
         var containers = new List<Container>();
         foreach (var f in FindObjectsByType<OpenableFurniture>(FindObjectsSortMode.None))
             if (f.GetComponent<HideSpot>() == null && !DecorativeOpenable.IsDecorative(f)) AddContainer(containers, f.transform);
@@ -165,15 +164,6 @@ public class LootQteBootstrap : MonoBehaviour
             // 가구 루트에 하나만 붙이면 빈 칸을 먼저 열어도 QTE 가 발생하고 아이템 칸은 QTE 없이 열린다.
             var gate = GateFor(root, mb, ref gated);
             LootQteGate.Register(gate, mb);
-        }
-        // 실제 스폰 결과 기준 정리: 묶음 전체에 아이템이 하나도 없는 게이트(후보 지점만 있고 비어 있는 상자)는 제거 → QTE 없이 바로 열린다.
-        foreach (var g in new List<LootQteGate>(LootQteGate.All))
-        {
-            if (g == null) continue;
-            int total = 0;
-            if (g.group != null) { foreach (var x in g.group) if (x != null) total += x.contents.Count; }
-            else total = g.contents.Count;
-            if (total == 0) { g.locked = false; Destroy(g); gated--; }
         }
         Debug.Log("[LootQteGate] pickups=" + pickups + " gatedContainers=" + gated);
     }
