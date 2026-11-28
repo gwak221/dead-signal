@@ -26,46 +26,7 @@ public class FirstPersonController : MonoBehaviour
     private bool isThirdPerson = false;
     private bool controlsEnabled = true;
 
-    // 신체 파손(다리) 등 외부 시스템이 제어하는 런타임 값.
-    // Inspector의 moveSpeed / runSpeed 원본 값은 건드리지 않는다.
-    private bool sprintAllowed = true;
-    private float speedMultiplier = 1f;
-
-    // 심박수 Sprint Lock (히스테리시스): lockBpm 이상이면 잠금, releaseBpm 이하로 회복돼야 해제. 그 사이 구간은 현재 상태 유지.
-    // 코드 상수(직렬화 안 함): 씬에 저장된 옛 값이 새 기준을 덮어쓰지 않게 한다.
-    /// <summary>이 BPM 이상이면 달리기 금지.</summary>
-    [System.NonSerialized] public float sprintLockBpm = 160f;
-    /// <summary>잠긴 뒤 이 BPM 이하로 내려가야 다시 달릴 수 있음 (121~159 는 현재 상태 유지).</summary>
-    [System.NonSerialized] public float sprintReleaseBpm = 120f;
-    private bool heartSprintLocked;
-
-    /// <summary>심박수로 인한 Sprint Lock 상태 (다리 부상 SprintAllowed 와 별개).</summary>
-    public bool HeartSprintLocked => heartSprintLocked;
-
-    void UpdateHeartSprintLock()
-    {
-        var heart = HeartRateController.Instance;
-        if (heart == null) return;
-        // 주사기 효과 중: 심박수와 상관없이 달릴 수 있다 (끝나는 순간 아래 판정으로 BPM 이 높으면 바로 다시 잠김)
-        if (heart.IsSprintUnlocked) { heartSprintLocked = false; return; }
-        float bpm = heart.CurrentBpm;
-        if (!heartSprintLocked && bpm >= sprintLockBpm) heartSprintLocked = true;
-        else if (heartSprintLocked && bpm <= sprintReleaseBpm) heartSprintLocked = false;
-    }
-
     public bool ControlsEnabled => controlsEnabled;
-    public bool IsThirdPerson => isThirdPerson;
-    public bool SprintAllowed => sprintAllowed;
-    /// <summary>이번 프레임 실제로 달리는 중 (심박수 시스템 등이 읽음).</summary>
-    public bool IsSprinting { get; private set; }
-    /// <summary>카메라 상하 시선(도, 아래가 +). 잡힘 연출 등 외부 시선 제어용.</summary>
-    public float LookPitch => cameraRotationX;
-    public void SetLookPitch(float pitch)
-    {
-        cameraRotationX = Mathf.Clamp(pitch, -80f, 80f);
-        if (cameraPivot != null) cameraPivot.localRotation = Quaternion.Euler(cameraRotationX, 0f, 0f);
-    }
-    public float SpeedMultiplier => speedMultiplier;
 
     void Awake()
     {
@@ -85,14 +46,11 @@ public class FirstPersonController : MonoBehaviour
     void Update()
     {
         if (!controlsEnabled)
-        {
-            IsSprinting = false;
             return;
-        }
 
         Move();
         Look();
-        // V키 1/3인칭 전환은 폐기 (1인칭 고정).
+        CameraSwitch();
     }
 
     public void SetControlsEnabled(bool enabled)
@@ -101,21 +59,6 @@ public class FirstPersonController : MonoBehaviour
 
         if (!enabled && sprintIndicator != null)
             sprintIndicator.SetActive(false);
-    }
-
-    // 다리 파손 등으로 달리기를 막을 때 사용.
-    public void SetSprintAllowed(bool allowed)
-    {
-        sprintAllowed = allowed;
-
-        if (!allowed && sprintIndicator != null)
-            sprintIndicator.SetActive(false);
-    }
-
-    // 이동 속도 배율 (1 = 정상). 걷기/달리기 모두에 적용.
-    public void SetSpeedMultiplier(float multiplier)
-    {
-        speedMultiplier = Mathf.Max(0f, multiplier);
     }
 
     void Move()
@@ -133,14 +76,8 @@ public class FirstPersonController : MonoBehaviour
         input = Vector2.ClampMagnitude(input, 1f);
 
         bool isMoving = input.sqrMagnitude > 0.01f;
-        UpdateHeartSprintLock();
-        bool shiftHeld = Keyboard.current.leftShiftKey.isPressed;
-        // 다리 부상(sprintAllowed) 또는 심박수 잠금 중 하나라도 걸려 있으면 달리기 불가.
-        bool isRunning = sprintAllowed && !heartSprintLocked && shiftHeld && isMoving;
-        if (heartSprintLocked && shiftHeld && isMoving)
-            HudToast.Show("TooExhausted", "TOO EXHAUSTED", 1.0f, 150f, 0);
-        IsSprinting = isRunning;
-        float currentSpeed = (isRunning ? runSpeed : moveSpeed) * speedMultiplier;
+        bool isRunning = Keyboard.current.leftShiftKey.isPressed && isMoving;
+        float currentSpeed = isRunning ? runSpeed : moveSpeed;
 
         if (sprintIndicator != null)
             sprintIndicator.SetActive(isRunning);
@@ -174,6 +111,18 @@ public class FirstPersonController : MonoBehaviour
         cameraRotationX -= mouseY;
         cameraRotationX = Mathf.Clamp(cameraRotationX, -80f, 80f);
         cameraPivot.localRotation = Quaternion.Euler(cameraRotationX, 0f, 0f);
+    }
+
+    void CameraSwitch()
+    {
+        if (Keyboard.current == null)
+            return;
+
+        if (Keyboard.current.vKey.wasPressedThisFrame)
+        {
+            isThirdPerson = !isThirdPerson;
+            SetCameraMode();
+        }
     }
 
     void SetCameraMode()
